@@ -1,0 +1,40 @@
+version: '3'
+services:
+  elasticsearch:
+      image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/elasticsearch:6.7.0
+      ports:
+          - 9200:9200
+          - 9300:9300
+      environment:
+          - xpack.security.enabled=false
+      volumes: 
+        - amundsen-elasticsearch-data:/usr/share/elasticsearch/data
+      ulimits:
+        nofile:
+           soft: 65536
+           hard: 65536
+      logging:
+        driver: awslogs
+        options: 
+          awslogs-group: amundsen-elasticsearch
+          awslogs-region: us-east-1
+          awslogs-stream-prefix: amundsen-elasticsearch
+
+  cloudcmd:
+    image: coderaiser/cloudcmd
+    container_name: web
+    volumes: 
+        - amundsen-elasticsearch-data:/mnt/amundsen-elasticsearch-data
+    ports: 
+        - 8000:8000
+    logging:
+      driver: awslogs
+      options: 
+        awslogs-group: amundsencloudcmd
+        awslogs-region: us-east-1
+        awslogs-stream-prefix: amundsen-cloudcmd
+
+volumes: 
+  amundsen-elasticsearch-data:
+
+

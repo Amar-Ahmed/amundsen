@@ -1,0 +1,22 @@
+version: '3'
+services:
+  web:
+    image: coderaiser/cloudcmd
+    container_name: web
+    volumes: 
+        - amundsen-elasticsearch-data:/mnt/amundsen-elasticsearch-data
+        - amundsen-neo4j-data:/mnt/amundsen-neo4j-data
+    ports: 
+        - 8000:8000
+    logging:
+      driver: awslogs
+      options: 
+        awslogs-group: amundsencloudcmd
+        awslogs-region: us-east-1
+        awslogs-stream-prefix: amundsen-cloudcmd
+volumes: 
+  amundsen-elasticsearch-data:
+  amundsen-neo4j-data: 
+
+
+
