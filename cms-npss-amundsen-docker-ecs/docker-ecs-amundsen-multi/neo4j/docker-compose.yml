@@ -1,7 +1,7 @@
 version: '3'
 services:
   neo4j:
-      image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/neo4j:3.3.0
+      image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/neo4j:3.5.26
       environment:
         - NEO4J_AUTH=neo4j/test
         # These dont seem to be working though!
@@ -27,19 +27,19 @@ services:
           awslogs-region: us-east-1
           awslogs-stream-prefix: amundsen-neo4j
   
-  cloudcmd:
-    image: coderaiser/cloudcmd
-    container_name: web
-    volumes: 
-        - amundsen-neo4j-data:/mnt/amundsen-neo4j-data
-    ports: 
-        - 8000:8000
-    logging:
-      driver: awslogs
-      options: 
-        awslogs-group: amundsencloudcmd
-        awslogs-region: us-east-1
-        awslogs-stream-prefix: amundsen-cloudcmd
+  # cloudcmd:
+  #   image: coderaiser/cloudcmd
+  #   container_name: web
+  #   volumes: 
+  #       - amundsen-neo4j-data:/mnt/amundsen-neo4j-data
+  #   ports: 
+  #       - 8000:8000
+  #   logging:
+  #     driver: awslogs
+  #     options: 
+  #       awslogs-group: amundsencloudcmd
+  #       awslogs-region: us-east-1
+  #       awslogs-stream-prefix: amundsen-cloudcmd
 
 
 volumes: 

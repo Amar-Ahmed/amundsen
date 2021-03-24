@@ -17,7 +17,7 @@ services:
           awslogs-stream-prefix: amundsensearch
 
   amundsenmetadata:
-      image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/amundsen-metadata:3.0.0
+      image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/amundsen-metadata:3.3.0
       depends_on:
         - neo4j
       ports:
