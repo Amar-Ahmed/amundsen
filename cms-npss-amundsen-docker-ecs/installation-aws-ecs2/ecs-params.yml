@@ -1,0 +1,48 @@
+version: 1
+task_definition:
+  ecs_network_mode: awsvpc
+  services:
+    web:
+      cpu_shares: 100
+      mem_limit: 500MB
+      name: web
+      container_name: web
+    neo4j:
+      cpu_shares: 100
+      mem_limit: 5GB
+      name: neo4j_amundsen
+      container_name: neo4j_amundsen
+    elasticsearch:
+      cpu_shares: 100
+      mem_limit: 5GB
+      name: es_amundsen
+    amundsensearch:
+      cpu_shares: 100
+      mem_limit: 2GB
+      name: amundsensearch
+    amundsenmetadata:
+      cpu_shares: 100
+      mem_limit: 2GB
+      name: amundsenmetadata   
+    amundsenfrontend:
+      cpu_shares: 100
+      mem_limit: 2GB
+      name: amundsenfrontend
+
+run_params:
+  network_configuration:
+    awsvpc_configuration:
+      subnets: 
+        - subnet-0b95f70d9a07f62b5
+        - subnet-0efcf659e0aadcf98
+      security_groups: 
+        - sg-0e334d883635072a5
+      assign_public_ip: DISABLED
+  # service_discovery:
+    #container_name: web
+    #container_port: 8000
+    # service_discovery_service:
+    #     name: web
+    #     description: "Cloud Commander Web UI"
+    #     healthcheck_custom_config:
+    #       failure_threshold: 10

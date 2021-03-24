@@ -1,0 +1,53 @@
+version: '3'
+services:
+  amundsensearch:
+      image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/amundsen-search:2.4.1
+      ports:
+        - 5001:5001
+      depends_on:
+        - elasticsearch
+      environment:
+        # - PROXY_ENDPOINT=es_amundsen    
+        - PROXY_ENDPOINT=elasticsearch.amundsendev2.local
+      logging:
+        driver: awslogs
+        options: 
+          awslogs-group: amundsensearch
+          awslogs-region: us-east-1
+          awslogs-stream-prefix: amundsensearch
+
+  amundsenmetadata:
+      image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/amundsen-metadata:3.3.0
+      depends_on:
+        - neo4j
+      ports:
+        - 5002:5002
+      environment:
+         - PROXY_HOST=bolt://neo4j.amundsendev2.local
+      logging:
+        driver: awslogs
+        options: 
+          awslogs-group: amundsenmetadata
+          awslogs-region: us-east-1
+          awslogs-stream-prefix: amundsenmetadata
+
+  amundsenfrontend:
+      image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/amundsen-frontend:3.1.0
+      depends_on:
+        - amundsenmetadata
+        - amundsensearch
+      ports:
+        - 5000:5000
+      environment:
+        - SEARCHSERVICE_BASE=http://amundsenapp.amundsendev2.local:5001
+        - METADATASERVICE_BASE=http://amundsenapp.amundsendev2.local:5002
+      logging:
+        driver: awslogs
+        options: 
+          awslogs-group: amundsenfrontend
+          awslogs-region: us-east-1
+          awslogs-stream-prefix: amundsenfrontend
+  
+
+
+

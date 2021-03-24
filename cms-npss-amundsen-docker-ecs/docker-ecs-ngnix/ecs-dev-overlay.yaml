@@ -1,0 +1,37 @@
+version: '3'
+
+x-aws-vpc: "vpc-07c049cde54fecc06"
+x-aws-subnets: "subnet-0b95f70d9a07f62b5,subnet-0efcf659e0aadcf98"
+x-aws-security-group: "sg-0e334d883635072a5"
+x-aws-loadbalancer: "ALB-amundsendev2"
+x-aws-cloudformation:
+  Resources:
+    Web8000TargetGroup:
+      Properties:
+        HealthCheckPath: /healthcheck
+        Matcher:
+          HttpCode: "200-499"
+    Neo4j7687TargetGroup:
+      Properties:
+        Matcher:
+          HttpCode: "200-499"
+    Neo4j7474TargetGroup:
+      Properties:
+        Matcher:
+          HttpCode: "200-499"
+    Amundsenfrontend5000TargetGroup:
+      Properties:
+        Matcher:
+          HttpCode: "200-499"
+    Amundsenmetadata5002TargetGroup:
+      Properties:
+        Matcher:
+          HttpCode: "200-499"
+    Amundsensearch5001TargetGroup:
+      Properties:
+        Matcher:
+          HttpCode: "200-499"
+    Elasticsearch9200TargetGroup:
+      Properties:
+        Matcher:
+          HttpCode: "200-499"

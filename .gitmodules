@@ -1,27 +1,27 @@
 [submodule "amundsendatabuilder"]
 	path = amundsendatabuilder
-	url = https://github.com/amundsen-io/amundsendatabuilder
+	url = ../amundsendatabuilder
 	branch = master
 [submodule "amundsenfrontendlibrary"]
 	path = amundsenfrontendlibrary
-	url = https://github.com/amundsen-io/amundsenfrontendlibrary
+	url = ../amundsenfrontendlibrary
 	branch = master
 [submodule "amundsenmetadatalibrary"]
 	path = amundsenmetadatalibrary
-	url = https://github.com/amundsen-io/amundsenmetadatalibrary
+	url = ../amundsenmetadatalibrary
 	branch = master
 [submodule "amundsensearchlibrary"]
 	path = amundsensearchlibrary
-	url = https://github.com/amundsen-io/amundsensearchlibrary
+	url = ../amundsensearchlibrary
 	branch = master
 [submodule "amundsencommon"]
 	path = amundsencommon
-	url = https://github.com/amundsen-io/amundsencommon
+	url = ../amundsencommon
 	branch = master
 [submodule "amundsengremlin"]
 	path = amundsengremlin
-	url = https://github.com/amundsen-io/amundsengremlin
+	url = ../amundsengremlin
 	branch = master
 [submodule "amundsenrds"]
 	path = amundsenrds
-	url = https://github.com/amundsen-io/amundsenrds.git
+	url = ../amundsenrds.git

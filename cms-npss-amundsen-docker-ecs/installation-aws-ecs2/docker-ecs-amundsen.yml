@@ -1,0 +1,107 @@
+version: '3'
+services:
+  web:
+    image: coderaiser/cloudcmd
+    container_name: web
+    ports: 
+        - 8000:8000
+    logging:
+      driver: awslogs
+      options: 
+        awslogs-group: amundsencloudcmd
+        awslogs-region: us-east-1
+        awslogs-stream-prefix: amundsen-cloudcmd
+  neo4j:
+      image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/neo4j:3.3.0
+      environment:
+        - NEO4J_AUTH=neo4j/test
+        # These dont seem to be working though!
+        - NEO4J_dbms.active_database=amundsen.db
+        - NEO4J_dbms.directories.data=/neo4j/data
+        - NEO4J_dbms.directories.logs=/var/log/neo4j
+        - NEO4J_dbms.directories.import=/var/lib/neo4j/import
+        - NEO4J_dbms.security.auth_enabled=false
+        - NEO4J_dbms.connectors.default_listen_address=0.0.0.0
+      ulimits:
+        nofile:
+          soft: 40000
+          hard: 40000
+      ports:
+          - 7474:7474
+          - 7687:7687
+      logging:
+        driver: awslogs
+        options: 
+          awslogs-group: amundsen-neo4j
+          awslogs-region: us-east-1
+          awslogs-stream-prefix: amundsen-neo4j
+
+  elasticsearch:
+      image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/elasticsearch:6.7.0
+      ports:
+          - 9200:9200
+      environment:
+          - xpack.security.enabled=false
+      ulimits:
+        nofile:
+           soft: 65536
+           hard: 65536
+      logging:
+        driver: awslogs
+        options: 
+          awslogs-group: amundsen-elasticsearch
+          awslogs-region: us-east-1
+          awslogs-stream-prefix: amundsen-elasticsearch
+
+  amundsensearch:
+      image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/amundsen-search:2.4.1
+      ports:
+        - 5001:5001
+      depends_on:
+        - elasticsearch
+      environment:
+        # - PROXY_ENDPOINT=es_amundsen    
+        - PROXY_ENDPOINT=elasticsearch  
+      logging:
+        driver: awslogs
+        options: 
+          awslogs-group: amundsensearch
+          awslogs-region: us-east-1
+          awslogs-stream-prefix: amundsensearch
+
+  amundsenmetadata:
+      image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/amundsen-metadata:3.0.0
+      container_name: amundsenmetadata
+      depends_on:
+        - neo4j
+      ports:
+        - 5002:5002
+      environment:
+         - PROXY_HOST=bolt://neo4j
+      logging:
+        driver: awslogs
+        options: 
+          awslogs-group: amundsenmetadata
+          awslogs-region: us-east-1
+          awslogs-stream-prefix: amundsenmetadata
+
+  amundsenfrontend:
+      image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/amundsen-frontend:3.1.0
+      container_name: amundsenfrontend
+      depends_on:
+        - amundsenmetadata
+        - amundsensearch
+      ports:
+        - 5000:5000
+      environment:
+        - SEARCHSERVICE_BASE=http://amundsensearch:5001
+        - METADATASERVICE_BASE=http://amundsenmetadata:5002
+      logging:
+        driver: awslogs
+        options: 
+          awslogs-group: amundsenfrontend
+          awslogs-region: us-east-1
+          awslogs-stream-prefix: amundsenfrontend
+
+
+

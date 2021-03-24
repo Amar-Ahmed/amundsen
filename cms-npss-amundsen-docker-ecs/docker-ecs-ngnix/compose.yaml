@@ -1,0 +1,160 @@
+version: '3'
+    
+services:
+  web:
+    image: coderaiser/cloudcmd 
+    ports:
+      - target: 8000
+        x-aws-protocol: http
+    volumes: 
+      - amundsen-data:/mnt/amundsen-data
+    logging:
+      driver: awslogs
+      options: 
+        awslogs-group: amundsenfrontend
+        awslogs-region: us-east-1
+        awslogs-stream-prefix: web
+
+  neo4j:
+    image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/neo4j:3.3.0
+    container_name: neo4j_amundsen
+    environment:
+      - NEO4J_AUTH=neo4j/test
+      # These dont seem to be working though!
+      - NEO4J_dbms.active_database=amundsen.db
+      - NEO4J_dbms.directories.data=/neo4j/data
+      - NEO4J_dbms.directories.logs=/var/log/neo4j
+      - NEO4J_dbms.directories.import=/var/lib/neo4j/import
+      - NEO4J_dbms.security.auth_enabled=false
+      - NEO4J_dbms.connectors.default_listen_address=0.0.0.0
+    ulimits:
+      nofile:
+        soft: 40000
+        hard: 40000
+    ports:
+      - target: 7474
+        x-aws-protocol: http
+      - target: 7687
+        x-aws-protocol: http
+    logging:
+      driver: awslogs
+      options: 
+        awslogs-group: amundsen-neo4j
+        awslogs-region: us-east-1
+        awslogs-stream-prefix: amundsen-neo4j
+    deploy:
+      resources:
+        limits:
+          cpus: '0.70'
+          memory: 4096M
+        reservations:
+          cpus: '0.25'
+          memory: 1024M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+
+  elasticsearch:
+    image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/elasticsearch:6.7.0
+    container_name: es_amundsen
+    ports:
+        - target: 9200
+          x-aws-protocol: http
+    environment:
+        - xpack.security.enabled=false
+        - discovery.type=single-node
+    ulimits:
+      nofile:
+          soft: 65536
+          hard: 65536
+    logging:
+      driver: awslogs
+      options: 
+        awslogs-group: amundsen-elasticsearch
+        awslogs-region: us-east-1
+        awslogs-stream-prefix: amundsen-elasticsearch
+    deploy:
+      resources:
+        limits:
+          cpus: '0.70'
+          memory: 4096M
+        reservations:
+          cpus: '0.25'
+          memory: 1024M
+
+  amundsensearch:
+    image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/amundsen-search:2.4.1
+    container_name: amundsensearch
+    ports:
+      - target: 5001
+        x-aws-protocol: http 
+    depends_on:
+      - elasticsearch
+    environment:
+      # - PROXY_ENDPOINT=es_amundsen
+      - PROXY_ENDPOINT=elasticsearch
+    logging:
+      driver: awslogs
+      options: 
+        awslogs-group: amundsensearch
+        awslogs-region: us-east-1
+        awslogs-stream-prefix: amundsensearch
+
+  amundsenmetadata:
+      image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/amundsen-metadata:3.0.0
+      container_name: amundsenmetadata
+      depends_on:
+        - neo4j
+      ports:
+        - target: 5002
+          x-aws-protocol: http
+      environment:
+          # - PROXY_HOST=bolt://neo4j_amundsen
+          - PROXY_HOST=bolt://neo4j
+      logging:
+        driver: awslogs
+        options: 
+          awslogs-group: amundsenmetadata
+          awslogs-region: us-east-1
+          awslogs-stream-prefix: amundsenmetadata
+      # healthcheck:
+      #   test: python -c "import requests; print(requests.get(url = 'http://localhost:5000/healthcheck').status_code)"
+      #   interval: 1m30s
+      #   timeout: 10s
+      #   retries: 3
+      #   start_period: 40s
+      
+
+  amundsenfrontend:
+      image: 310946103770.dkr.ecr.us-east-1.amazonaws.com/npss/amundsen-frontend:3.1.0
+      container_name: amundsenfrontend
+      depends_on:
+        - amundsenmetadata
+        - amundsensearch
+      ports:
+        - target: 5000
+          x-aws-protocol: http
+      environment:
+        - SEARCHSERVICE_BASE=http://amundsensearch:5001
+        - METADATASERVICE_BASE=http://amundsenmetadata:5002
+      logging:
+        driver: awslogs
+        options: 
+          awslogs-group: amundsenfrontend
+          awslogs-region: us-east-1
+          awslogs-stream-prefix: amundsenfrontend
+
+volumes: 
+  amundsen-data:
+    # driver_opts:
+    #   # Filesystem configuration
+    #   backup_policy: ENABLED
+    #   lifecycle_policy: AFTER_14_DAYS
+    #   performance_mode: maxIO
+    #   throughput_mode: provisioned
+    #   provisioned_throughput: 1
+
+
+
