@@ -101,10 +101,9 @@ from elasticsearch import Elasticsearch
 import logging
 import datetime
 import pyhocon
+
+
 ### global variables  ###
-
-
-
 
 # logging
 LOGGER = logging.getLogger(__name__)
