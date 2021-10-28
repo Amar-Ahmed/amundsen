@@ -16,9 +16,10 @@ from flask_restful import Api
 
 from search_service.api.dashboard import SearchDashboardAPI, SearchDashboardFilterAPI
 from search_service.api.document import (
-    DocumentTableAPI, DocumentTablesAPI, DocumentUserAPI, DocumentUsersAPI,
+    DocumentFeatureAPI, DocumentFeaturesAPI, DocumentTableAPI, DocumentTablesAPI, DocumentUserAPI, DocumentUsersAPI,
 )
-from search_service.api.healthcheck import healthcheck
+from search_service.api.feature import SearchFeatureAPI, SearchFeatureFilterAPI
+from search_service.api.healthcheck import HealthcheckAPI
 from search_service.api.table import SearchTableAPI, SearchTableFilterAPI
 from search_service.api.user import SearchUserAPI
 
@@ -83,10 +84,12 @@ def create_app(*, config_module_class: str) -> Flask:
     logging.info('Created app with config name {}'.format(config_module_class))
 
     api_bp = Blueprint('api', __name__)
-    api_bp.add_url_rule('/healthcheck', 'healthcheck', healthcheck)
     api = Api(api_bp)
-    # Table Search API
 
+    # Health Check
+    api.add_resource(HealthcheckAPI, '/healthcheck')
+
+    # Table Search API
     api.add_resource(SearchTableFilterAPI, '/search_table')
     # TODO: Rename endpoint to be more generic and accept a resource type so that logic can be re-used
     api.add_resource(SearchTableAPI, '/search')
@@ -98,13 +101,20 @@ def create_app(*, config_module_class: str) -> Flask:
     api.add_resource(SearchDashboardAPI, '/search_dashboard')
     api.add_resource(SearchDashboardFilterAPI, '/search_dashboard_filter')
 
+    # Feature Search API
+    api.add_resource(SearchFeatureAPI, '/search_feature')
+    api.add_resource(SearchFeatureFilterAPI, '/search_feature_filter')
+
     # DocumentAPI
-    # todo: needs to update to handle dashboard/user or other entities use cases.
+    # todo: needs to handle dashboard
     api.add_resource(DocumentTablesAPI, '/document_table')
     api.add_resource(DocumentTableAPI, '/document_table/<document_id>')
 
     api.add_resource(DocumentUsersAPI, '/document_user')
     api.add_resource(DocumentUserAPI, '/document_user/<document_id>')
+
+    api.add_resource(DocumentFeaturesAPI, '/document_feature')
+    api.add_resource(DocumentFeatureAPI, '/document_feature/<document_id>')
 
     app.register_blueprint(api_bp)
 

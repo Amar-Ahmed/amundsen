@@ -2,11 +2,20 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { GlobalState } from 'ducks/rootReducer';
-import { ResourceType, SendingState } from 'interfaces';
+import { LineageItem, ResourceType, SendingState } from 'interfaces';
 
 import { defaultEmptyFilters } from './search/filters';
 
 import { dashboardMetadata } from './metadata/dashboard';
+
+const sharedLineageItemCore = {
+  badges: [],
+  cluster: 'cluster',
+  database: 'h',
+  schema: 'schema',
+  source: 'source',
+  usage: 0,
+};
 
 const globalState: GlobalState = {
   announcements: {
@@ -65,6 +74,56 @@ const globalState: GlobalState = {
     statusCode: 200,
     dashboard: dashboardMetadata,
   },
+  feature: {
+    statusCode: 200,
+    isLoading: false,
+    isLoadingOwners: false,
+    feature: {
+      key: '',
+      name: '',
+      version: '',
+      status: '',
+      feature_group: '',
+      entity: '',
+      data_type: '',
+      availability: [],
+      description: '',
+      owners: [],
+      badges: [],
+      owner_tags: [],
+      tags: [],
+      programmatic_descriptions: [],
+      watermarks: [],
+      stats: [],
+      last_updated_timestamp: 0,
+      created_timestamp: 0,
+    },
+    featureCode: {
+      isLoading: false,
+      statusCode: null,
+      featureCode: {
+        text: '',
+        source: '',
+        key: '',
+      },
+    },
+    featureLineage: {
+      isLoading: false,
+      statusCode: null,
+      featureLineage: {
+        upstream_entities: [],
+        downstream_entities: [],
+        depth: 0,
+        direction: 'upstream',
+        key: '',
+      },
+    },
+    preview: {
+      isLoading: false,
+      previewData: {},
+      status: null,
+    },
+  },
   feedback: {
     sendState: SendingState.IDLE,
   },
@@ -78,34 +137,41 @@ const globalState: GlobalState = {
     requestIsOpen: false,
     sendState: SendingState.IDLE,
   },
-  popularTables: {
-    popularTablesIsLoaded: true,
-    popularTables: [
-      {
-        cluster: 'testCluster',
-        database: 'testDatabase',
-        description: 'I have a lot of users',
-        key: 'testDatabase://testCluster.testSchema/testName',
-        name: 'testName',
-        schema: 'testSchema',
-        type: ResourceType.table,
-      },
-      {
-        cluster: 'testCluster',
-        database: 'testDatabase',
-        description: 'I also have a lot of users',
-        key: 'testDatabase://testCluster.testSchema/otherName',
-        name: 'otherName',
-        schema: 'testSchema',
-        type: ResourceType.table,
-      },
-    ],
+  popularResources: {
+    popularResourcesIsLoaded: true,
+    popularResources: {
+      [ResourceType.table]: [
+        {
+          cluster: 'testCluster',
+          database: 'testDatabase',
+          description: 'I have a lot of users',
+          key: 'testDatabase://testCluster.testSchema/testName',
+          name: 'testName',
+          schema: 'testSchema',
+          type: ResourceType.table,
+        },
+        {
+          cluster: 'testCluster',
+          database: 'testDatabase',
+          description: 'I also have a lot of users',
+          key: 'testDatabase://testCluster.testSchema/otherName',
+          name: 'otherName',
+          schema: 'testSchema',
+          type: ResourceType.table,
+        },
+      ],
+    },
   },
   search: {
     search_term: 'testName',
     resource: ResourceType.table,
     isLoading: false,
     dashboards: {
+      page_index: 0,
+      results: [],
+      total_results: 0,
+    },
+    features: {
       page_index: 0,
       results: [],
       total_results: 0,
@@ -148,6 +214,11 @@ const globalState: GlobalState = {
         results: [],
         total_results: 0,
       },
+      features: {
+        page_index: 0,
+        results: [],
+        total_results: 0,
+      },
     },
     filters: defaultEmptyFilters,
   },
@@ -178,18 +249,21 @@ const globalState: GlobalState = {
       watermarks: [],
       programmatic_descriptions: {},
     },
-    tableLineage: {
-      lineage: {
-        upstream_entities: [],
-        downstream_entities: [],
-      },
-      status: null,
-    },
     tableOwners: {
       isLoading: true,
       owners: {},
     },
-    columnLineageMap: {},
+    tableQualityChecks: {
+      status: null,
+      isLoading: false,
+      checks: {
+        external_url: '',
+        last_run_timestamp: 0,
+        num_checks_success: 0,
+        num_checks_failed: 0,
+        num_checks_total: 0,
+      },
+    },
   },
   lastIndexed: { lastIndexed: 1555632106 },
   tags: {
@@ -217,6 +291,16 @@ const globalState: GlobalState = {
     resourceTags: {
       isLoading: false,
       tags: [],
+    },
+  },
+  badges: {
+    allBadges: {
+      isLoading: false,
+      badges: [
+        {
+          badge_name: 'rangers_walker_badge',
+        },
+      ],
     },
   },
   user: {
@@ -265,6 +349,55 @@ const globalState: GlobalState = {
     },
   },
   ui: {},
+  lineage: {
+    lineageTree: {
+      upstream_entities: [
+        {
+          ...sharedLineageItemCore,
+          key: 'h/parent-3',
+          level: 3,
+          name: 'parent-3',
+          parent: '',
+        },
+        {
+          ...sharedLineageItemCore,
+          key: 'h/parent-1',
+          level: 1,
+          name: 'parent-1',
+          parent: 'h/parent-2-solo',
+        },
+        {
+          ...sharedLineageItemCore,
+          key: 'h/parent-1',
+          level: 1,
+          name: 'parent-1',
+          parent: 'h/parent-2',
+        },
+
+        {
+          ...sharedLineageItemCore,
+          key: 'h/parent-2',
+          level: 2,
+          name: 'parent-2',
+          parent: 'h/parent-3',
+        },
+        {
+          ...sharedLineageItemCore,
+          key: 'h/parent-2-solo',
+          level: 2,
+          name: 'parent-2-solo',
+          parent: '',
+        },
+      ] as LineageItem[],
+      downstream_entities: [],
+      key: '',
+      direction: 'both',
+      depth: 1,
+    },
+    statusCode: null,
+    isLoading: false,
+    columnLineageMap: {},
+  },
 };
 
 export default globalState;

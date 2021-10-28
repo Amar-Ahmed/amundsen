@@ -4,7 +4,7 @@
 import * as React from 'react';
 
 import { ResourceType, TableResource } from 'interfaces/Resources';
-import { LineageItem } from 'interfaces/TableMetadata';
+import { LineageItem } from 'interfaces/Lineage';
 import TableListItem from 'components/ResourceListItem/TableListItem';
 
 export interface LineageListProps {
@@ -27,7 +27,13 @@ const LineageList: React.FC<LineageListProps> = ({
         type: ResourceType.table,
         description: '',
       };
-      return <TableListItem table={tableResource} logging={logging} />;
+      return (
+        <TableListItem
+          table={tableResource}
+          logging={logging}
+          key={`lineage-item::${index}`}
+        />
+      );
     })}
   </div>
 );

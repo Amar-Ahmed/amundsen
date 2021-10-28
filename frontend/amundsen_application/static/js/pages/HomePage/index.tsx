@@ -11,10 +11,11 @@ import { UpdateSearchStateReset } from 'ducks/search/types';
 
 import MyBookmarks from 'components/Bookmark/MyBookmarks';
 import Breadcrumb from 'components/Breadcrumb';
-import PopularTables from 'components/PopularTables';
+import PopularTables from 'components/PopularResources';
 import SearchBar from 'components/SearchBar';
 import TagsListContainer from 'components/Tags';
 import Announcements from 'components/Announcements';
+import BadgesListContainer from 'components/Badges';
 
 import { announcementsEnabled } from 'config/config-utils';
 
@@ -53,6 +54,9 @@ export class HomePage extends React.Component<HomePageProps> {
                 path="/search"
                 text={SEARCH_BREADCRUMB_TEXT}
               />
+            </div>
+            <div className="home-element-container">
+              <BadgesListContainer shortBadgesList />
             </div>
             <div className="home-element-container">
               <TagsListContainer shortTagsList />

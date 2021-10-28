@@ -5,10 +5,14 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 
 import { GlobalState } from 'ducks/rootReducer';
-import { emptyLineage } from 'ducks/tableMetadata/reducer';
+import { initialLineageState } from 'ducks/lineage/reducer';
+import { TAB_URL_PARAM } from 'components/TabsComponent/constants';
 import { getColumnLineageLink } from 'config/config-utils';
-import { Lineage, LineageItem, TableMetadata } from 'interfaces/TableMetadata';
+import { TableMetadata } from 'interfaces/TableMetadata';
+import { Lineage, LineageItem } from 'interfaces/Lineage';
+import { TABLE_TAB } from 'pages/TableDetailPage/constants';
 import { logClick } from 'utils/analytics';
+
 import ColumnLineageLoader from '../ColumnLineageLoader';
 import {
   COLUMN_LINEAGE_LIST_SIZE,
@@ -21,7 +25,6 @@ import './styles.scss';
 
 interface ColumnLineageListOwnProps {
   columnName: string;
-  tableKey: string;
 }
 
 interface StateFromProps {
@@ -41,7 +44,12 @@ interface LineageListProps {
 
 const getLink = (table, direction) => {
   const { cluster, database, schema, name } = table;
-  return `/table_detail/${cluster}/${database}/${schema}/${name}?source=column_lineage_${direction}`;
+  // TODO - column lineage should return the column name as a separate field
+  const [tableName, columnName] = name.split('/');
+  return (
+    `/table_detail/${cluster}/${database}/${schema}/${tableName}` +
+    `?source=column_lineage_${direction}&${TAB_URL_PARAM}=${TABLE_TAB.COLUMN}&column=${columnName}`
+  );
 };
 
 const renderLineageLinks = (entity, index, direction) => {
@@ -135,10 +143,11 @@ export const mapStateToProps = (
   state: GlobalState,
   ownProps: ColumnLineageListOwnProps
 ) => {
-  const { columnLineageMap, tableData } = state.tableMetadata;
+  const { tableData } = state.tableMetadata;
+  const { columnLineageMap } = state.lineage;
   const columnStateObject = columnLineageMap[ownProps.columnName];
   const lineage =
-    (columnStateObject && columnStateObject.lineage) || emptyLineage;
+    (columnStateObject && columnStateObject.lineageTree) || initialLineageState;
   const isLoading = columnStateObject && columnStateObject.isLoading;
   return {
     tableData,

@@ -11,12 +11,16 @@ from flask import Response, jsonify, make_response, request
 from flask import current_app as app
 from flask.blueprints import Blueprint
 
+from amundsen_common.entity.resource_type import ResourceType, to_label
+
+from amundsen_application.api.utils.search_utils import generate_query_json
 from amundsen_application.log.action_log import action_logging
 
 from amundsen_application.models.user import load_user, dump_user
 
 from amundsen_application.api.utils.metadata_utils import is_table_editable, marshall_table_partial, \
-    marshall_table_full, marshall_dashboard_partial, marshall_dashboard_full, marshall_lineage_table, TableUri
+    marshall_table_full, marshall_dashboard_partial, marshall_dashboard_full, marshall_feature_full, \
+    marshall_lineage_table, TableUri
 from amundsen_application.api.utils.request_utils import get_query_param, request_metadata, request_search
 
 
@@ -26,59 +30,80 @@ LOGGER = logging.getLogger(__name__)
 metadata_blueprint = Blueprint('metadata', __name__, url_prefix='/api/metadata/v0')
 
 TABLE_ENDPOINT = '/table'
+FEATURE_ENDPOINT = '/feature'
 LAST_INDEXED_ENDPOINT = '/latest_updated_ts'
-POPULAR_TABLES_ENDPOINT = '/popular_tables'
+POPULAR_RESOURCES_ENDPOINT = '/popular_resources'
 TAGS_ENDPOINT = '/tags/'
+BADGES_ENDPOINT = '/badges/'
 USER_ENDPOINT = '/user'
 DASHBOARD_ENDPOINT = '/dashboard'
 
 
 def _get_table_endpoint() -> str:
-    table_endpoint = app.config['METADATASERVICE_BASE'] + TABLE_ENDPOINT
-    if table_endpoint is None:
-        raise Exception('An request endpoint for table resources must be configured')
-    return table_endpoint
+    metadata_service_base = app.config['METADATASERVICE_BASE']
+    if metadata_service_base is None:
+        raise Exception('METADATASERVICE_BASE must be configured')
+    return metadata_service_base + TABLE_ENDPOINT
+
+
+def _get_feature_endpoint() -> str:
+    metadata_service_base = app.config['METADATASERVICE_BASE']
+    if metadata_service_base is None:
+        raise Exception('METADATASERVICE_BASE must be configured')
+    return metadata_service_base + FEATURE_ENDPOINT
 
 
 def _get_dashboard_endpoint() -> str:
-    dashboard_endpoint = app.config['METADATASERVICE_BASE'] + DASHBOARD_ENDPOINT
-    if dashboard_endpoint is None:
-        raise Exception('An request endpoint for dashboard resources must be configured')
-    return dashboard_endpoint
+    metadata_service_base = app.config['METADATASERVICE_BASE']
+    if metadata_service_base is None:
+        raise Exception('METADATASERVICE_BASE must be configured')
+    return metadata_service_base + DASHBOARD_ENDPOINT
 
 
-@metadata_blueprint.route('/popular_tables', methods=['GET'])
-def popular_tables() -> Response:
+@metadata_blueprint.route('/popular_resources', methods=['GET'])
+def popular_resources() -> Response:
     """
-    call the metadata service endpoint to get the current popular tables
+    call the metadata service endpoint to get the current popular tables, dashboards etc.
+    this takes a required query parameter "types", that is a comma separated string of requested resource types
     :return: a json output containing an array of popular table metadata as 'popular_tables'
 
     Schema Defined Here:
     https://github.com/lyft/amundsenmetadatalibrary/blob/master/metadata_service/api/popular_tables.py
     """
     try:
-        if app.config['AUTH_USER_METHOD'] and app.config['POPULAR_TABLE_PERSONALIZATION']:
+        if app.config['AUTH_USER_METHOD'] and app.config['POPULAR_RESOURCES_PERSONALIZATION']:
             user_id = app.config['AUTH_USER_METHOD'](app).user_id
         else:
             user_id = ''
 
+        resource_types = get_query_param(request.args, 'types')
+
         service_base = app.config['METADATASERVICE_BASE']
-        count = app.config['POPULAR_TABLE_COUNT']
-        url = f'{service_base}{POPULAR_TABLES_ENDPOINT}/{user_id}?limit={count}'
+        count = app.config['POPULAR_RESOURCES_COUNT']
+        url = f'{service_base}{POPULAR_RESOURCES_ENDPOINT}/{user_id}?limit={count}&types={resource_types}'
 
         response = request_metadata(url=url)
         status_code = response.status_code
 
         if status_code == HTTPStatus.OK:
             message = 'Success'
-            response_list = response.json().get('popular_tables')
-            popular_tables = [marshall_table_partial(result) for result in response_list]
+            json_response = response.json()
+            tables = json_response.get(ResourceType.Table.name, [])
+            popular_tables = [marshall_table_partial(result) for result in tables]
+            dashboards = json_response.get(ResourceType.Dashboard.name, [])
+            popular_dashboards = [marshall_dashboard_partial(dashboard) for dashboard in dashboards]
         else:
             message = 'Encountered error: Request to metadata service failed with status code ' + str(status_code)
             logging.error(message)
-            popular_tables = [{}]
+            popular_tables = []
+            popular_dashboards = []
 
-        payload = jsonify({'results': popular_tables, 'msg': message})
+        all_popular_resources = {
+            to_label(resource_type=ResourceType.Table): popular_tables,
+            to_label(resource_type=ResourceType.Dashboard): popular_dashboards
+        }
+
+        payload = jsonify({'results': all_popular_resources, 'msg': message})
         return make_response(payload, status_code)
     except Exception as e:
         message = 'Encountered exception: ' + str(e)
@@ -91,7 +116,7 @@ def popular_tables() -> Response:
 def get_table_metadata() -> Response:
     """
     call the metadata service endpoint and return matching results
-    :return: a json output containing a table metdata object as 'tableData'
+    :return: a json output containing a table metadata object as 'tableData'
 
     Schema Defined Here: https://github.com/lyft/amundsenmetadatalibrary/blob/master/metadata_service/api/table.py
     TODO: Define type for this
@@ -351,10 +376,8 @@ def put_column_description() -> Response:
 @metadata_blueprint.route('/tags')
 def get_tags() -> Response:
     """
-    call the metadata service endpoint to get the list of all tags from neo4j
+    call the metadata service endpoint to get the list of all tags from metadata proxy
     :return: a json output containing the list of all tags, as 'tags'
-
-    Schema Defined Here: https://github.com/lyft/amundsenmetadatalibrary/blob/master/metadata_service/api/tag.py
     """
     try:
         url = app.config['METADATASERVICE_BASE'] + TAGS_ENDPOINT
@@ -378,6 +401,34 @@ def get_tags() -> Response:
         return make_response(payload, HTTPStatus.INTERNAL_SERVER_ERROR)
 
 
+@metadata_blueprint.route('/badges')
+def get_badges() -> Response:
+    """
+    call the metadata service endpoint to get the list of all badges from metadata proxy
+    :return: a json output containing the list of all badges, as 'badges'
+    """
+    try:
+        url = app.config['METADATASERVICE_BASE'] + BADGES_ENDPOINT
+        response = request_metadata(url=url)
+        status_code = response.status_code
+
+        if status_code == HTTPStatus.OK:
+            message = 'Success'
+            badges = response.json().get('badges')
+        else:
+            message = 'Encountered error: Badges Unavailable'
+            logging.error(message)
+            badges = []
+
+        payload = jsonify({'badges': badges, 'msg': message})
+        return make_response(payload, status_code)
+    except Exception as e:
+        message = 'Encountered exception: ' + str(e)
+        payload = jsonify({'badges': [], 'msg': message})
+        logging.exception(message)
+        return make_response(payload, HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
 def _update_metadata_tag(table_key: str, method: str, tag: str) -> int:
     table_endpoint = _get_table_endpoint()
     url = f'{table_endpoint}/{table_key}/tag/{tag}'
@@ -389,68 +440,69 @@ def _update_metadata_tag(table_key: str, method: str, tag: str) -> int:
     return status_code
 
 
-def _update_search_tag(table_key: str, method: str, tag: str) -> int:
+def _update_search_tag(key: str, resource_type: ResourceType, method: str, tag: str) -> int:
     """
-    call the search service endpoint to get whole table information uniquely identified by table_key
+    call the search service endpoint to get whole entity information uniquely identified by the key
     update tags list, call search service endpoint again to write back the updated field
-    TODO: we should update dashboard tag in the future
-    :param table_key: table key e.g. 'database://cluster.schema/table'
+    TODO: we should update dashboard tag in the future. Note that dashboard ES schema doesn't have key field,
+    so that should be added.
+    :param key: e.g. 'database://cluster.schema/table'
     :param method: PUT or DELETE
-    :param tag: tag name to be put/delete
+    :param tag: tag name to be added/deleted
     :return: HTTP status code
     """
     searchservice_base = app.config['SEARCHSERVICE_BASE']
-    searchservice_get_table_url = f'{searchservice_base}/search_table'
 
-    # searchservice currently doesn't allow colon or / inside filters, thus can't get item based on key
-    # table key e.g: 'database://cluster.schema/table'
-    table_uri = TableUri.from_uri(table_key)
+    if resource_type == ResourceType.Table:
+        filter_url = f'{searchservice_base}/search_table'
+        update_url = f'{searchservice_base}/document_table'
+    elif resource_type == ResourceType.Feature:
+        filter_url = f'{searchservice_base}/search_feature_filter'
+        update_url = f'{searchservice_base}/document_feature'
+    else:
+        LOGGER.error(f'updating search tags not supported for {resource_type.name.lower()}')
+        return HTTPStatus.NOT_IMPLEMENTED
 
-    request_param_map = {
-        'search_request':
-            {
-                'type': 'AND',
-                'filters':
-                    {
-                        'database': [table_uri.database],
-                        'schema': [table_uri.schema],
-                        'table': [table_uri.table],
-                        'cluster': [table_uri.cluster]
-                    }
-            },
-        'query_term': ''
-    }
+    query = generate_query_json(filters={'key': [key]}, page_index=0, search_term='')
+    search_response = request_search(
+        url=filter_url,
+        method='POST',
+        headers={'Content-Type': 'application/json'},
+        data=json.dumps(query),
+    )
 
-    get_table_response = request_search(url=searchservice_get_table_url, method='POST', json=request_param_map)
-    get_status_code = get_table_response.status_code
-    if get_status_code != HTTPStatus.OK:
-        LOGGER.info(f'Fail to get table info from serviceservice, http status code: {get_status_code}')
-        LOGGER.debug(get_table_response.text)
-        return get_status_code
+    if search_response.status_code != HTTPStatus.OK:
+        LOGGER.info(f'Fail to get entity from serviceservice, http status code: {search_response.status_code}')
+        LOGGER.info(search_response.text)
+        return search_response.status_code
 
-    raw_data_map = json.loads(get_table_response.text)
-    # key is unique, thus (database, cluster, schema, table) should uniquely identify the table
-    if len(raw_data_map['results']) > 1:
-        LOGGER.error(f'Error! Duplicate table key: {table_key}')
-    table = raw_data_map['results'][0]
+    raw_data_map = json.loads(search_response.text)
+    # key should uniquely identify this resource
+    num_results = len(raw_data_map['results'])
+    if num_results != 1:
+        LOGGER.error(f'Expecting exactly one ES result for key {key} but got {num_results}')
+        return HTTPStatus.INTERNAL_SERVER_ERROR
 
-    old_tags_list = table['tags']
+    resource = raw_data_map['results'][0]
+    old_tags_list = resource['tags']
     new_tags_list = [item for item in old_tags_list if item['tag_name'] != tag]
     if method != 'DELETE':
         new_tags_list.append({'tag_name': tag})
-    table['tags'] = new_tags_list
+    resource['tags'] = new_tags_list
 
     # remove None values
-    pruned_table = {k: v for k, v in table.items() if v is not None}
-
-    post_param_map = {"data": pruned_table}
-    searchservice_update_url = f'{searchservice_base}/document_table'
-    update_table_response = request_search(url=searchservice_update_url, method='PUT', json=post_param_map)
-    update_status_code = update_table_response.status_code
-    if update_status_code != HTTPStatus.OK:
-        LOGGER.info(f'Fail to update table info in searchservice, http status code: {update_status_code}')
-        LOGGER.debug(update_table_response.text)
-        return update_table_response.status_code
+    pruned_entity = {k: v for k, v in resource.items() if v is not None}
+    post_param_map = {"data": pruned_entity}
+    update_response = request_search(
+        url=update_url,
+        method='PUT',
+        headers={'Content-Type': 'application/json'},
+        data=json.dumps(post_param_map),
+    )
+    if update_response.status_code != HTTPStatus.OK:
+        LOGGER.info(f'Fail to update tag in searchservice, http status code: {update_response.status_code}')
+        LOGGER.info(update_response.text)
+        return update_response.status_code
 
     return HTTPStatus.OK
 
@@ -473,7 +525,8 @@ def update_table_tags() -> Response:
         _log_update_table_tags(table_key=table_key, method=method, tag=tag)
 
         metadata_status_code = _update_metadata_tag(table_key=table_key, method=method, tag=tag)
-        search_status_code = _update_search_tag(table_key=table_key, method=method, tag=tag)
+        search_status_code = _update_search_tag(
+            key=table_key, resource_type=ResourceType.Table, method=method, tag=tag)
 
         http_status_code = HTTPStatus.OK
         if metadata_status_code == HTTPStatus.OK and search_status_code == HTTPStatus.OK:
@@ -800,7 +853,9 @@ def get_table_lineage() -> Response:
     try:
         table_endpoint = _get_table_endpoint()
         table_key = get_query_param(request.args, 'key')
-        url = f'{table_endpoint}/{table_key}/lineage'
+        depth = get_query_param(request.args, 'depth')
+        direction = get_query_param(request.args, 'direction')
+        url = f'{table_endpoint}/{table_key}/lineage?depth={depth}&direction={direction}'
         response = request_metadata(url=url, method=request.method)
         json = response.json()
         downstream = [marshall_lineage_table(table) for table in json.get('downstream_entities')]
@@ -840,3 +895,241 @@ def get_column_lineage() -> Response:
     except Exception as e:
         payload = jsonify({'msg': 'Encountered exception: ' + str(e)})
         return make_response(payload, HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
+@metadata_blueprint.route('/get_feature_description', methods=['GET'])
+def get_feature_description() -> Response:
+    try:
+        feature_key = get_query_param(request.args, 'key')
+
+        endpoint = _get_feature_endpoint()
+
+        url = '{0}/{1}/description'.format(endpoint, feature_key)
+
+        response = request_metadata(url=url)
+        status_code = response.status_code
+
+        if status_code == HTTPStatus.OK:
+            message = 'Success'
+            description = response.json().get('description')
+        else:
+            message = 'Get feature description failed'
+            description = None
+
+        payload = jsonify({'description': description, 'msg': message})
+        return make_response(payload, status_code)
+    except Exception as e:
+        payload = jsonify({'description': None, 'msg': 'Encountered exception: ' + str(e)})
+        return make_response(payload, HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
+@metadata_blueprint.route('/put_feature_description', methods=['PUT'])
+def put_feature_description() -> Response:
+    try:
+        args = request.get_json()
+        feature_key = get_query_param(args, 'key')
+        description = get_query_param(args, 'description')
+
+        endpoint = _get_feature_endpoint()
+
+        url = '{0}/{1}/description'.format(endpoint, feature_key)
+
+        response = request_metadata(url=url, method='PUT', data=json.dumps({'description': description}))
+        status_code = response.status_code
+
+        if status_code == HTTPStatus.OK:
+            message = 'Success'
+        else:
+            message = 'Update feature description failed'
+
+        payload = jsonify({'msg': message})
+        return make_response(payload, status_code)
+    except Exception as e:
+        payload = jsonify({'msg': 'Encountered exception: ' + str(e)})
+        return make_response(payload, HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
+@metadata_blueprint.route('/get_feature_generation_code', methods=['GET'])
+def get_feature_generation_code() -> Response:
+    """
+    Call metadata service to fetch feature generation code
+    :return:
+    """
+    try:
+        feature_key = get_query_param(request.args, 'key')
+
+        endpoint = _get_feature_endpoint()
+
+        url = f'{endpoint}/{feature_key}/generation_code'
+        response = request_metadata(url=url, method=request.method)
+        payload = response.json()
+        return make_response(jsonify(payload), 200)
+    except Exception as e:
+        payload = jsonify({'msg': 'Encountered exception: ' + str(e)})
+        return make_response(payload, HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
+@metadata_blueprint.route('/get_feature_lineage', methods=['GET'])
+def get_feature_lineage() -> Response:
+    """
+    Call metadata service to fetch table lineage for a given feature
+    :return:
+    """
+    try:
+        feature_key = get_query_param(request.args, 'key')
+        depth = get_query_param(request.args, 'depth')
+        direction = get_query_param(request.args, 'direction')
+
+        endpoint = _get_feature_endpoint()
+
+        url = f'{endpoint}/{feature_key}/lineage?depth={depth}&direction={direction}'
+        response = request_metadata(url=url, method=request.method)
+        json = response.json()
+        downstream = [marshall_lineage_table(table) for table in json.get('downstream_entities')]
+        upstream = [marshall_lineage_table(table) for table in json.get('upstream_entities')]
+
+        payload = {
+            'downstream_entities': downstream,
+            'upstream_entities': upstream,
+        }
+        return make_response(jsonify(payload), 200)
+    except Exception as e:
+        payload = jsonify({'msg': 'Encountered exception: ' + str(e)})
+        return make_response(payload, HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
+@metadata_blueprint.route('/update_feature_owner', methods=['PUT', 'DELETE'])
+def update_feature_owner() -> Response:
+    try:
+        args = request.get_json()
+        feature_key = get_query_param(args, 'key')
+        owner = get_query_param(args, 'owner')
+
+        endpoint = _get_feature_endpoint()
+
+        url = '{0}/{1}/owner/{2}'.format(endpoint, feature_key, owner)
+        method = request.method
+
+        response = request_metadata(url=url, method=method)
+        status_code = response.status_code
+
+        if status_code == HTTPStatus.OK:
+            message = 'Updated owner'
+        else:
+            message = 'There was a problem updating owner {0}'.format(owner)
+
+        payload = jsonify({'msg': message})
+        return make_response(payload, status_code)
+    except Exception as e:
+        payload = jsonify({'msg': 'Encountered exception: ' + str(e)})
+        return make_response(payload, HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
+def _update_metadata_feature_tag(endpoint: str, feature_key: str, method: str, tag: str) -> int:
+    url = f'{endpoint}/{feature_key}/tag/{tag}'
+    response = request_metadata(url=url, method=method)
+    status_code = response.status_code
+    if status_code != HTTPStatus.OK:
+        LOGGER.info(f'Fail to update tag in metadataservice, http status code: {status_code}')
+        LOGGER.debug(response.text)
+    return status_code
+
+
+@metadata_blueprint.route('/update_feature_tags', methods=['PUT', 'DELETE'])
+def update_feature_tags() -> Response:
+    try:
+        args = request.get_json()
+        method = request.method
+        feature_key = get_query_param(args, 'key')
+        tag = get_query_param(args, 'tag')
+
+        endpoint = _get_feature_endpoint()
+
+        metadata_status_code = _update_metadata_feature_tag(endpoint=endpoint,
+                                                            feature_key=feature_key,
+                                                            method=method, tag=tag)
+        search_status_code = _update_search_tag(
+            key=feature_key, resource_type=ResourceType.Feature, method=method, tag=tag)
+
+        http_status_code = HTTPStatus.OK
+        if metadata_status_code == HTTPStatus.OK and search_status_code == HTTPStatus.OK:
+            message = 'Success'
+        else:
+            message = f'Encountered error: {method} feature tag failed'
+            logging.error(message)
+            http_status_code = HTTPStatus.INTERNAL_SERVER_ERROR
+
+        payload = jsonify({'msg': message})
+        return make_response(payload, http_status_code)
+
+    except Exception as e:
+        message = 'Encountered exception: ' + str(e)
+        logging.exception(message)
+        payload = jsonify({'msg': message})
+        return make_response(payload, HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
+@metadata_blueprint.route('/feature', methods=['GET'])
+def get_feature_metadata() -> Response:
+    """
+    call the metadata service endpoint and return matching results
+    :return: a json output containing a feature metadata object as 'featureData'
+
+    """
+    try:
+        feature_key = get_query_param(request.args, 'key')
+        list_item_index = request.args.get('index', None)
+        list_item_source = request.args.get('source', None)
+
+        results_dict = _get_feature_metadata(feature_key=feature_key, index=list_item_index, source=list_item_source)
+        return make_response(jsonify(results_dict), results_dict.get('status_code', HTTPStatus.INTERNAL_SERVER_ERROR))
+    except Exception as e:
+        message = 'Encountered exception: ' + str(e)
+        logging.exception(message)
+        return make_response(jsonify({'featureData': {}, 'msg': message}), HTTPStatus.INTERNAL_SERVER_ERROR)
+
+
+@action_logging
+def _get_feature_metadata(*, feature_key: str, index: int, source: str) -> Dict[str, Any]:
+
+    results_dict = {
+        'featureData': {},
+        'msg': '',
+    }
+
+    try:
+        feature_endpoint = _get_feature_endpoint()
+        url = f'{feature_endpoint}/{feature_key}'
+        response = request_metadata(url=url)
+    except ValueError as e:
+        # envoy client BadResponse is a subclass of ValueError
+        message = 'Encountered exception: ' + str(e)
+        results_dict['msg'] = message
+        results_dict['status_code'] = getattr(e, 'code', HTTPStatus.INTERNAL_SERVER_ERROR)
+        logging.exception(message)
+        return results_dict
+
+    status_code = response.status_code
+    results_dict['status_code'] = status_code
+
+    if status_code != HTTPStatus.OK:
+        message = 'Encountered error: Metadata request failed'
+        results_dict['msg'] = message
+        logging.error(message)
+        return results_dict
+
+    try:
+        feature_data_raw: dict = response.json()
+
+        feature_data_raw['key'] = feature_key
+
+        results_dict['featureData'] = marshall_feature_full(feature_data_raw)
+        results_dict['msg'] = 'Success'
+        return results_dict
+    except Exception as e:
+        message = 'Encountered exception: ' + str(e)
+        results_dict['msg'] = message
+        logging.exception(message)
+        # explicitly raise the exception which will trigger 500 api response
+        results_dict['status_code'] = getattr(e, 'code', HTTPStatus.INTERNAL_SERVER_ERROR)
+        return results_dict

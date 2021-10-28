@@ -13,6 +13,7 @@ from flasgger import Swagger
 from flask import Blueprint, Flask
 from flask_cors import CORS
 from flask_restful import Api
+from werkzeug.utils import import_string
 
 from metadata_service.api.badge import BadgeAPI
 from metadata_service.api.column import (ColumnBadgeAPI, ColumnDescriptionAPI,
@@ -21,7 +22,15 @@ from metadata_service.api.dashboard import (DashboardBadgeAPI,
                                             DashboardDescriptionAPI,
                                             DashboardDetailAPI,
                                             DashboardTagAPI)
-from metadata_service.api.healthcheck import healthcheck
+from metadata_service.api.feature import (FeatureBadgeAPI,
+                                          FeatureDescriptionAPI,
+                                          FeatureDetailAPI,
+                                          FeatureGenerationCodeAPI,
+                                          FeatureLineageAPI, FeatureOwnerAPI,
+                                          FeatureSampleAPI, FeatureStatsAPI,
+                                          FeatureTagAPI)
+from metadata_service.api.healthcheck import HealthcheckAPI
+from metadata_service.api.popular_resources import PopularResourcesAPI
 from metadata_service.api.popular_tables import PopularTablesAPI
 from metadata_service.api.system import Neo4jDetailAPI, StatisticsMetricsAPI
 from metadata_service.api.table import (TableBadgeAPI, TableDashboardAPI,
@@ -32,6 +41,7 @@ from metadata_service.api.tag import TagAPI
 from metadata_service.api.user import (UserDetailAPI, UserFollowAPI,
                                        UserFollowsAPI, UserOwnAPI, UserOwnsAPI,
                                        UserReadsAPI)
+from metadata_service.deprecations import process_deprecations
 
 # For customized flask use below arguments to override.
 FLASK_APP_MODULE_NAME = os.getenv('FLASK_APP_MODULE_NAME')
@@ -88,14 +98,23 @@ def create_app(*, config_module_class: str) -> Flask:
     logging.info('Created app with config name {}'.format(config_module_class))
     logging.info('Using backend {}'.format(app.config.get('PROXY_CLIENT')))
 
-    api_bp = Blueprint('api', __name__)
-    api_bp.add_url_rule('/healthcheck', 'healthcheck', healthcheck)
+    # Initialize custom extensions and routes
+    init_custom_ext_routes = app.config.get('INIT_CUSTOM_EXT_AND_ROUTES')
+    if init_custom_ext_routes:
+        init_custom_ext_routes(app)
 
+    api_bp = Blueprint('api', __name__)
     api = Api(api_bp)
 
+    api.add_resource(HealthcheckAPI, '/healthcheck')
+
+    # `PopularTablesAPI` is deprecated, and will be removed in version 4.
     api.add_resource(PopularTablesAPI,
                      '/popular_tables/',
                      '/popular_tables/<path:user_id>')
+    api.add_resource(PopularResourcesAPI,
+                     '/popular_resources/',
+                     '/popular_resources/<path:user_id>')
     api.add_resource(TableDetailAPI, '/table/<path:table_uri>')
     api.add_resource(TableDescriptionAPI,
                      '/table/<path:id>/description')
@@ -144,8 +163,36 @@ def create_app(*, config_module_class: str) -> Flask:
                      '/dashboard/<path:id>/tag/<tag>')
     api.add_resource(DashboardBadgeAPI,
                      '/dashboard/<path:id>/badge/<badge>')
+    api.add_resource(FeatureDetailAPI, '/feature/<path:feature_uri>')
+    api.add_resource(FeatureDescriptionAPI,
+                     '/feature/<path:id>/description')
+    api.add_resource(FeatureTagAPI,
+                     '/feature/<path:id>/tag/<tag>')
+    api.add_resource(FeatureBadgeAPI,
+                     '/feature/<path:id>/badge/<badge>')
+    api.add_resource(FeatureLineageAPI,
+                     '/feature/<path:id>/lineage')
+    api.add_resource(FeatureOwnerAPI,
+                     '/feature/<path:feature_uri>/owner/<owner>')
+    api.add_resource(FeatureStatsAPI,
+                     '/feature/<path:id>/stats')
+    api.add_resource(FeatureSampleAPI,
+                     '/feature/<path:id>/sample_data')
+    api.add_resource(FeatureGenerationCodeAPI,
+                     '/feature/<path:feature_uri>/generation_code')
     app.register_blueprint(api_bp)
+
+    # cli registration
+    proxy_cli = app.config.get('PROXY_CLI')
+    if proxy_cli:
+        app.cli.add_command(import_string(proxy_cli))
+        logging.info('Using cli {}'.format(proxy_cli))
 
     if app.config.get('SWAGGER_ENABLED'):
         Swagger(app, template_file=os.path.join(ROOT_DIR, app.config.get('SWAGGER_TEMPLATE_PATH')), parse=True)
+
+    # handles the deprecation warnings
+    # and process any config/environment variables accordingly
+    process_deprecations(app)
+
     return app

@@ -4,11 +4,13 @@
 import { combineReducers } from 'redux';
 
 import dashboard, { DashboardReducerState } from 'ducks/dashboard/reducer';
+import feature, { FeatureReducerState } from 'ducks/feature/reducer';
+import badges, { BadgesReducerState } from 'ducks/badges/reducer';
 import announcements, { AnnouncementsReducerState } from './announcements';
 import feedback, { FeedbackReducerState } from './feedback/reducer';
-import popularTables, {
-  PopularTablesReducerState,
-} from './popularTables/reducer';
+import popularResources, {
+  PopularResourcesReducerState,
+} from './popularResources/reducer';
 import search, { SearchReducerState } from './search/reducer';
 import tableMetadata, {
   TableMetadataReducerState,
@@ -20,37 +22,44 @@ import ui, { UIReducerState } from './ui';
 import bookmarks, { BookmarkReducerState } from './bookmark/reducer';
 import notification, { NotificationReducerState } from './notification/reducer';
 import issue, { IssueReducerState } from './issue/reducer';
+import lineage, { LineageReducerState } from './lineage/reducer';
 
 export interface GlobalState {
   announcements: AnnouncementsReducerState;
   bookmarks: BookmarkReducerState;
   dashboard: DashboardReducerState;
+  feature: FeatureReducerState;
   feedback: FeedbackReducerState;
   issue: IssueReducerState;
   notification: NotificationReducerState;
-  popularTables: PopularTablesReducerState;
+  popularResources: PopularResourcesReducerState;
   search: SearchReducerState;
   tableMetadata: TableMetadataReducerState;
   lastIndexed: LastIndexedReducerState;
   tags: TagsReducerState;
+  badges: BadgesReducerState;
   user: UserReducerState;
   ui: UIReducerState;
+  lineage: LineageReducerState;
 }
 
 const rootReducer = combineReducers<GlobalState>({
   announcements,
   bookmarks,
   dashboard,
+  feature,
   feedback,
   issue,
   notification,
-  popularTables,
+  popularResources,
   search,
   tableMetadata,
   lastIndexed,
   tags,
+  badges,
   user,
   ui,
+  lineage,
 });
 
 export default rootReducer;

@@ -13,7 +13,34 @@ import { ResourceType } from '../interfaces';
 
 export const DEFAULT_DATABASE_ICON_CLASS = 'icon-database icon-color';
 export const DEFAULT_DASHBOARD_ICON_CLASS = 'icon-dashboard icon-color';
+const WILDCARD_SIGN = '*';
+const RESOURCE_SEPARATOR = '.';
 const ANNOUNCEMENTS_LINK_LABEL = 'Announcements';
+const hasWildcard = (n) => n.indexOf(WILDCARD_SIGN) > -1;
+const withComputedMessage = (notice: NoticeType, resourceName) => {
+  if (typeof notice.messageHtml === 'function') {
+    notice.messageHtml = notice.messageHtml(resourceName);
+  }
+  return notice;
+};
+const resourceMatches = (key: string, resource: string) => {
+  if (key === resource || key === WILDCARD_SIGN) {
+    return true;
+  }
+  if (key.includes(WILDCARD_SIGN)) {
+    const wildcardIndex = key.indexOf(WILDCARD_SIGN);
+    const inverseWildcardIndex = -1 * (key.length - wildcardIndex - 1);
+    if (
+      key.slice(0, wildcardIndex) === resource.slice(0, wildcardIndex) &&
+      (wildcardIndex === key.length - 1 ||
+        key.slice(inverseWildcardIndex) ===
+          resource.slice(inverseWildcardIndex))
+    ) {
+      return true;
+    }
+  }
+  return false;
+};
 
 /**
  * Returns the display name for a given source id for a given resource type.
@@ -58,6 +85,9 @@ export function getSourceIconClass(
     if (resource === ResourceType.table) {
       return DEFAULT_DATABASE_ICON_CLASS;
     }
+    if (resource === ResourceType.feature) {
+      return DEFAULT_DATABASE_ICON_CLASS;
+    }
     return '';
   }
 
@@ -74,7 +104,34 @@ export function getResourceNotices(
   const { notices } = AppConfig.resourceConfig[resourceType];
 
   if (notices && notices[resourceName]) {
-    return notices[resourceName];
+    const thisNotice = notices[resourceName];
+    return withComputedMessage(thisNotice, resourceName);
+  }
+
+  const wildcardNoticesKeys = Object.keys(notices).filter(hasWildcard);
+  if (wildcardNoticesKeys.length) {
+    const wildcardNoticesArray = new Array(1);
+    let hasNotice: boolean = false;
+
+    wildcardNoticesKeys.forEach((key) => {
+      const decomposedKey = key.split(RESOURCE_SEPARATOR);
+      const decomposedResource = resourceName.split(RESOURCE_SEPARATOR);
+
+      for (let i = 0; i < decomposedKey.length; i++) {
+        if (resourceMatches(decomposedKey[i], decomposedResource[i])) {
+          if (i === decomposedKey.length - 1) {
+            wildcardNoticesArray[0] = notices[key];
+            hasNotice = true;
+          }
+          continue;
+        }
+        break;
+      }
+    });
+    if (hasNotice) {
+      const [noticeFromWildcard] = wildcardNoticesArray;
+      return withComputedMessage(noticeFromWildcard, resourceName);
+    }
   }
 
   return false;
@@ -149,6 +206,13 @@ export function indexDashboardsEnabled(): boolean {
 }
 
 /**
+ * Returns whether or not ML features should be shown
+ */
+export function indexFeaturesEnabled(): boolean {
+  return AppConfig.indexFeatures.enabled;
+}
+
+/**
  * Returns whether or not user features should be shown
  */
 export function indexUsersEnabled(): boolean {
@@ -160,6 +224,15 @@ export function indexUsersEnabled(): boolean {
  */
 export function issueTrackingEnabled(): boolean {
   return AppConfig.issueTracking.enabled;
+}
+
+/**
+ * Returns the string that will prepopulate the issue description
+ * text field with a template to suggest more detailed information
+ * to be provided by the user when an issue is reported
+ */
+export function getIssueDescriptionTemplate(): string {
+  return AppConfig.issueTracking.issueDescriptionTemplate;
 }
 
 /**
@@ -320,6 +393,13 @@ export function getLogoTitle(): string {
 /**
  * Returns whether the in-app table lineage list is enabled.
  */
+export function isFeatureListLineageEnabled() {
+  return AppConfig.featureLineage.inAppListEnabled;
+}
+
+/**
+ * Returns whether the in-app table lineage list is enabled.
+ */
 export function isTableListLineageEnabled() {
   return AppConfig.tableLineage.inAppListEnabled;
 }
@@ -329,6 +409,20 @@ export function isTableListLineageEnabled() {
  */
 export function isColumnListLineageEnabled() {
   return AppConfig.columnLineage.inAppListEnabled;
+}
+
+/**
+ * Returns whether the in-app table lineage page is enabled.
+ */
+export function isTableLineagePageEnabled() {
+  return AppConfig.tableLineage.inAppPageEnabled;
+}
+
+/**
+ * Returns whether the in-app column lineage page is enabled.
+ */
+export function isColumnLineagePageEnabled() {
+  return AppConfig.columnLineage.inAppPageEnabled;
 }
 
 /**
@@ -345,4 +439,18 @@ export function getColumnLineageLink(
     tableData.name,
     columnName
   );
+}
+
+/**
+ * Returns whether table data quality checks are enabled
+ */
+export function isTableQualityCheckEnabled() {
+  return AppConfig.tableQualityChecks.isEnabled;
+}
+
+/**
+ * Returns whether Available badges section should be shown in Home Page
+ */
+export function isShowBadgesInHomeEnabled() {
+  return AppConfig.browse.showBadgesInHome;
 }

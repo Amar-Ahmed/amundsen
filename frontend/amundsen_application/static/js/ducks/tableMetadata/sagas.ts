@@ -13,10 +13,8 @@ import {
   getColumnDescriptionSuccess,
   getPreviewDataFailure,
   getPreviewDataSuccess,
-  getTableLineageSuccess,
-  getTableLineageFailure,
-  getColumnLineageSuccess,
-  getColumnLineageFailure,
+  getTableQualityChecksSuccess,
+  getTableQualityChecksFailure,
 } from './reducer';
 
 import {
@@ -32,10 +30,8 @@ import {
   UpdateColumnDescriptionRequest,
   UpdateTableDescription,
   UpdateTableDescriptionRequest,
-  GetTableLineageRequest,
-  GetTableLineage,
-  GetColumnLineageRequest,
-  GetColumnLineage,
+  GetTableQualityChecksRequest,
+  GetTableQualityChecks,
 } from './types';
 
 export function* getTableDataWorker(action: GetTableDataRequest): SagaIterator {
@@ -70,6 +66,8 @@ export function* getTableDescriptionWorker(
   const state = yield select();
   let { tableData } = state.tableMetadata;
   try {
+    // TODO - Cleanup this pattern of sending in the table metadata and then modifying it and sending it back.
+    // Should just fetch the description and send it back to the reducer.
     tableData = yield call(
       API.getTableDescription,
       state.tableMetadata.tableData
@@ -184,35 +182,19 @@ export function* getPreviewDataWatcher(): SagaIterator {
   yield takeLatest(GetPreviewData.REQUEST, getPreviewDataWorker);
 }
 
-export function* getTableLineageWorker(
-  action: GetTableLineageRequest
+export function* getTableQualityChecksWorker(
+  action: GetTableQualityChecksRequest
 ): SagaIterator {
+  const { key } = action.payload;
   try {
-    const response = yield call(API.getTableLineage, action.payload.key);
-    const { data, status } = response;
-    yield put(getTableLineageSuccess(data, status));
+    const response = yield call(API.getTableQualityChecksSummary, key);
+    const { checks, status } = response;
+    yield put(getTableQualityChecksSuccess(checks, status));
   } catch (error) {
     const { status } = error;
-    yield put(getTableLineageFailure(status));
+    yield put(getTableQualityChecksFailure(status));
   }
 }
-export function* getTableLineageWatcher(): SagaIterator {
-  yield takeEvery(GetTableLineage.REQUEST, getTableLineageWorker);
-}
-
-export function* getColumnLineageWorker(
-  action: GetColumnLineageRequest
-): SagaIterator {
-  const { key, columnName } = action.payload;
-  try {
-    const response = yield call(API.getColumnLineage, key, columnName);
-    const { data, status } = response;
-    yield put(getColumnLineageSuccess(data, columnName, status));
-  } catch (error) {
-    const { status } = error;
-    yield put(getColumnLineageFailure(columnName, status));
-  }
-}
-export function* getColumnLineageWatcher(): SagaIterator {
-  yield takeEvery(GetColumnLineage.REQUEST, getColumnLineageWorker);
+export function* getTableQualityChecksWatcher(): SagaIterator {
+  yield takeLatest(GetTableQualityChecks.REQUEST, getTableQualityChecksWorker);
 }

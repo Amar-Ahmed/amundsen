@@ -13,7 +13,7 @@ from databuilder.extractor.dashboard.mode_analytics.mode_dashboard_last_successf
 from databuilder.models.dashboard.dashboard_execution import DashboardExecution
 
 
-class TestModeDashboardLastModifiedTimestampExtractor(unittest.TestCase):
+class TestModeDashboardLastSuccessfulExecutionExtractor(unittest.TestCase):
     def setUp(self) -> None:
         config = ConfigFactory.from_dict({
             'extractor.mode_dashboard_last_successful_execution.organization': 'amundsen',

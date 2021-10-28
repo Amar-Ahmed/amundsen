@@ -10,7 +10,7 @@ import attr
 from amundsen_common.models.user import User as CommonUser
 from marshmallow3_annotations.ext.attrs import AttrsSchema
 
-from .base import Base
+from search_service.models.base import Base
 
 
 @attr.s(auto_attribs=True, kw_only=True)
@@ -22,8 +22,10 @@ class User(Base, CommonUser):
     id: str
 
     def get_id(self) -> str:
-        # uses the user email as the document id in ES
         return self.id
+
+    def get_attrs_dict(self) -> dict:
+        return self.__dict__.copy()
 
     @classmethod
     def get_attrs(cls) -> Set:

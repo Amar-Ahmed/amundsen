@@ -2,23 +2,27 @@ import axios, { AxiosResponse, AxiosError } from 'axios';
 
 import {
   PreviewData,
-  PreviewQueryParams,
+  TablePreviewQueryParams,
   TableMetadata,
   DashboardResource,
   UpdateOwnerPayload,
   User,
   Tag,
   Lineage,
+  ResourceType,
+  TableQualityChecks,
 } from 'interfaces';
 
 /** HELPERS **/
 import { indexDashboardsEnabled } from 'config/config-utils';
 import {
+  createOwnerUpdatePayload,
+  getOwnersDictFromUsers,
+} from 'utils/ownerUtils';
+import {
   getTableQueryParams,
   getRelatedDashboardSlug,
   getTableDataFromResponseData,
-  getTableOwnersFromResponseData,
-  createOwnerUpdatePayload,
   createOwnerNotificationData,
   shouldSendNotification,
 } from './helpers';
@@ -38,6 +42,7 @@ export type RelatedDashboardDataAPI = {
   dashboards: DashboardResource[];
 } & MessageAPI;
 export type LineageAPI = { lineage: Lineage } & MessageAPI;
+export type TableQualityChecksAPI = { checks: TableQualityChecks } & MessageAPI;
 
 export function getTableData(key: string, index?: string, source?: string) {
   const tableQueryParams = getTableQueryParams({ key, index, source });
@@ -46,7 +51,7 @@ export function getTableData(key: string, index?: string, source?: string) {
 
   return tableRequest.then((tableResponse: AxiosResponse<TableDataAPI>) => ({
     data: getTableDataFromResponseData(tableResponse.data),
-    owners: getTableOwnersFromResponseData(tableResponse.data),
+    owners: getOwnersDictFromUsers(tableResponse.data.tableData.owners),
     tags: tableResponse.data.tableData.tags,
     statusCode: tableResponse.status,
   }));
@@ -106,7 +111,7 @@ export function getTableOwners(key: string) {
   return axios
     .get(`${API_PATH}/table?${tableParams}`)
     .then((response: AxiosResponse<TableDataAPI>) =>
-      getTableOwnersFromResponseData(response.data)
+      getOwnersDictFromUsers(response.data.tableData.owners)
     );
 }
 
@@ -116,13 +121,22 @@ export function generateOwnerUpdateRequests(
   tableData: TableMetadata
 ): any {
   /* Return the list of requests to be executed */
-  return updateArray.map((item) => {
-    const updatePayload = createOwnerUpdatePayload(item, tableData.key);
-    const notificationData = createOwnerNotificationData(item, tableData);
+  return updateArray.map((updateOwnerPayload) => {
+    const updatePayload = createOwnerUpdatePayload(
+      ResourceType.table,
+      tableData.key,
+      updateOwnerPayload
+    );
+    const notificationData = createOwnerNotificationData(
+      updateOwnerPayload,
+      tableData
+    );
 
     /* Chain requests to send notification on success to desired users */
     return axios(updatePayload)
-      .then(() => axios.get(`/api/metadata/v0/user?user_id=${item.id}`))
+      .then(() =>
+        axios.get(`/api/metadata/v0/user?user_id=${updateOwnerPayload.id}`)
+      )
       .then((response) => {
         if (shouldSendNotification(response.data.user)) {
           return axios.post('/api/mail/v0/notification', notificationData);
@@ -162,7 +176,7 @@ export function updateColumnDescription(
   });
 }
 
-export function getPreviewData(queryParams: PreviewQueryParams) {
+export function getPreviewData(queryParams: TablePreviewQueryParams) {
   return axios({
     url: '/api/preview/v0/',
     method: 'POST',
@@ -183,37 +197,17 @@ export function getPreviewData(queryParams: PreviewQueryParams) {
     });
 }
 
-export function getTableLineage(key: string) {
-  const tableQueryParams = getTableQueryParams({ key });
-  return axios({
-    url: `${API_PATH}/get_table_lineage?${tableQueryParams}`,
-    method: 'GET',
-  })
-    .then((response: AxiosResponse<LineageAPI>) => ({
-      data: response.data,
-      status: response.status,
-    }))
-    .catch((e: AxiosError<LineageAPI>) => {
-      const { response } = e;
-      const status = response ? response.status : null;
-      return Promise.reject({ status });
-    });
-}
-
-export function getColumnLineage(key: string, columnName: string) {
+export function getTableQualityChecksSummary(key: string) {
   const tableQueryParams = getTableQueryParams({
     key,
-    column_name: columnName,
   });
-  return axios({
-    url: `${API_PATH}/get_column_lineage?${tableQueryParams}`,
-    method: 'GET',
-  })
-    .then((response: AxiosResponse<LineageAPI>) => ({
-      data: response.data,
+  return axios
+    .get(`/api/quality/v0/table/summary?${tableQueryParams}`)
+    .then((response: AxiosResponse<TableQualityChecksAPI>) => ({
+      checks: response.data.checks,
       status: response.status,
     }))
-    .catch((e: AxiosError<LineageAPI>) => {
+    .catch((e) => {
       const { response } = e;
       const status = response ? response.status : null;
       return Promise.reject({ status });

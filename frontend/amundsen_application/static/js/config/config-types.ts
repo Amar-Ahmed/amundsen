@@ -14,6 +14,7 @@ export interface AppConfig {
   editableText: EditableTextConfig;
   indexDashboards: IndexDashboardsConfig;
   indexUsers: IndexUsersConfig;
+  indexFeatures: IndexFeaturesConfig;
   userIdLabel?: string /* Temporary configuration due to lacking string customization/translation support */;
   issueTracking: IssueTrackingConfig;
   logoPath: string | null;
@@ -24,9 +25,11 @@ export interface AppConfig {
   announcements: AnnoucementsFeaturesConfig;
   navLinks: Array<LinkConfig>;
   resourceConfig: ResourceConfig;
+  featureLineage: FeatureLineageConfig;
   tableLineage: TableLineageConfig;
   columnLineage: ColumnLineageConfig;
   tableProfile: TableProfileConfig;
+  tableQualityChecks: TableQualityChecksConfig;
 }
 
 export interface AppConfigCustom {
@@ -37,6 +40,7 @@ export interface AppConfigCustom {
   editableText?: EditableTextConfig;
   indexDashboards?: IndexDashboardsConfig;
   indexUsers?: IndexUsersConfig;
+  indexFeatures?: IndexFeaturesConfig;
   userIdLabel?: string /* Temporary configuration due to lacking string customization/translation support */;
   issueTracking?: IssueTrackingConfig;
   logoPath?: string;
@@ -47,9 +51,11 @@ export interface AppConfigCustom {
   announcements?: AnnoucementsFeaturesConfig;
   navLinks?: Array<LinkConfig>;
   resourceConfig?: ResourceConfig;
+  featureLineage?: FeatureLineageConfig;
   tableLineage?: TableLineageConfig;
   columnLineage?: ColumnLineageConfig;
   tableProfile?: TableProfileConfig;
+  tableQualityChecks?: TableQualityChecksConfig;
 }
 
 /**
@@ -70,6 +76,7 @@ export interface AnalyticsConfig {
 interface BrowseConfig {
   curatedTags: Array<string>;
   showAllTags: boolean;
+  showBadgesInHome: boolean;
 }
 
 /**
@@ -149,7 +156,7 @@ export enum NoticeSeverity {
 }
 export interface NoticeType {
   severity: NoticeSeverity;
-  messageHtml: string;
+  messageHtml: string | ((resourceName: string) => string);
 }
 /**
  * Stats configuration options
@@ -225,6 +232,7 @@ interface ResourceConfig {
   [ResourceType.dashboard]: BaseResourceConfig;
   [ResourceType.table]: TableResourceConfig;
   [ResourceType.user]: BaseResourceConfig;
+  [ResourceType.feature]: BaseResourceConfig;
 }
 
 /**
@@ -269,6 +277,13 @@ interface TableProfileConfig {
 }
 
 /**
+ * FeatureLineageConfig - enable upstream lineage tab for features
+ */
+interface FeatureLineageConfig {
+  inAppListEnabled: boolean;
+}
+
+/**
  * TableLineageConfig - Customize the "Table Lineage" links of the "Table Details" page.
  * This feature is intended to link to an external lineage provider.
  *
@@ -281,14 +296,15 @@ interface TableProfileConfig {
 interface TableLineageConfig {
   iconPath: string;
   isBeta: boolean;
-  isEnabled: boolean;
   urlGenerator: (
     database: string,
     cluster: string,
     schema: string,
     table: string
   ) => string;
+  externalEnabled: boolean;
   inAppListEnabled: boolean;
+  inAppPageEnabled: boolean;
 }
 
 /**
@@ -298,6 +314,7 @@ interface TableLineageConfig {
  */
 interface ColumnLineageConfig {
   inAppListEnabled: boolean;
+  inAppPageEnabled: boolean;
   urlGenerator: (
     database: string,
     cluster: string,
@@ -336,6 +353,16 @@ interface IndexUsersConfig {
 }
 
 /**
+ * IndexFeaturesConfig - When enabled, ML features will be avaialable as searchable resources. This requires
+ * feature objects to be ingested via Databuilder and made available in the metadata and serch services.
+ *
+ * enabled - Enables/disables this feature in the frontend only
+ */
+interface IndexFeaturesConfig {
+  enabled: boolean;
+}
+
+/**
  * EditableTextConfig - Configure max length limits for editable fields
  *
  * tableDescLength - maxlength for table descriptions
@@ -348,10 +375,12 @@ interface EditableTextConfig {
 /**
  * IssueTrackingConfig - configures whether to display the issue tracking feature
  * that allows users to display tickets associated with a table and create ones
- * linked to a table
+ * linked to a table, and allows a customized template that will be prepopulated
+ * in the description for reporting an issue
  */
 interface IssueTrackingConfig {
   enabled: boolean;
+  issueDescriptionTemplate: string;
 }
 
 export enum NumberStyle {
@@ -373,4 +402,12 @@ export interface NumberStyleConfig {
 export interface NumberFormatConfig {
   numberSystem: string | null;
   [NumberStyle.DECIMAL]?: NumberStyleConfig;
+}
+
+/**
+ * TableQualityChecksConfig - configuration to query and display data quality check status from
+ * an external provider. API must be configured.
+ */
+export interface TableQualityChecksConfig {
+  isEnabled: boolean;
 }
