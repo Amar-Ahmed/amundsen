@@ -1,7 +1,7 @@
 openapi: '3.0.2'
 info:
   title: 'Search Service'
-  description: 'Used to communicate with elasticsearch or apache atlas to get search results. Used by the frontend service'
+  description: 'Used to communicate with elasticsearch to get search results. Used by the frontend service'
   version: '1.1.12'
 
 components:
@@ -16,6 +16,17 @@ components:
     EmptyResponse:
       type: object
       properties: {}
+    HealthcheckResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: The status of the service, values will be 'ok' or 'fail'
+        checks:
+          type: object
+          description: An arbitrary dictionary representing the healthchecks that have run
+          example:
+            $ref: '#/detailedExamples/healthcheck'
     SearchTableResults:
       type: object
       properties:
@@ -38,6 +49,17 @@ components:
                 type: array
                 items:
                     $ref: '#/components/schemas/DashboardFields'
+    SearchFeatureResults:
+      type: object
+      properties:
+        total_results:
+          type: integer
+          description: 'number of results'
+          example: 10
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureFields'
     SearchUserResults:
       type: object
       properties:
@@ -167,6 +189,73 @@ components:
               type: integer
               description: 'dashboard last successful run time'
               example: 1568814420
+    FeatureFields:
+      type: object
+      properties:
+        id:
+          type: string
+          description: 'elasticsearch doc id'
+          example: '1234aaabbb'
+        feature_group:
+          type: string
+          description: 'group name which feature belongs to'
+          example: 'realtime_post_processed_group'
+        feature_name:
+          type: string
+          description: 'name of feature'
+          example: 'ml_feature_420_abcd'
+        version:
+          type: string
+          description: 'version as string'
+          example: 'v1.1.5'
+        key:
+          type: string
+          description: 'key format: {feature_group}/{feature_name}/{version}'
+          example: 'realtime_post_processed_group/ml_feature_420_abcd/v1.1.5'
+        total_usage:
+          type: int
+          description: 'total usage'
+          example: 0
+        status:
+          type: string
+          description: 'feature status'
+          example: 'active'
+        entity:
+          type: string
+          description: 'business entity described by this feature'
+          example: 'listing'
+        description:
+          type: string
+          description: 'feature description'
+          example: 'this feature has durations of active listings in seconds'
+        availability:
+          type: array
+          items:
+            type: string
+          description: 'list of databases where this feature is available'
+          example: [ 'hive', 'dynamo' ]
+        badges:
+          type: array
+          items:
+            type: object
+            properties:
+              tag_name:
+                type: string
+          description: 'list of feature badges'
+          example: [ { 'tag_name': 'badge1' }, { 'tag_name': 'badge2' } ]
+        tags:
+          type: array
+          items:
+            type: object
+            properties:
+              tag_name:
+                type: string
+          description: 'list of feature tags'
+          example: [ { 'tag_name': 'tag1' }, { 'tag_name': 'tag2' } ]
+        last_updated_timestamp:
+          type: integer
+          description: 'unixtime when the feature configuration was last updated'
+          example: 1568814420
     UserFields:
       type: object
       properties:
@@ -174,7 +263,7 @@ components:
           type: string
           description: 'elasticsearch doc id'
           example: 'M81jD3cBdULZTSY96PSh'
-        name:
+        full_name:
           type: string
           description: 'user name'
           example: 'Harry Potter'
@@ -210,3 +299,25 @@ components:
           type: string
           description: 'the kinds of users'
           example: 'student'
+
+detailedExamples:
+  healthcheck:
+    {
+      'ElasticsearchProxy:connection': {
+        'cluster_name': 'docker-cluster',
+        'status': 'yellow',
+        'timed_out': False,
+        'number_of_nodes': 1,
+        'number_of_data_nodes': 1,
+        'active_primary_shards': 16,
+        'active_shards': 16,
+        'relocating_shards': 0,
+        'initializing_shards': 0,
+        'unassigned_shards': 15,
+        'delayed_unassigned_shards': 0,
+        'number_of_pending_tasks': 0,
+        'number_of_in_flight_fetch': 0,
+        'task_max_waiting_in_queue_millis': 0,
+        'active_shards_percent_as_number': 51.61290322580645
+      }
+    }

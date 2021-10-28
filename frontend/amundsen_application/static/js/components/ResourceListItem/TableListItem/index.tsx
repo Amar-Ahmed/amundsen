@@ -33,7 +33,11 @@ const TableListItem: React.FC<TableListItemProps> = ({ table, logging }) => (
       className="resource-list-item table-list-item"
       to={getLink(table, logging)}
       onClick={(e) =>
-        logClick(e, { target_id: 'table_list_item', value: logging.source })
+        logClick(e, {
+          target_id: 'table_list_item',
+          value: logging.source,
+          position: logging.index.toString(),
+        })
       }
     >
       <div className="resource-info">
@@ -58,7 +62,7 @@ const TableListItem: React.FC<TableListItemProps> = ({ table, logging }) => (
           <div className="body-secondary-3 truncated">{table.description}</div>
         </div>
       </div>
-      <div className="resource-type">
+      <div className="resource-type resource-source">
         {getSourceDisplayName(table.database, table.type)}
       </div>
       <div className="resource-badges">

@@ -22,14 +22,16 @@ import { pageViewed } from 'ducks/ui';
 import rootReducer from 'ducks/rootReducer';
 import rootSaga from 'ducks/rootSaga';
 
-import DashboardPage from './pages/DashboardPage';
 import AnnouncementPage from './pages/AnnouncementPage';
 import BrowsePage from './pages/BrowsePage';
+import DashboardPage from './pages/DashboardPage';
+import FeaturePage from './pages/FeaturePage';
 import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 import SearchPage from './pages/SearchPage';
 import ProfilePage from './pages/ProfilePage';
 import TableDetail from './pages/TableDetailPage';
+import LineagePage from './pages/LineagePage';
 
 import Preloader from './components/Preloader';
 import Footer from './features/Footer';
@@ -64,10 +66,15 @@ const Routes: React.FC = () => {
         <Route path="/announcements" component={AnnouncementPage} />
         <Route path="/browse" component={BrowsePage} />
         <Route path="/dashboard/:uri" component={DashboardPage} />
+        <Route path="/feature/:group/:name/:version" component={FeaturePage} />
         <Route path="/search" component={SearchPage} />
         <Route
           path="/table_detail/:cluster/:database/:schema/:table"
           component={TableDetail}
+        />
+        <Route
+          path="/lineage/:resource/:cluster/:database/:schema/:table"
+          component={LineagePage}
         />
         <Route path="/user/:userId" component={ProfilePage} />
         <Route path="/404" component={NotFoundPage} />

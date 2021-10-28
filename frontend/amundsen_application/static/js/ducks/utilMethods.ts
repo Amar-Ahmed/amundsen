@@ -1,7 +1,14 @@
-import { Tag } from 'interfaces';
+import { Badge, Tag } from 'interfaces';
+import * as qs from 'simple-query-string';
 
 export function sortTagsAlphabetical(a: Tag, b: Tag): number {
   return a.tag_name.localeCompare(b.tag_name);
+}
+
+export function sortBadgesAlphabetical(a: Badge, b: Badge): number {
+  const aBadgeName = a.badge_name || '';
+  const bBadgeName = b.badge_name || '';
+  return aBadgeName.localeCompare(bBadgeName);
 }
 
 export function extractFromObj(
@@ -26,4 +33,13 @@ export function filterFromObj(
       obj[key] = initialObj[key];
       return obj;
     }, {});
+}
+
+/**
+ * Takes a parameter objects and generates the query string parameters needed for requests.
+ * Example:
+ * const queryParameters = getQueryParams({key: tableData.key, column_name: columnName})
+ */
+export function getQueryParams(params: object): string {
+  return qs.stringify(params);
 }

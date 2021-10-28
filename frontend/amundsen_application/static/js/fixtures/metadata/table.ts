@@ -3,6 +3,7 @@ import {
   DashboardResource,
   ResourceType,
   Lineage,
+  TableQualityChecks,
 } from '../../interfaces';
 
 export const tableMetadata: TableMetadata = {
@@ -18,7 +19,7 @@ export const tableMetadata: TableMetadata = {
       col_type: 'bigint',
       description: 'Test Value',
       is_editable: true,
-      sort_order: '0',
+      sort_order: 0,
       name: 'ride_id',
       stats: [
         {
@@ -47,7 +48,7 @@ export const tableMetadata: TableMetadata = {
       description:
         'ds will be the date part of requested_at ds will be the date part of requested_at ds will be the date part of requested_at ds will be the date part of requested_at ds will be the date part of requested_at ds will be the date part of requested_at ds w',
       is_editable: true,
-      sort_order: '1',
+      sort_order: 1,
       name: 'ds',
       stats: [],
       badges: [],
@@ -56,7 +57,7 @@ export const tableMetadata: TableMetadata = {
       col_type: 'string',
       description: 'Route_id Description',
       is_editable: true,
-      sort_order: '2',
+      sort_order: 2,
       name: 'route_id',
       stats: [
         {
@@ -175,6 +176,9 @@ export const tableMetadata: TableMetadata = {
 export const emptyTableLineage: Lineage = {
   downstream_entities: [],
   upstream_entities: [],
+  key: 'database://cluster.schema/table_name',
+  depth: 1,
+  direction: 'both',
 };
 
 export const tableLineage: Lineage = {
@@ -188,6 +192,7 @@ export const tableLineage: Lineage = {
       name: 'table_name',
       schema: 'schema',
       usage: 1398,
+      parent: 'database://cluster.schema/parent_table_name',
     },
   ],
   upstream_entities: [
@@ -200,8 +205,12 @@ export const tableLineage: Lineage = {
       name: 'table_name',
       schema: 'schema',
       usage: 1398,
+      parent: 'database://cluster.schema/parent_table_name',
     },
   ],
+  key: 'database://cluster.schema/table_name',
+  depth: 1,
+  direction: 'both',
 };
 
 export const relatedDashboards: DashboardResource[] = [
@@ -242,3 +251,11 @@ export const relatedDashboards: DashboardResource[] = [
     url: 'https://app.mode.com/testCompany/reports/123566',
   },
 ];
+
+export const qualityChecks: TableQualityChecks = {
+  num_checks_failed: 2,
+  num_checks_success: 10,
+  num_checks_total: 12,
+  external_url: 'test_url',
+  last_run_timestamp: 1629304939877,
+};

@@ -4,12 +4,12 @@
 from http import HTTPStatus
 from typing import Any, Iterable, Mapping, Tuple, Union
 
+from amundsen_common.entity.resource_type import ResourceType
 from flasgger import swag_from
 from flask import current_app as app
 from flask_restful import Resource, fields, marshal
 
 from metadata_service.entity.badge import Badge
-from metadata_service.entity.resource_type import ResourceType
 from metadata_service.exception import NotFoundException
 from metadata_service.proxy import get_proxy_client
 from metadata_service.proxy.base_proxy import BaseProxy
@@ -77,7 +77,7 @@ class BadgeCommon:
                                   category=category,
                                   resource_type=resource_type)
             return {'message': f'The badge {badge_name} with category {category} was '
-                               f'added successfully to resurce with id {id}'}, HTTPStatus.OK
+                               f'added successfully to resource with id {id}'}, HTTPStatus.OK
         except Exception as e:
             return {'message': f'The badge {badge_name} with category {category} '
                                f'for resource id {id} and resource_type {resource_type.name} failed to '

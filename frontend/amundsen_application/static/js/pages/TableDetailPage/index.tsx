@@ -9,13 +9,12 @@ import { bindActionCreators } from 'redux';
 import { RouteComponentProps } from 'react-router';
 
 import { GlobalState } from 'ducks/rootReducer';
-import { getTableData, getTableLineage } from 'ducks/tableMetadata/reducer';
+import { getTableData } from 'ducks/tableMetadata/reducer';
+import { getTableLineage } from 'ducks/lineage/reducer';
 import { openRequestDescriptionDialog } from 'ducks/notification/reducer';
 import { updateSearchState } from 'ducks/search/reducer';
-import {
-  GetTableDataRequest,
-  GetTableLineageRequest,
-} from 'ducks/tableMetadata/types';
+import { GetTableDataRequest } from 'ducks/tableMetadata/types';
+import { GetTableLineageRequest } from 'ducks/lineage/types';
 import { OpenRequestAction } from 'ducks/notification/types';
 import { UpdateSearchStateRequest } from 'ducks/search/types';
 
@@ -29,23 +28,31 @@ import {
   issueTrackingEnabled,
   isTableListLineageEnabled,
   notificationsEnabled,
+  isTableQualityCheckEnabled,
 } from 'config/config-utils';
 
 import BadgeList from 'features/BadgeList';
 import ColumnList from 'features/ColumnList';
 
+import Alert from 'components/Alert';
 import BookmarkIcon from 'components/Bookmark/BookmarkIcon';
 import Breadcrumb from 'components/Breadcrumb';
-import TabsComponent, { TabInfo } from 'components/TabsComponent';
-import TagInput from 'components/Tags/TagInput';
-import EditableText from 'components/EditableText';
-import LoadingSpinner from 'components/LoadingSpinner';
 import EditableSection from 'components/EditableSection';
-import Alert from 'components/Alert';
+import EditableText from 'components/EditableText';
+import TabsComponent, { TabInfo } from 'components/TabsComponent';
+import { TAB_URL_PARAM } from 'components/TabsComponent/constants';
+import TagInput from 'components/Tags/TagInput';
+import LoadingSpinner from 'components/LoadingSpinner';
 
 import { logAction, logClick } from 'utils/analytics';
 import { formatDateTimeShort } from 'utils/dateUtils';
-import { getLoggingParams } from 'utils/logUtils';
+import {
+  buildTableKey,
+  getLoggingParams,
+  getUrlParam,
+  setUrlParam,
+  TablePageParams,
+} from 'utils/navigationUtils';
 
 import {
   ProgrammaticDescription,
@@ -58,6 +65,7 @@ import {
 
 import DataPreviewButton from './DataPreviewButton';
 import ExploreButton from './ExploreButton';
+import LineageButton from './LineageButton';
 import FrequentUsers from './FrequentUsers';
 import LineageLink from './LineageLink';
 import LineageList from './LineageList';
@@ -69,6 +77,7 @@ import TableHeaderBullets from './TableHeaderBullets';
 import TableIssues from './TableIssues';
 import WatermarkLabel from './WatermarkLabel';
 import WriterLink from './WriterLink';
+import TableQualityChecksLabel from './TableQualityChecks';
 import TableReportsDropdown from './ResourceReportsDropdown';
 import RequestDescriptionText from './RequestDescriptionText';
 import RequestMetadataForm from './RequestMetadataForm';
@@ -140,14 +149,16 @@ export class TableDetail extends React.Component<
 
   state = {
     sortedBy: SORT_CRITERIAS.sort_order,
-    currentTab: Constants.TABLE_TAB.COLUMN,
+    currentTab: this.getDefaultTab(),
   };
 
   componentDidMount() {
     const { location, getTableData, getTableLineageDispatch } = this.props;
     const { index, source } = getLoggingParams(location.search);
-
-    this.key = this.getTableKey();
+    const {
+      match: { params },
+    } = this.props;
+    this.key = buildTableKey(params);
     getTableData(this.key, index, source);
 
     if (isTableListLineageEnabled()) {
@@ -157,8 +168,13 @@ export class TableDetail extends React.Component<
   }
 
   componentDidUpdate() {
-    const { location, getTableData, getTableLineageDispatch } = this.props;
-    const newKey = this.getTableKey();
+    const {
+      location,
+      getTableData,
+      getTableLineageDispatch,
+      match: { params },
+    } = this.props;
+    const newKey = buildTableKey(params);
 
     if (this.key !== newKey) {
       const { index, source } = getLoggingParams(location.search);
@@ -169,7 +185,12 @@ export class TableDetail extends React.Component<
       if (isTableListLineageEnabled()) {
         getTableLineageDispatch(this.key);
       }
+      this.setState({ currentTab: this.getDefaultTab() });
     }
+  }
+
+  getDefaultTab() {
+    return getUrlParam(TAB_URL_PARAM) || Constants.TABLE_TAB.COLUMN;
   }
 
   getDisplayName() {
@@ -177,18 +198,6 @@ export class TableDetail extends React.Component<
     const { params } = match;
 
     return `${params.schema}.${params.table}`;
-  }
-
-  getTableKey() {
-    /*
-    This 'key' is the `table_uri` format described in metadataservice. Because it contains the '/' character,
-    we can't pass it as a single URL parameter without encodeURIComponent which makes ugly URLs.
-    DO NOT CHANGE
-    */
-    const { match } = this.props;
-    const { params } = match;
-
-    return `${params.database}://${params.cluster}.${params.schema}/${params.table}`;
   }
 
   handleClick = (e) => {
@@ -240,7 +249,14 @@ export class TableDetail extends React.Component<
       openRequestDescriptionDialog,
       tableLineage,
     } = this.props;
-    const { sortedBy } = this.state;
+    const { sortedBy, currentTab } = this.state;
+    const tableParams: TablePageParams = {
+      cluster: tableData.cluster,
+      database: tableData.database,
+      table: tableData.name,
+      schema: tableData.schema,
+    };
+    const selectedColumn = getUrlParam(Constants.COLUMN_URL_KEY);
 
     // Default Column content
     tabInfo.push({
@@ -249,10 +265,11 @@ export class TableDetail extends React.Component<
           openRequestDescriptionDialog={openRequestDescriptionDialog}
           columns={tableData.columns}
           database={tableData.database}
-          tableKey={tableData.key}
+          tableParams={tableParams}
           editText={editText}
           editUrl={editUrl}
           sortBy={sortedBy}
+          selectedColumn={selectedColumn}
         />
       ),
       key: Constants.TABLE_TAB.COLUMN,
@@ -310,9 +327,10 @@ export class TableDetail extends React.Component<
     return (
       <TabsComponent
         tabs={tabInfo}
-        defaultTab={Constants.TABLE_TAB.COLUMN}
+        defaultTab={currentTab}
         onSelect={(key) => {
           this.setState({ currentTab: key });
+          setUrlParam(TAB_URL_PARAM, key);
           logAction({
             command: 'click',
             target_id: 'table_detail_tab',
@@ -395,6 +413,7 @@ export class TableDetail extends React.Component<
               <SourceLink tableSource={data.source} />
             </div>
             <div className="header-section header-buttons">
+              <LineageButton tableData={data} />
               <TableReportsDropdown resourceReports={data.resource_reports} />
               <DataPreviewButton modalTitle={this.getDisplayName()} />
               <ExploreButton tableData={data} />
@@ -457,6 +476,9 @@ export class TableDetail extends React.Component<
                       uriKey={tableData.key}
                     />
                   </EditableSection>
+                  {isTableQualityCheckEnabled() && (
+                    <TableQualityChecksLabel tableKey={tableData.key} />
+                  )}
                   {this.renderProgrammaticDesc(
                     data.programmatic_descriptions.left
                   )}
@@ -513,7 +535,7 @@ export const mapStateToProps = (state: GlobalState) => ({
   isLoading: state.tableMetadata.isLoading,
   statusCode: state.tableMetadata.statusCode,
   tableData: state.tableMetadata.tableData,
-  tableLineage: state.tableMetadata.tableLineage.lineage,
+  tableLineage: state.lineage.lineageTree,
   numRelatedDashboards: state.tableMetadata.dashboards
     ? state.tableMetadata.dashboards.dashboards.length
     : 0,

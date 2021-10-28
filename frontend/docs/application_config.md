@@ -183,7 +183,9 @@ A notice is a small box with an icon and a message containing HTML markup (like 
   <img src='img/notices-alert-table.png' width='50%' />
 </figure>
 
-To set them up, we'll use the current configuration objects for the resources. For example, if company X wants to deprecate the use of one table or dashboard, they can opt to add new notices in their configuration file:
+To set them up, we'll use the current configuration objects for the resources. In the event that we want to add the same notice to every table that follows a particular pattern, we use a wildcard character, *, for pattern matching. In addition, we can have dynamic HTML messages to allow for notices to change their message based on what table it is. 
+
+For example, if company X wants to deprecate the use of one table or dashboard, they can opt to add new notices in their configuration file:
 
 ```
   resourceConfig: {
@@ -211,10 +213,99 @@ To set them up, we'll use the current configuration objects for the resources. F
 
 The above code will show a notice with a red exclamation icon whenever a final user visits the table's Table Detail page or the Dashboard Detail page.
 
+If you want to target several tables at once, you can use wildcards as shown below:
+
+```
+  resourceConfig: {
+    [ResourceType.table]: {
+      ... //Table Resource Configuration
+      notices: {
+          "<CLUSTER>.<DATABASE>.<SCHEMA>.*": {
+            severity: NoticeSeverity.ALERT,
+            messageHtml: `This table is deprecated`,
+          },
+      },
+    },
+    [ResourceType.dashboard]: {
+      ... //Dashboard Resource Configuration
+      notices: {
+          "<PRODUCT>.<CLUSTER>.<GROUPNAME>.*": {
+            severity: NoticeSeverity.WARNING,
+            messageHtml: `This dashboard is deprecated`,
+          },
+      },
+    },
+
+  },
+```
+
+The above code will show a notice with a red exclamation icon whenever a final user visits any table within the specified cluster, database, and schema or any dashboard within the specified product, cluster, and groupname.
+
+Wildcards can also replace individual parts of table names. If you want to add a notice to all resources whose names followed the pattern foo_*:
+
+```
+  resourceConfig: {
+    [ResourceType.table]: {
+      ... //Table Resource Configuration
+      notices: {
+          "<CLUSTER>.<DATABASE>.<SCHEMA>.foo_*": {
+            severity: NoticeSeverity.INFO,
+            messageHtml: `This table has information`,
+          },
+      },
+    },
+    [ResourceType.dashboard]: {
+      ... //Dashboard Resource Configuration
+      notices: {
+          "<PRODUCT>.<CLUSTER>.<GROUPNAME>.foo_*": {
+            severity: NoticeSeverity.INFO,
+            messageHtml: `This dashboard has information`,
+          },
+      },
+    },
+
+  },
+```
+
+The above code will show the message on any table with the specified cluster, database and schema whose table name starts with `foo_` or any dashboard with the specified product, cluster, and groupname whose dashboard name starts with `foo_`.
+
+If you want to use a dynamic HTML message that changes depending on the name of the resource, you can use string formatting as shown below:
+
+```
+  resourceConfig: {
+    [ResourceType.table]: {
+      ... //Table Resource Configuration
+      notices: {
+          "<CLUSTER>.<DATABASE>.<SCHEMA>.*": {
+            severity: NoticeSeverity.ALERT,
+            messageHtml: (resourceName) => {
+              const [cluster, datasource, schema, table] = resourceName.split('.');
+              return `This schema is deprecated, please use <a href="https://amundsen.<company>.net/table_detail/${cluster}/${datasource}/SCHEMA/${table}">this table instead</a>`;
+            },
+          },
+      },
+    },
+    [ResourceType.dashboard]: {
+      ... //Dashboard Resource Configuration
+      notices: {
+          "<PRODUCT>.<CLUSTER>.<GROUPNAME>.*": {
+            severity: NoticeSeverity.WARNING,
+            messageHtml: (resourceName) => {
+              const [product, cluster, groupname, dashboard] = resourceName.split('.');
+              return `${groupname} is deprecated, please use <a href="LINKTODASHBOARD">this dashboard instead</a>`;
+            },
+          },
+      },
+    },
+
+  },
+```
+
+The above code will show a notice with a dynamic message and a red exclamation icon whenever a final user visits any table within the specified cluster, database, and schema or any dashboard within the specified product, cluster, and groupname. We can also use dynamic messages for notices without the wildcard by replacing the * with the specific table or dashboard name.
+
 This feature's ultimate goal is to allow Amundsen administrators to point their users to more trusted/higher quality resources without removing the old references.
 
 Learn more about the future developments for this feature in [its RFC](https://github.com/amundsen-io/rfcs/blob/master/rfcs/029-resource-notices.md).
-
 ## Table Lineage
 
 _TODO: Please add doc_
@@ -225,5 +316,5 @@ _TODO: Please add doc\*_
 
 ## Issue Tracking Features
 
-In order to enable Issue Tracking set `IssueTrackingConfig.enabled` to `true` to see UI features. Further configuration
-is required to fully enable the feature, please see this [entry](flask_config.md#issue-tracking-integration-features)
+In order to enable Issue Tracking set `IssueTrackingConfig.enabled` to `true` to see UI features. If you wish to prepopulate the issue description text field with a template to suggest more detailed information to be provided by the user when an issue is reported, set `IssueTrackingConfig.issueDescriptionTemplate` with the desired string. Further configuration
+is required to fully enable the feature, please see this [entry](flask_config.md#issue-tracking-integration-features).

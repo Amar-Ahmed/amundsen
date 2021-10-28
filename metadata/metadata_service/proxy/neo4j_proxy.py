@@ -9,13 +9,19 @@ from typing import (Any, Dict, Iterable, List, Optional, Tuple,  # noqa: F401
                     Union, no_type_check)
 
 import neo4j
+import neobolt
+from amundsen_common.entity.resource_type import ResourceType, to_resource_type
+from amundsen_common.models.api import health_check
 from amundsen_common.models.dashboard import DashboardSummary
+from amundsen_common.models.feature import Feature, FeatureWatermark
+from amundsen_common.models.generation_code import GenerationCode
 from amundsen_common.models.lineage import Lineage, LineageItem
 from amundsen_common.models.popular_table import PopularTable
 from amundsen_common.models.table import (Application, Badge, Column,
                                           ProgrammaticDescription, Reader,
-                                          Source, Stat, Table, Tag, User,
-                                          Watermark)
+                                          ResourceReport, Source, SqlJoin,
+                                          SqlWhere, Stat, Table, TableSummary,
+                                          Tag, User, Watermark)
 from amundsen_common.models.user import User as UserEntity
 from amundsen_common.models.user import UserSchema
 from beaker.cache import CacheManager
@@ -29,7 +35,6 @@ from metadata_service.entity.dashboard_detail import \
 from metadata_service.entity.dashboard_query import \
     DashboardQuery as DashboardQueryEntity
 from metadata_service.entity.description import Description
-from metadata_service.entity.resource_type import ResourceType
 from metadata_service.entity.tag_detail import TagDetail
 from metadata_service.exception import NotFoundException
 from metadata_service.proxy.base_proxy import BaseProxy
@@ -39,13 +44,11 @@ from metadata_service.util import UserResourceRel
 _CACHE = CacheManager(**parse_cache_config_options({'cache.type': 'memory'}))
 
 # Expire cache every 11 hours + jitter
-_GET_POPULAR_TABLE_CACHE_EXPIRY_SEC = 11 * 60 * 60 + randint(0, 3600)
-
+_GET_POPULAR_RESOURCES_CACHE_EXPIRY_SEC = 11 * 60 * 60 + randint(0, 3600)
 
 CREATED_EPOCH_MS = 'publisher_created_epoch_ms'
 LAST_UPDATED_EPOCH_MS = 'publisher_last_updated_epoch_ms'
 PUBLISHED_TAG_PROPERTY_NAME = 'published_tag'
-
 
 LOGGER = logging.getLogger(__name__)
 
@@ -85,13 +88,26 @@ class Neo4jProxy(BaseProxy):
                                             encrypted=encrypted,
                                             trust=trust)  # type: Driver
 
-    def is_healthy(self) -> None:
-        # throws if cluster unhealthy or can't connect.  An alternative would be to use one of
-        # the HTTP status endpoints, which might be more specific, but don't implicitly test
-        # our configuration.
-        with self._driver.session() as session:
-            session.read_transaction(self._execute_cypher_query,
-                                     statement='CALL dbms.cluster.overview()', param_dict={})
+    def health(self) -> health_check.HealthCheck:
+        """
+        Runs one or more series of checks on the service. Can also
+        optionally return additional metadata about each check (e.g.
+        latency to database, cpu utilization, etc.).
+        """
+        checks = {}
+        try:
+            # dbms.cluster.overview() is only available for enterprise neo4j users
+            cluster_overview = self._execute_cypher_query(statement='CALL dbms.cluster.overview()', param_dict={})
+            checks = dict(cluster_overview.single())
+            checks['overview_enabled'] = True
+            status = health_check.OK
+        except neobolt.exceptions.ClientError:
+            checks = {'overview_enabled': False}
+            status = health_check.OK  # Can connect to database but plugin is not available
+        except Exception:
+            status = health_check.FAIL
+        final_checks = {f'{type(self).__name__}:connection': checks}
+        return health_check.HealthCheck(status=status, checks=final_checks)
 
     @timer_with_counter
     def get_table(self, *, table_uri: str) -> Table:
@@ -104,8 +120,10 @@ class Neo4jProxy(BaseProxy):
 
         readers = self._exec_usage_query(table_uri)
 
-        wmk_results, table_writer, timestamp_value, owners, tags, source, badges, prog_descs = \
+        wmk_results, table_writer, timestamp_value, owners, tags, source, badges, prog_descs, resource_reports = \
             self._exec_table_query(table_uri)
+
+        joins, filters = self._exec_table_query_query(table_uri)
 
         table = Table(database=last_neo4j_record['db']['name'],
                       cluster=last_neo4j_record['clstr']['name'],
@@ -122,7 +140,10 @@ class Neo4jProxy(BaseProxy):
                       last_updated_timestamp=timestamp_value,
                       source=source,
                       is_view=self._safe_get(last_neo4j_record, 'tbl', 'is_view'),
-                      programmatic_descriptions=prog_descs
+                      programmatic_descriptions=prog_descs,
+                      common_joins=joins,
+                      common_filters=filters,
+                      resource_reports=resource_reports
                       )
 
         return table
@@ -189,7 +210,8 @@ class Neo4jProxy(BaseProxy):
                                                          param_dict={'tbl_key': table_uri})
         readers = []  # type: List[Reader]
         for usage_neo4j_record in usage_neo4j_records:
-            reader = Reader(user=User(email=usage_neo4j_record['email']),
+            reader_data = self._get_user_details(user_id=usage_neo4j_record['email'])
+            reader = Reader(user=self._build_user_from_record(record=reader_data),
                             read_count=usage_neo4j_record['read_count'])
             readers.append(reader)
 
@@ -214,6 +236,7 @@ class Neo4jProxy(BaseProxy):
         OPTIONAL MATCH (tbl)-[:HAS_BADGE]->(badge:Badge)
         OPTIONAL MATCH (tbl)-[:SOURCE]->(src:Source)
         OPTIONAL MATCH (tbl)-[:DESCRIPTION]->(prog_descriptions:Programmatic_Description)
+        OPTIONAL MATCH (tbl)-[:HAS_REPORT]->(resource_reports:Report)
         RETURN collect(distinct wmk) as wmk_records,
         application,
         t.last_updated_timestamp as last_updated_timestamp,
@@ -221,7 +244,8 @@ class Neo4jProxy(BaseProxy):
         collect(distinct tag) as tag_records,
         collect(distinct badge) as badge_records,
         src,
-        collect(distinct prog_descriptions) as prog_descriptions
+        collect(distinct prog_descriptions) as prog_descriptions,
+        collect(distinct resource_reports) as resource_reports
         """)
 
         table_records = self._execute_cypher_query(statement=table_level_query,
@@ -269,7 +293,8 @@ class Neo4jProxy(BaseProxy):
         owner_record = []
 
         for owner in table_records.get('owner_records', []):
-            owner_record.append(User(email=owner['email']))
+            owner_data = self._get_user_details(user_id=owner['email'])
+            owner_record.append(self._build_user_from_record(record=owner_data))
 
         src = None
 
@@ -281,7 +306,79 @@ class Neo4jProxy(BaseProxy):
             table_records.get('prog_descriptions', [])
         )
 
-        return wmk_results, table_writer, timestamp_value, owner_record, tags, src, badges, prog_descriptions
+        resource_reports = self._extract_resource_reports_from_query(table_records.get('resource_reports', []))
+
+        return wmk_results, table_writer, timestamp_value, owner_record, tags, src, badges, prog_descriptions, \
+            resource_reports
+
+    @timer_with_counter
+    def _exec_table_query_query(self, table_uri: str) -> Tuple:
+        """
+        Queries one Cypher record with results that contain information about queries
+        and entities (e.g. joins, where clauses, etc.) associated to queries that are executed
+        on the table.
+        """
+
+        # Return Value: (Watermark Results, Table Writer, Last Updated Timestamp, owner records, tag records)
+        table_query_level_query = textwrap.dedent("""
+        MATCH (tbl:Table {key: $tbl_key})
+        OPTIONAL MATCH (tbl)-[:COLUMN]->(col:Column)-[COLUMN_JOINS_WITH]->(j:Join)
+        OPTIONAL MATCH (j)-[JOIN_OF_COLUMN]->(col2:Column)
+        OPTIONAL MATCH (j)-[JOIN_OF_QUERY]->(jq:Query)-[:HAS_EXECUTION]->(exec:Execution)
+        WITH tbl, j, col, col2,
+            sum(coalesce(exec.execution_count, 0)) as join_exec_cnt
+        ORDER BY join_exec_cnt desc
+        LIMIT 5
+        WITH tbl,
+            COLLECT(DISTINCT {
+            join: {
+                joined_on_table: {
+                    database: case when j.left_table_key = $tbl_key
+                              then j.right_database
+                              else j.left_database
+                              end,
+                    cluster: case when j.left_table_key = $tbl_key
+                             then j.right_cluster
+                             else j.left_cluster
+                             end,
+                    schema: case when j.left_table_key = $tbl_key
+                            then j.right_schema
+                            else j.left_schema
+                            end,
+                    name: case when j.left_table_key = $tbl_key
+                          then j.right_table
+                          else j.left_table
+                          end
+                },
+                joined_on_column: col2.name,
+                column: col.name,
+                join_type: j.join_type,
+                join_sql: j.join_sql
+            },
+            join_exec_cnt: join_exec_cnt
+        }) as joins
+        WITH tbl, joins
+        OPTIONAL MATCH (tbl)-[:COLUMN]->(col:Column)-[USES_WHERE_CLAUSE]->(whr:Where)
+        OPTIONAL MATCH (whr)-[WHERE_CLAUSE_OF]->(wq:Query)-[:HAS_EXECUTION]->(whrexec:Execution)
+        WITH tbl, joins,
+            whr, sum(coalesce(whrexec.execution_count, 0)) as where_exec_cnt
+        ORDER BY where_exec_cnt desc
+        LIMIT 5
+        RETURN tbl, joins,
+          COLLECT(DISTINCT {
+            where_clause: whr.where_clause,
+            where_exec_cnt: where_exec_cnt
+          }) as filters
+        """)
+
+        query_records = self._execute_cypher_query(statement=table_query_level_query, param_dict={'tbl_key': table_uri})
+
+        table_query_records = query_records.single()
+
+        joins = self._extract_joins_from_query(table_query_records.get('joins', [{}]))
+        filters = self._extract_filters_from_query(table_query_records.get('filters', [{}]))
+
+        return joins, filters
 
     def _extract_programmatic_descriptions_from_query(self, raw_prog_descriptions: dict) -> list:
         prog_descriptions = []
@@ -293,6 +390,39 @@ class Neo4jProxy(BaseProxy):
                 prog_descriptions.append(ProgrammaticDescription(source=source, text=prog_description['description']))
         prog_descriptions.sort(key=lambda x: x.source)
         return prog_descriptions
+
+    def _extract_resource_reports_from_query(self, raw_resource_reports: dict) -> list:
+        resource_reports = []
+        for resource_report in raw_resource_reports:
+            name = resource_report.get('name')
+            if name is None:
+                LOGGER.error("A report with no name found... skipping.")
+            else:
+                resource_reports.append(ResourceReport(name=name, url=resource_report['url']))
+
+        resource_reports.sort(key=lambda x: x.name)
+        return resource_reports
+
+    def _extract_joins_from_query(self, joins: List[Dict]) -> List[Dict]:
+        valid_joins = []
+        for join in joins:
+            join_data = join['join']
+            if all(join_data.values()):
+                new_sql_join = SqlJoin(join_sql=join_data['join_sql'],
+                                       join_type=join_data['join_type'],
+                                       joined_on_column=join_data['joined_on_column'],
+                                       joined_on_table=TableSummary(**join_data['joined_on_table']),
+                                       column=join_data['column'])
+                valid_joins.append(new_sql_join)
+        return valid_joins
+
+    def _extract_filters_from_query(self, filters: List[Dict]) -> List[Dict]:
+        return_filters = []
+        for filt in filters:
+            filter_where = filt.get('where_clause')
+            if filter_where:
+                return_filters.append(SqlWhere(where_clause=filter_where))
+        return return_filters
 
     @no_type_check
     def _safe_get(self, dct, *keys):
@@ -339,9 +469,9 @@ class Neo4jProxy(BaseProxy):
         return _badges
 
     @timer_with_counter
-    def _get_resource_description(self, *,
-                                  resource_type: ResourceType,
-                                  uri: str) -> Description:
+    def get_resource_description(self, *,
+                                 resource_type: ResourceType,
+                                 uri: str) -> Description:
         """
         Get the resource description based on the uri. Any exception will propagate back to api server.
 
@@ -371,17 +501,17 @@ class Neo4jProxy(BaseProxy):
         :return:
         """
 
-        return self._get_resource_description(resource_type=ResourceType.Table, uri=table_uri).description
+        return self.get_resource_description(resource_type=ResourceType.Table, uri=table_uri).description
 
     @timer_with_counter
-    def _put_resource_description(self, *,
-                                  resource_type: ResourceType,
-                                  uri: str,
-                                  description: str) -> None:
+    def put_resource_description(self, *,
+                                 resource_type: ResourceType,
+                                 uri: str,
+                                 description: str) -> None:
         """
-        Update table description with one from user
-        :param table_uri: Table uri (key in Neo4j)
-        :param description: new value for table description
+        Update resource description with one from user
+        :param uri: Resource uri (key in Neo4j)
+        :param description: new value for resource description
         """
         # start neo4j transaction
         desc_key = uri + '/_description'
@@ -410,7 +540,7 @@ class Neo4jProxy(BaseProxy):
                                                              'key': uri})
 
             if not result.single():
-                raise NotFoundException('Failed to update the description as resource {uri} does not exist'.format(uri=uri))
+                raise NotFoundException(f'Failed to update the description as resource {uri} does not exist')
 
             # end neo4j transaction
             tx.commit()
@@ -437,9 +567,9 @@ class Neo4jProxy(BaseProxy):
         :param description: new value for table description
         """
 
-        self._put_resource_description(resource_type=ResourceType.Table,
-                                       uri=table_uri,
-                                       description=description)
+        self.put_resource_description(resource_type=ResourceType.Table,
+                                      uri=table_uri,
+                                      description=description)
 
     @timer_with_counter
     def get_column_description(self, *,
@@ -506,9 +636,8 @@ class Neo4jProxy(BaseProxy):
                                                              'column_key': column_uri})
 
             if not result.single():
-                raise NotFoundException('Failed to update the table {tbl} '
-                                   'column {col} description as either table or column does not exist'.format(tbl=table_uri,
-                                                                     col=column_uri))
+                raise NotFoundException(f'Failed to update the table {table_uri} column '
+                                        f'{column_uri} description as either table or column does not exist')
 
             # end neo4j transaction
             tx.commit()
@@ -535,6 +664,24 @@ class Neo4jProxy(BaseProxy):
         Update table owner informations.
         1. Do a create if not exists query of the owner(user) node.
         2. Do a upsert of the owner/owned_by relation.
+        :param table_uri:
+        :param owner:
+        :return:
+        """
+
+        self.add_resource_owner(uri=table_uri,
+                                resource_type=ResourceType.Table,
+                                owner=owner)
+
+    @timer_with_counter
+    def add_resource_owner(self, *,
+                           uri: str,
+                           resource_type: ResourceType,
+                           owner: str) -> None:
+        """
+        Update table owner informations.
+        1. Do a create if not exists query of the owner(user) node.
+        2. Do a upsert of the owner/owned_by relation.
 
         :param table_uri:
         :param owner:
@@ -546,22 +693,22 @@ class Neo4jProxy(BaseProxy):
         """)
 
         upsert_owner_relation_query = textwrap.dedent("""
-        MATCH (n1:User {key: $user_email}), (n2:Table {key: $tbl_key})
+        MATCH (n1:User {{key: $user_email}}), (n2:{resource_type} {{key: $res_key}})
         MERGE (n1)-[r1:OWNER_OF]->(n2)-[r2:OWNER]->(n1)
         RETURN n1.key, n2.key
-        """)
+        """.format(resource_type=resource_type.name))
 
         try:
             tx = self._driver.session().begin_transaction()
             # upsert the node
             tx.run(create_owner_query, {'user_email': owner})
             result = tx.run(upsert_owner_relation_query, {'user_email': owner,
-                                                          'tbl_key': table_uri})
+                                                          'res_key': uri})
 
             if not result.single():
                 raise RuntimeError('Failed to create relation between '
-                                   'owner {owner} and table {tbl}'.format(owner=owner,
-                                                                          tbl=table_uri))
+                                   'owner {owner} and resource {uri}'.format(owner=owner,
+                                                                             uri=uri))
             tx.commit()
         except Exception as e:
             if not tx.closed():
@@ -579,16 +726,31 @@ class Neo4jProxy(BaseProxy):
         :param owner:
         :return:
         """
+        self.delete_resource_owner(uri=table_uri,
+                                   resource_type=ResourceType.Table,
+                                   owner=owner)
+
+    @timer_with_counter
+    def delete_resource_owner(self, *,
+                              uri: str,
+                              resource_type: ResourceType,
+                              owner: str) -> None:
+        """
+        Delete the owner / owned_by relationship.
+        :param table_uri:
+        :param owner:
+        :return:
+        """
         delete_query = textwrap.dedent("""
-        MATCH (n1:User{key: $user_email}), (n2:Table {key: $tbl_key})
+        MATCH (n1:User{{key: $user_email}}), (n2:{resource_type} {{key: $res_key}})
         OPTIONAL MATCH (n1)-[r1:OWNER_OF]->(n2)
         OPTIONAL MATCH (n2)-[r2:OWNER]->(n1)
         DELETE r1,r2
-        """)
+        """.format(resource_type=resource_type.name))
         try:
             tx = self._driver.session().begin_transaction()
             tx.run(delete_query, {'user_email': owner,
-                                  'tbl_key': table_uri})
+                                  'res_key': uri})
         except Exception as e:
             # propagate the exception back to api
             if not tx.closed():
@@ -873,8 +1035,9 @@ class Neo4jProxy(BaseProxy):
             return neo4j_statistics
         return {}
 
-    @_CACHE.cache('_get_global_popular_tables_uris', expire=_GET_POPULAR_TABLE_CACHE_EXPIRY_SEC)
-    def _get_global_popular_tables_uris(self, num_entries: int) -> List[str]:
+    @_CACHE.cache('_get_global_popular_resources_uris', expire=_GET_POPULAR_RESOURCES_CACHE_EXPIRY_SEC)
+    def _get_global_popular_resources_uris(self, num_entries: int,
+                                           resource_type: ResourceType = ResourceType.Table) -> List[str]:
         """
         Retrieve popular table uris. Will provide tables with top x popularity score.
         Popularity score = number of distinct readers * log(total number of reads)
@@ -886,28 +1049,29 @@ class Neo4jProxy(BaseProxy):
         :return: Iterable of table uri
         """
         query = textwrap.dedent("""
-        MATCH (tbl:Table)-[r:READ_BY]->(u:User)
-        WITH tbl.key as table_key, count(distinct u) as readers, sum(r.read_count) as total_reads
+        MATCH (resource:{resource_type})-[r:READ_BY]->(u:User)
+        WITH resource.key as resource_key, count(distinct u) as readers, sum(r.read_count) as total_reads
         WHERE readers >= $num_readers
-        RETURN table_key, readers, total_reads, (readers * log(total_reads)) as score
+        RETURN resource_key, readers, total_reads, (readers * log(total_reads)) as score
         ORDER BY score DESC LIMIT $num_entries;
-        """)
+        """).format(resource_type=resource_type.name)
         LOGGER.info('Querying popular tables URIs')
-        num_readers = current_app.config['POPULAR_TABLE_MINIMUM_READER_COUNT']
+        num_readers = current_app.config['POPULAR_RESOURCES_MINIMUM_READER_COUNT']
         records = self._execute_cypher_query(statement=query,
                                              param_dict={'num_readers': num_readers,
                                                          'num_entries': num_entries})
 
-        return [record['table_key'] for record in records]
+        return [record['resource_key'] for record in records]
 
     @timer_with_counter
-    @_CACHE.cache('_get_personal_popular_tables_uris', _GET_POPULAR_TABLE_CACHE_EXPIRY_SEC)
-    def _get_personal_popular_tables_uris(self, num_entries: int,
-                                          user_id: str) -> List[str]:
+    @_CACHE.cache('_get_personal_popular_tables_uris', _GET_POPULAR_RESOURCES_CACHE_EXPIRY_SEC)
+    def _get_personal_popular_resources_uris(self, num_entries: int,
+                                             user_id: str,
+                                             resource_type: ResourceType = ResourceType.Table) -> List[str]:
         """
-        Retrieve personalized popular table uris. Will provide tables with top
+        Retrieve personalized popular resources uris. Will provide resources with top
         popularity score that have been read by a peer of the user_id provided.
-        The popularity score is defined in the same way as `_get_global_popular_tables_uris`
+        The popularity score is defined in the same way as `_get_global_popular_resources_uris`
 
         The result of this method will be cached based on the key (num_entries, user_id),
         and the cache will be expired based on _GET_POPULAR_TABLE_CACHE_EXPIRY_SEC
@@ -915,28 +1079,29 @@ class Neo4jProxy(BaseProxy):
         :return: Iterable of table uri
         """
         statement = textwrap.dedent("""
-        MATCH (:User {key:$user_id})<-[:READ_BY]-(:Table)-[:READ_BY]->
-             (coUser:User)<-[coRead:READ_BY]-(table:Table)
-        WITH table.key AS table_key, count(DISTINCT coUser) AS co_readers,
+        MATCH (:User {{key:$user_id}})<-[:READ_BY]-(:{resource_type})-[:READ_BY]->
+             (coUser:User)<-[coRead:READ_BY]-(resource:{resource_type})
+        WITH resource.key AS resource_key, count(DISTINCT coUser) AS co_readers,
              sum(coRead.read_count) AS total_co_reads
         WHERE co_readers >= $num_readers
-        RETURN table_key, (co_readers * log(total_co_reads)) AS score
+        RETURN resource_key, (co_readers * log(total_co_reads)) AS score
         ORDER BY score DESC LIMIT $num_entries;
-        """)
+        """).format(resource_type=resource_type.name)
         LOGGER.info('Querying popular tables URIs')
-        num_readers = current_app.config['POPULAR_TABLE_MINIMUM_READER_COUNT']
+        num_readers = current_app.config['POPULAR_RESOURCES_MINIMUM_READER_COUNT']
         records = self._execute_cypher_query(statement=statement,
                                              param_dict={'user_id': user_id,
                                                          'num_readers': num_readers,
                                                          'num_entries': num_entries})
 
-        return [record['table_key'] for record in records]
+        return [record['resource_key'] for record in records]
 
     @timer_with_counter
     def get_popular_tables(self, *,
                            num_entries: int,
                            user_id: Optional[str] = None) -> List[PopularTable]:
         """
+
         Retrieve popular tables. As popular table computation requires full scan of table and user relationship,
         it will utilize cached method _get_popular_tables_uris.
 
@@ -945,10 +1110,10 @@ class Neo4jProxy(BaseProxy):
         """
         if user_id is None:
             # Get global popular table URIs
-            table_uris = self._get_global_popular_tables_uris(num_entries)
+            table_uris = self._get_global_popular_resources_uris(num_entries)
         else:
             # Get personalized popular table URIs
-            table_uris = self._get_personal_popular_tables_uris(num_entries, user_id)
+            table_uris = self._get_personal_popular_resources_uris(num_entries, user_id)
 
         if not table_uris:
             return []
@@ -974,6 +1139,101 @@ class Neo4jProxy(BaseProxy):
                                          description=self._safe_get(record, 'table_description'))
             popular_tables.append(popular_table)
         return popular_tables
+
+    def _get_popular_tables(self, *, resource_uris: List[str]) -> List[TableSummary]:
+        """
+
+        """
+        if not resource_uris:
+            return []
+
+        query = textwrap.dedent("""
+        MATCH (db:Database)-[:CLUSTER]->(clstr:Cluster)-[:SCHEMA]->(schema:Schema)-[:TABLE]->(tbl:Table)
+        WHERE tbl.key IN $table_uris
+        WITH db.name as database_name, clstr.name as cluster_name, schema.name as schema_name, tbl
+        OPTIONAL MATCH (tbl)-[:DESCRIPTION]->(dscrpt:Description)
+        RETURN database_name, cluster_name, schema_name, tbl.name as table_name,
+        dscrpt.description as table_description;
+        """)
+        records = self._execute_cypher_query(statement=query,
+                                             param_dict={'table_uris': resource_uris})
+
+        popular_tables = []
+        for record in records:
+            popular_table = TableSummary(database=record['database_name'],
+                                         cluster=record['cluster_name'],
+                                         schema=record['schema_name'],
+                                         name=record['table_name'],
+                                         description=self._safe_get(record, 'table_description'))
+            popular_tables.append(popular_table)
+        return popular_tables
+
+    def _get_popular_dashboards(self, *, resource_uris: List[str]) -> List[DashboardSummary]:
+        """
+
+        """
+        if not resource_uris:
+            return []
+
+        query = textwrap.dedent(f"""
+        MATCH (d:Dashboard)-[:DASHBOARD_OF]->(dg:Dashboardgroup)-[:DASHBOARD_GROUP_OF]->(c:Cluster)
+        WHERE d.key IN $dashboards_uris
+        OPTIONAL MATCH (d)-[:DESCRIPTION]->(dscrpt:Description)
+        OPTIONAL MATCH (d)-[:EXECUTED]->(last_exec:Execution)
+        WHERE split(last_exec.key, '/')[5] = '_last_successful_execution'
+        RETURN c.name as cluster_name, dg.name as dg_name, dg.dashboard_group_url as dg_url,
+        d.key as uri, d.name as name, d.dashboard_url as url,
+        split(d.key, '_')[0] as product,
+        dscrpt.description as description, last_exec.timestamp as last_successful_run_timestamp""")
+
+        records = self._execute_cypher_query(statement=query,
+                                             param_dict={'dashboards_uris': resource_uris})
+
+        popular_dashboards = []
+        for record in records:
+            popular_dashboards.append(DashboardSummary(
+                uri=record['uri'],
+                cluster=record['cluster_name'],
+                group_name=record['dg_name'],
+                group_url=record['dg_url'],
+                product=record['product'],
+                name=record['name'],
+                url=record['url'],
+                description=record['description'],
+                last_successful_run_timestamp=record['last_successful_run_timestamp'],
+            ))
+
+        return popular_dashboards
+
+    @timer_with_counter
+    def get_popular_resources(self, *,
+                              num_entries: int,
+                              resource_types: List[str],
+                              user_id: Optional[str] = None) -> Dict[str, List]:
+        popular_resources: Dict[str, List] = dict()
+        for resource in resource_types:
+            resource_type = to_resource_type(label=resource)
+            popular_resources[resource_type.name] = list()
+            if user_id is None:
+                # Get global popular Table/Dashboard URIs
+                resource_uris = self._get_global_popular_resources_uris(num_entries,
+                                                                        resource_type=resource_type)
+            else:
+                # Get personalized popular Table/Dashboard URIs
+                resource_uris = self._get_personal_popular_resources_uris(num_entries,
+                                                                          user_id,
+                                                                          resource_type=resource_type)
+
+            if resource_type == ResourceType.Table:
+                popular_resources[resource_type.name] = self._get_popular_tables(
+                    resource_uris=resource_uris
+                )
+            elif resource_type == ResourceType.Dashboard:
+                popular_resources[resource_type.name] = self._get_popular_dashboards(
+                    resource_uris=resource_uris
+                )
+
+        return popular_resources
 
     @timer_with_counter
     def get_user(self, *, id: str) -> Union[UserEntity, None]:
@@ -1073,7 +1333,7 @@ class Neo4jProxy(BaseProxy):
         return [self._build_user_from_record(record=rec) for rec in result['users']]
 
     @staticmethod
-    def _build_user_from_record(record: dict, manager_name: str = '') -> UserEntity:
+    def _build_user_from_record(record: dict, manager_name: Optional[str] = None) -> UserEntity:
         """
         Builds user record from Cypher query result. Other than the one defined in amundsen_common.models.user.User,
         you could add more fields from User node into the User model by specifying keys in config.USER_OTHER_KEYS
@@ -1088,10 +1348,12 @@ class Neo4jProxy(BaseProxy):
                     other_key_values[k] = record[k]
 
         return UserEntity(email=record['email'],
+                          user_id=record.get('user_id', record['email']),
                           first_name=record.get('first_name'),
                           last_name=record.get('last_name'),
                           full_name=record.get('full_name'),
-                          is_active=record.get('is_active', False),
+                          is_active=record.get('is_active', True),
+                          profile_url=record.get('profile_url'),
                           github_username=record.get('github_username'),
                           team_name=record.get('team_name'),
                           slack_id=record.get('slack_id'),
@@ -1406,7 +1668,12 @@ class Neo4jProxy(BaseProxy):
         if not dashboard_record:
             raise NotFoundException('No dashboard exist with URI: {}'.format(id))
 
-        owners = [self._build_user_from_record(record=owner) for owner in dashboard_record['owners']]
+        owners = []
+
+        for owner in dashboard_record.get('owners', []):
+            owner_data = self._get_user_details(user_id=owner['email'], user_data=owner)
+            owners.append(self._build_user_from_record(record=owner_data))
+
         tags = [Tag(tag_type=tag['tag_type'], tag_name=tag['key']) for tag in dashboard_record['tags']]
 
         badges = self._make_badges(dashboard_record['badges'])
@@ -1452,7 +1719,7 @@ class Neo4jProxy(BaseProxy):
         :return:
         """
 
-        return self._get_resource_description(resource_type=ResourceType.Dashboard, uri=id)
+        return self.get_resource_description(resource_type=ResourceType.Dashboard, uri=id)
 
     @timer_with_counter
     def put_dashboard_description(self, *,
@@ -1464,9 +1731,9 @@ class Neo4jProxy(BaseProxy):
         :param description: new value for Dashboard description
         """
 
-        self._put_resource_description(resource_type=ResourceType.Dashboard,
-                                       uri=id,
-                                       description=description)
+        self.put_resource_description(resource_type=ResourceType.Dashboard,
+                                      uri=id,
+                                      description=description)
 
     @timer_with_counter
     def get_resources_using_table(self, *,
@@ -1526,63 +1793,63 @@ class Neo4jProxy(BaseProxy):
 
         get_both_lineage_query = textwrap.dedent(u"""
         MATCH (source:{resource} {{key: $query_key}})
-        OPTIONAL MATCH (source)-[downstream_len:HAS_DOWNSTREAM*..{depth}]->(downstream_entity:{resource})
-        OPTIONAL MATCH (source)-[upstream_len:HAS_UPSTREAM*..{depth}]->(upstream_entity:{resource})
-        WITH downstream_entity, upstream_entity, downstream_len, upstream_len
+        OPTIONAL MATCH dpath=(source)-[downstream_len:HAS_DOWNSTREAM*..{depth}]->(downstream_entity:{resource})
+        OPTIONAL MATCH upath=(source)-[upstream_len:HAS_UPSTREAM*..{depth}]->(upstream_entity:{resource})
+        WITH downstream_entity, upstream_entity, downstream_len, upstream_len, upath, dpath
         OPTIONAL MATCH (upstream_entity)-[:HAS_BADGE]->(upstream_badge:Badge)
         OPTIONAL MATCH (downstream_entity)-[:HAS_BADGE]->(downstream_badge:Badge)
         WITH CASE WHEN downstream_badge IS NULL THEN []
         ELSE collect(distinct {{key:downstream_badge.key,category:downstream_badge.category}})
         END AS downstream_badges, CASE WHEN upstream_badge IS NULL THEN []
         ELSE collect(distinct {{key:upstream_badge.key,category:upstream_badge.category}})
-        END AS upstream_badges, upstream_entity, downstream_entity, upstream_len, downstream_len
+        END AS upstream_badges, upstream_entity, downstream_entity, upstream_len, downstream_len, upath, dpath
         OPTIONAL MATCH (downstream_entity:{resource})-[downstream_read:READ_BY]->(:User)
-        WITH upstream_entity, downstream_entity, upstream_len, downstream_len,
+        WITH upstream_entity, downstream_entity, upstream_len, downstream_len, upath, dpath,
         downstream_badges, upstream_badges, sum(downstream_read.read_count) as downstream_read_count
         OPTIONAL MATCH (upstream_entity:{resource})-[upstream_read:READ_BY]->(:User)
         WITH upstream_entity, downstream_entity, upstream_len, downstream_len,
         downstream_badges, upstream_badges, downstream_read_count,
-        sum(upstream_read.read_count) as upstream_read_count
+        sum(upstream_read.read_count) as upstream_read_count, upath, dpath
         WITH CASE WHEN upstream_len IS NULL THEN []
         ELSE COLLECT(distinct{{level:SIZE(upstream_len), source:split(upstream_entity.key,'://')[0],
-        key:upstream_entity.key, badges:upstream_badges, usage:upstream_read_count}})
+        key:upstream_entity.key, badges:upstream_badges, usage:upstream_read_count, parent:nodes(upath)[-2].key}})
         END AS upstream_entities, CASE WHEN downstream_len IS NULL THEN []
         ELSE COLLECT(distinct{{level:SIZE(downstream_len), source:split(downstream_entity.key,'://')[0],
-        key:downstream_entity.key, badges:downstream_badges, usage:downstream_read_count}})
+        key:downstream_entity.key, badges:downstream_badges, usage:downstream_read_count, parent:nodes(dpath)[-2].key}})
         END AS downstream_entities RETURN downstream_entities, upstream_entities
         """).format(depth=depth, resource=resource_type.name)
 
         get_upstream_lineage_query = textwrap.dedent(u"""
         MATCH (source:{resource} {{key: $query_key}})
-        OPTIONAL MATCH (source)-[upstream_len:HAS_UPSTREAM*..{depth}]->(upstream_entity:{resource})
-        WITH upstream_entity, upstream_len
+        OPTIONAL MATCH path=(source)-[upstream_len:HAS_UPSTREAM*..{depth}]->(upstream_entity:{resource})
+        WITH upstream_entity, upstream_len, path
         OPTIONAL MATCH (upstream_entity)-[:HAS_BADGE]->(upstream_badge:Badge)
         WITH CASE WHEN upstream_badge IS NULL THEN []
         ELSE collect(distinct {{key:upstream_badge.key,category:upstream_badge.category}})
-        END AS upstream_badges, upstream_entity, upstream_len
+        END AS upstream_badges, upstream_entity, upstream_len, path
         OPTIONAL MATCH (upstream_entity:{resource})-[upstream_read:READ_BY]->(:User)
         WITH upstream_entity, upstream_len, upstream_badges,
-        sum(upstream_read.read_count) as upstream_read_count
+        sum(upstream_read.read_count) as upstream_read_count, path
         WITH CASE WHEN upstream_len IS NULL THEN []
         ELSE COLLECT(distinct{{level:SIZE(upstream_len), source:split(upstream_entity.key,'://')[0],
-        key:upstream_entity.key, badges:upstream_badges, usage:upstream_read_count}})
+        key:upstream_entity.key, badges:upstream_badges, usage:upstream_read_count, parent:nodes(path)[-2].key}})
         END AS upstream_entities RETURN upstream_entities
         """).format(depth=depth, resource=resource_type.name)
 
         get_downstream_lineage_query = textwrap.dedent(u"""
         MATCH (source:{resource} {{key: $query_key}})
-        OPTIONAL MATCH (source)-[downstream_len:HAS_DOWNSTREAM*..{depth}]->(downstream_entity:{resource})
-        WITH downstream_entity, downstream_len
+        OPTIONAL MATCH path=(source)-[downstream_len:HAS_DOWNSTREAM*..{depth}]->(downstream_entity:{resource})
+        WITH downstream_entity, downstream_len, path
         OPTIONAL MATCH (downstream_entity)-[:HAS_BADGE]->(downstream_badge:Badge)
         WITH CASE WHEN downstream_badge IS NULL THEN []
         ELSE collect(distinct {{key:downstream_badge.key,category:downstream_badge.category}})
-        END AS downstream_badges, downstream_entity, downstream_len
+        END AS downstream_badges, downstream_entity, downstream_len, path
         OPTIONAL MATCH (downstream_entity:{resource})-[downstream_read:READ_BY]->(:User)
         WITH downstream_entity, downstream_len, downstream_badges,
-        sum(downstream_read.read_count) as downstream_read_count
+        sum(downstream_read.read_count) as downstream_read_count, path
         WITH CASE WHEN downstream_len IS NULL THEN []
         ELSE COLLECT(distinct{{level:SIZE(downstream_len), source:split(downstream_entity.key,'://')[0],
-        key:downstream_entity.key, badges:downstream_badges, usage:downstream_read_count}})
+        key:downstream_entity.key, badges:downstream_badges, usage:downstream_read_count, parent:nodes(path)[-2].key}})
         END AS downstream_entities RETURN downstream_entities
         """).format(depth=depth, resource=resource_type.name)
 
@@ -1607,16 +1874,186 @@ class Neo4jProxy(BaseProxy):
                                                     "source": downstream["source"],
                                                     "level": downstream["level"],
                                                     "badges": self._make_badges(downstream["badges"]),
-                                                    "usage": downstream.get("usage", 0)}))
+                                                    "usage": downstream.get("usage", 0),
+                                                    "parent": downstream.get("parent", '')
+                                                    }))
 
         for upstream in result.get("upstream_entities") or []:
             upstream_tables.append(LineageItem(**{"key": upstream["key"],
                                                   "source": upstream["source"],
                                                   "level": upstream["level"],
                                                   "badges": self._make_badges(upstream["badges"]),
-                                                  "usage": upstream.get("usage", 0)}))
+                                                  "usage": upstream.get("usage", 0),
+                                                  "parent": upstream.get("parent", '')
+                                                  }))
 
+        # ToDo: Add a root_entity as an item, which will make it easier for lineage graph
         return Lineage(**{"key": id,
                           "upstream_entities": upstream_tables,
                           "downstream_entities": downstream_tables,
                           "direction": direction, "depth": depth})
+
+    def _create_watermarks(self, wmk_records: List) -> List[Watermark]:
+        watermarks = []
+        for record in wmk_records:
+            if record['key'] is not None:
+                watermark_type = record['key'].split('/')[-2]
+                watermarks.append(Watermark(watermark_type=watermark_type,
+                                            partition_key=record['partition_key'],
+                                            partition_value=record['partition_value'],
+                                            create_time=record['create_time']))
+        return watermarks
+
+    def _create_feature_watermarks(self, wmk_records: List) -> List[Watermark]:
+        watermarks = []
+        for record in wmk_records:
+            if record['key'] is not None:
+                watermark_type = record['key'].split('/')[-1]
+
+                watermarks.append(FeatureWatermark(key=record['key'],
+                                                   watermark_type=watermark_type,
+                                                   time=record['time']))
+        return watermarks
+
+    def _create_programmatic_descriptions(self, prog_desc_records: List) -> List[ProgrammaticDescription]:
+        programmatic_descriptions = []
+        for pg in prog_desc_records:
+            source = pg['description_source']
+            if source is None:
+                LOGGER.error("A programmatic description with no source was found... skipping.")
+            else:
+                programmatic_descriptions.append(ProgrammaticDescription(source=source,
+                                                                         text=pg['description']))
+        return programmatic_descriptions
+
+    def _create_owners(self, owner_records: List) -> List[User]:
+        owners = []
+        for owner in owner_records:
+            owners.append(User(email=owner['email']))
+        return owners
+
+    @timer_with_counter
+    def _exec_feature_query(self, *, feature_key: str) -> Dict:
+        """
+        Executes cypher query to get feature and related nodes
+        """
+
+        feature_query = textwrap.dedent("""\
+        MATCH (feat:Feature {key: $feature_key})
+        OPTIONAL MATCH (db:Database)-[:AVAILABLE_FEATURE]->(feat)
+        OPTIONAL MATCH (fg:Feature_Group)-[:GROUPS]->(feat)
+        OPTIONAL MATCH (feat)-[:OWNER]->(owner:User)
+        OPTIONAL MATCH (feat)-[:TAGGED_BY]->(tag:Tag)
+        OPTIONAL MATCH (feat)-[:HAS_BADGE]->(badge:Badge)
+        OPTIONAL MATCH (feat)-[:DESCRIPTION]->(desc:Description)
+        OPTIONAL MATCH (feat)-[:DESCRIPTION]->(prog_descriptions:Programmatic_Description)
+        OPTIONAL MATCH (wmk:Feature_Watermark)-[:BELONG_TO_FEATURE]->(feat)
+        RETURN feat, desc, fg,
+        collect(distinct wmk) as wmk_records,
+        collect(distinct db) as availability_records,
+        collect(distinct owner) as owner_records,
+        collect(distinct tag) as tag_records,
+        collect(distinct badge) as badge_records,
+        collect(distinct prog_descriptions) as prog_descriptions
+        """)
+
+        results = self._execute_cypher_query(statement=feature_query,
+                                             param_dict={'feature_key': feature_key})
+
+        if results is None:
+            raise NotFoundException('Feature with key {} does not exist'.format(feature_key))
+
+        feature_records = results.single()
+        if feature_records is None:
+            raise NotFoundException('Feature with key {} does not exist'.format(feature_key))
+
+        watermarks = self._create_feature_watermarks(wmk_records=feature_records['wmk_records'])
+
+        availability_records = [db['name'] for db in feature_records.get('availability_records')]
+
+        description = None
+        if feature_records.get('desc'):
+            description = feature_records.get('desc')['description']
+
+        programmatic_descriptions = self._create_programmatic_descriptions(feature_records['prog_descriptions'])
+
+        owners = self._create_owners(feature_records['owner_records'])
+
+        tags = []
+        for record in feature_records.get('tag_records'):
+            tag_result = Tag(tag_name=record['key'],
+                             tag_type=record['tag_type'])
+            tags.append(tag_result)
+
+        feature_node = feature_records['feat']
+
+        feature_group = feature_records['fg']
+
+        return {
+            'key': feature_node.get('key'),
+            'name': feature_node.get('name'),
+            'version': feature_node.get('version'),
+            'feature_group': feature_group.get('name'),
+            'data_type': feature_node.get('data_type'),
+            'entity': feature_node.get('entity'),
+            'description': description,
+            'programmatic_descriptions': programmatic_descriptions,
+            'last_updated_timestamp': feature_node.get('last_updated_timestamp'),
+            'created_timestamp': feature_node.get('created_timestamp'),
+            'watermarks': watermarks,
+            'availability': availability_records,
+            'tags': tags,
+            'badges': self._make_badges(feature_records.get('badge_records')),
+            'owners': owners,
+            'status': feature_node.get('status')
+        }
+
+    def get_feature(self, *, feature_uri: str) -> Feature:
+        """
+        :param feature_uri: uniquely identifying key for a feature node
+        :return: a Feature object
+        """
+        feature_metadata = self._exec_feature_query(feature_key=feature_uri)
+
+        feature = Feature(
+            key=feature_metadata['key'],
+            name=feature_metadata['name'],
+            version=feature_metadata['version'],
+            status=feature_metadata['status'],
+            feature_group=feature_metadata['feature_group'],
+            entity=feature_metadata['entity'],
+            data_type=feature_metadata['data_type'],
+            availability=feature_metadata['availability'],
+            description=feature_metadata['description'],
+            owners=feature_metadata['owners'],
+            badges=feature_metadata['badges'],
+            tags=feature_metadata['tags'],
+            programmatic_descriptions=feature_metadata['programmatic_descriptions'],
+            last_updated_timestamp=feature_metadata['last_updated_timestamp'],
+            created_timestamp=feature_metadata['created_timestamp'],
+            watermarks=feature_metadata['watermarks'])
+        return feature
+
+    def get_resource_generation_code(self, *, uri: str, resource_type: ResourceType) -> GenerationCode:
+        """
+        Executes cypher query to get query nodes associated with resource
+        """
+
+        neo4j_query = textwrap.dedent("""\
+        MATCH (feat:{resource_type} {{key: $resource_key}})
+        OPTIONAL MATCH (q:Feature_Generation_Code)-[:GENERATION_CODE_OF]->(feat)
+        RETURN q as query_records
+        """.format(resource_type=resource_type.name))
+
+        records = self._execute_cypher_query(statement=neo4j_query,
+                                             param_dict={'resource_key': uri})
+        if records is None:
+            raise NotFoundException('Generation code for id {} does not exist'.format(id))
+
+        query_result = records.single()['query_records']
+        if query_result is None:
+            raise NotFoundException('Generation code for id {} does not exist'.format(id))
+
+        return GenerationCode(key=query_result['key'],
+                              text=query_result['text'],
+                              source=query_result['source'])

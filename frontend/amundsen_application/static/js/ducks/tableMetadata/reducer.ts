@@ -1,40 +1,38 @@
 import {
-  ColumnLineageMap,
   DashboardResource,
-  Lineage,
   OwnerDict,
   PreviewData,
-  PreviewQueryParams,
+  TablePreviewQueryParams,
   TableMetadata,
+  TableQualityChecks,
   Tag,
 } from 'interfaces';
 
 import {
-  GetTableData,
-  GetTableDataRequest,
-  GetTableDataResponse,
-  GetTableDashboards,
-  GetTableDashboardsResponse,
-  GetTableDescription,
-  GetTableDescriptionRequest,
-  GetTableDescriptionResponse,
-  UpdateTableDescription,
-  UpdateTableDescriptionRequest,
+  ClickTableQualityLink,
+  ClickTableQualityLinkRequest,
   GetColumnDescription,
-  GetColumnDescriptionResponse,
   GetColumnDescriptionRequest,
-  UpdateColumnDescription,
-  UpdateColumnDescriptionRequest,
+  GetColumnDescriptionResponse,
   GetPreviewData,
   GetPreviewDataRequest,
   GetPreviewDataResponse,
+  GetTableDashboards,
+  GetTableDashboardsResponse,
+  GetTableData,
+  GetTableDataRequest,
+  GetTableDataResponse,
+  GetTableDescription,
+  GetTableDescriptionRequest,
+  GetTableDescriptionResponse,
+  GetTableQualityChecks,
+  GetTableQualityChecksRequest,
+  GetTableQualityChecksResponse,
+  UpdateColumnDescription,
+  UpdateColumnDescriptionRequest,
+  UpdateTableDescription,
+  UpdateTableDescriptionRequest,
   UpdateTableOwner,
-  GetTableLineageResponse,
-  GetTableLineage,
-  GetTableLineageRequest,
-  GetColumnLineageResponse,
-  GetColumnLineage,
-  GetColumnLineageRequest,
 } from './types';
 
 import tableOwnersReducer, {
@@ -68,17 +66,18 @@ export const initialTableDataState: TableMetadata = {
   programmatic_descriptions: {},
 };
 
-export const initialTableLineageState = {
-  lineage: {
-    upstream_entities: [],
-    downstream_entities: [],
-  },
-  status: null,
+export const emptyQualityChecks = {
+  external_url: '',
+  last_run_timestamp: 0,
+  num_checks_success: 0,
+  num_checks_failed: 0,
+  num_checks_total: 0,
 };
 
-export const emptyLineage = {
-  upstream_entities: [],
-  downstream_entities: [],
+export const initialQualityChecksState = {
+  status: null,
+  isLoading: false,
+  checks: emptyQualityChecks,
 };
 
 export const initialState: TableMetadataReducerState = {
@@ -87,8 +86,7 @@ export const initialState: TableMetadataReducerState = {
   statusCode: null,
   tableData: initialTableDataState,
   tableOwners: initialOwnersState,
-  tableLineage: initialTableLineageState,
-  columnLineageMap: {},
+  tableQualityChecks: initialQualityChecksState,
 };
 
 /* ACTIONS */
@@ -106,7 +104,6 @@ export function getTableData(
     type: GetTableData.REQUEST,
   };
 }
-
 export function getTableDataFailure(): GetTableDataResponse {
   return {
     type: GetTableData.FAILURE,
@@ -118,7 +115,6 @@ export function getTableDataFailure(): GetTableDataResponse {
     },
   };
 }
-
 export function getTableDataSuccess(
   data: TableMetadata,
   owners: OwnerDict,
@@ -250,7 +246,7 @@ export function updateColumnDescription(
 }
 
 export function getPreviewData(
-  queryParams: PreviewQueryParams
+  queryParams: TablePreviewQueryParams
 ): GetPreviewDataRequest {
   return { payload: { queryParams }, type: GetPreviewData.REQUEST };
 }
@@ -279,82 +275,52 @@ export function getPreviewDataSuccess(
   };
 }
 
-export function getTableLineage(key: string): GetTableLineageRequest {
+export function getTableQualityChecks(
+  key: string
+): GetTableQualityChecksRequest {
   return {
-    type: GetTableLineage.REQUEST,
-    payload: { key },
+    type: GetTableQualityChecks.REQUEST,
+    payload: {
+      key,
+    },
   };
 }
-
-export function getTableLineageSuccess(
-  data: Lineage,
+export function getTableQualityChecksSuccess(
+  checks: TableQualityChecks,
   status: number
-): GetTableLineageResponse {
+): GetTableQualityChecksResponse {
   return {
-    type: GetTableLineage.SUCCESS,
+    type: GetTableQualityChecks.SUCCESS,
     payload: {
-      lineage: data,
+      checks,
       status,
     },
   };
 }
-
-export function getTableLineageFailure(
+export function getTableQualityChecksFailure(
   status: number
-): GetTableLineageResponse {
+): GetTableQualityChecksResponse {
   return {
-    type: GetTableLineage.FAILURE,
+    type: GetTableQualityChecks.FAILURE,
     payload: {
-      lineage: initialTableLineageState.lineage,
       status,
+      checks: emptyQualityChecks,
     },
   };
 }
 
-export function getColumnLineage(
-  key: string,
-  columnName: string
-): GetColumnLineageRequest {
+export function clickDataQualityLink(): ClickTableQualityLinkRequest {
   return {
-    type: GetColumnLineage.REQUEST,
-    payload: { key, columnName },
+    type: ClickTableQualityLink.REQUEST,
     meta: {
       analytics: {
-        name: `getColumnLineage`,
+        name: 'table/clickTableQualityLink',
         payload: {
-          category: 'lineage',
-          label: `${key}/${columnName}`,
+          action: 'click',
+          category: 'table',
+          label: 'see more',
         },
       },
-    },
-  };
-}
-
-export function getColumnLineageSuccess(
-  data: Lineage,
-  columnName: string,
-  status: number
-): GetColumnLineageResponse {
-  return {
-    type: GetColumnLineage.SUCCESS,
-    payload: {
-      columnName,
-      status,
-      lineage: data,
-    },
-  };
-}
-
-export function getColumnLineageFailure(
-  columnName: string,
-  status: number
-): GetColumnLineageResponse {
-  return {
-    type: GetColumnLineage.FAILURE,
-    payload: {
-      columnName,
-      lineage: initialTableLineageState.lineage,
-      status,
     },
   };
 }
@@ -374,11 +340,11 @@ export interface TableMetadataReducerState {
   statusCode: number | null;
   tableData: TableMetadata;
   tableOwners: TableOwnerReducerState;
-  tableLineage: {
+  tableQualityChecks: {
     status: number | null;
-    lineage: Lineage;
+    isLoading: boolean;
+    checks: TableQualityChecks;
   };
-  columnLineageMap: ColumnLineageMap;
 }
 
 export default function reducer(
@@ -436,44 +402,28 @@ export default function reducer(
         ...state,
         tableOwners: tableOwnersReducer(state.tableOwners, action),
       };
-    case GetTableLineage.SUCCESS:
-    case GetTableLineage.FAILURE:
+    case GetTableQualityChecks.REQUEST:
       return {
         ...state,
-        tableLineage: {
-          lineage: (<GetTableLineageResponse>action).payload.lineage,
-          status: (<GetTableLineageResponse>action).payload.status,
+        tableQualityChecks: {
+          status: null,
+          isLoading: true,
+          checks: emptyQualityChecks,
         },
       };
-    case GetColumnLineage.REQUEST: {
-      const { columnName } = (<GetColumnLineageRequest>action).payload;
+    case GetTableQualityChecks.SUCCESS:
+    case GetTableQualityChecks.FAILURE:
+      const { checks, status } = (<GetTableQualityChecksResponse>(
+        action
+      )).payload;
       return {
         ...state,
-        columnLineageMap: {
-          ...state.columnLineageMap,
-          [columnName]: {
-            lineage: emptyLineage,
-            isLoading: true,
-          },
+        tableQualityChecks: {
+          status,
+          checks,
+          isLoading: false,
         },
       };
-    }
-    case GetColumnLineage.SUCCESS:
-    case GetColumnLineage.FAILURE: {
-      const { columnName, lineage: columnLineage } = (<
-        GetColumnLineageResponse
-      >action).payload;
-      return {
-        ...state,
-        columnLineageMap: {
-          ...state.columnLineageMap,
-          [columnName]: {
-            lineage: columnLineage,
-            isLoading: false,
-          },
-        },
-      };
-    }
     default:
       return state;
   }

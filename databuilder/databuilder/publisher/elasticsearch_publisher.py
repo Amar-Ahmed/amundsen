@@ -5,11 +5,11 @@ import json
 import logging
 from typing import List
 
+from amundsen_common.models.index_map import TABLE_INDEX_MAP
 from elasticsearch.exceptions import NotFoundError
 from pyhocon import ConfigTree
 
 from databuilder.publisher.base_publisher import Publisher
-from databuilder.publisher.elasticsearch_constants import TABLE_ELASTICSEARCH_INDEX_MAPPING
 
 LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class ElasticsearchPublisher(Publisher):
     # config to control how many max documents to publish at a time
     ELASTICSEARCH_PUBLISHER_BATCH_SIZE = 'batch_size'
 
-    DEFAULT_ELASTICSEARCH_INDEX_MAPPING = TABLE_ELASTICSEARCH_INDEX_MAPPING
+    DEFAULT_ELASTICSEARCH_INDEX_MAPPING = TABLE_INDEX_MAP
 
     def __init__(self) -> None:
         super(ElasticsearchPublisher, self).__init__()
@@ -77,7 +77,7 @@ class ElasticsearchPublisher(Publisher):
         After upload, swap alias from {old_index} to {new_index} in a atomic operation
         to route traffic to {new_index}
         """
-        actions = [json.loads(l) for l in self.file_handler.readlines()]
+        actions = [json.loads(line) for line in self.file_handler.readlines()]
         # ensure new data exists
         if not actions:
             LOGGER.warning("received no data to upload to Elasticsearch!")
@@ -90,7 +90,8 @@ class ElasticsearchPublisher(Publisher):
         cnt = 0
 
         # create new index with mapping
-        self.elasticsearch_client.indices.create(index=self.elasticsearch_new_index, body=self.elasticsearch_mapping)
+        self.elasticsearch_client.indices.create(index=self.elasticsearch_new_index, body=self.elasticsearch_mapping,
+                                                 params={'include_type_name': 'true'})
         for action in actions:
             index_row = dict(index=dict(_index=self.elasticsearch_new_index,
                                         _type=self.elasticsearch_type))

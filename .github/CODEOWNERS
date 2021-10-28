@@ -11,11 +11,11 @@
 # review when someone opens a pull request.
 *       @amundsen-io/amundsen-committers
 
-/amundsen-kube-helm/ @feng-tao @jornh @javamonkey79
+/amundsen-kube-helm/ @feng-tao @jornh @javamonkey79 @mgorsk1 @verdan @sewardgw @youngyjd
 
-common/*.py        @feng-tao @jinhyukchang @allisonsuarez @verdan @bolkedebruin @mgorsk1
-databuilder/*.py   @feng-tao @jinhyukchang @allisonsuarez @dikshathakur3119
-frontend/amundsen_application/static/    @Golodhros @ttannis @allisonsuarez @dikshathakur3119 @feng-tao @dorianj
-frontend/*.py    @ttannis @feng-tao @dikshathakur3119 @allisonsuarez @dorianj
-metadata/*.py    @feng-tao @jinhyukchang @allisonsuarez @dikshathakur3119 @verdan @bolkedebruin @mgorsk1
-search/*.py      @feng-tao @jinhyukchang @allisonsuarez @dikshathakur3119 @verdan @bolkedebruin @mgorsk1
+common/*.py        @feng-tao @jinhyukchang @allisonsuarez @verdan @bolkedebruin @mgorsk1 @dorianj @youngyjd @dechoma @sewardgw @dkunitsk
+databuilder/*.py   @feng-tao @jinhyukchang @allisonsuarez @dorianj @verdan @mgorsk1 @youngyjd @dechoma @sewardgw @dkunitsk
+frontend/amundsen_application/static/    @Golodhros @ttannis @allisonsuarez @feng-tao @dorianj @verdan @mgorsk1 @sewardgw @youngyjd @dechoma
+frontend/*.py    @ttannis @feng-tao @allisonsuarez @dorianj @verdan @mgorsk1 @sewardgw @youngyjd @dkunitsk @dechoma
+metadata/*.py    @feng-tao @jinhyukchang @allisonsuarez @verdan @bolkedebruin @mgorsk1 @dorianj @youngyjd @dechoma @sewardgw @dkunitsk
+search/*.py      @feng-tao @jinhyukchang @allisonsuarez @verdan @bolkedebruin @mgorsk1 @dorianj @youngyjd @dechoma @sewardgw @dkunitsk

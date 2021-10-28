@@ -8,15 +8,6 @@ interface PartitionData {
   value?: string;
 }
 
-interface PreviewColumnItem {
-  column_name: string;
-  column_type: string;
-}
-
-interface PreviewDataItem {
-  id: string;
-}
-
 export interface TableColumnStats {
   stat_type: string;
   stat_val: string;
@@ -49,27 +40,33 @@ export interface TableWriter {
   name: string;
 }
 
-export interface PreviewQueryParams {
+export interface TablePreviewQueryParams {
   database: string;
   schema: string;
   tableName: string;
   cluster: string;
 }
 
-export interface PreviewData {
-  columns?: PreviewColumnItem[];
-  data?: PreviewDataItem[];
-  error_text?: string;
-}
+export type TableColumnType = TableColumn | NestedTableColumn;
 
 export interface TableColumn {
-  name: string;
+  badges: Badge[];
+  col_type: string;
+  col_index?: number;
+  children?: NestedTableColumn[];
   description: string;
   is_editable: boolean;
-  col_type: string;
-  sort_order: string;
+  name: string;
+  sort_order: number;
   stats: TableColumnStats[];
-  badges: Badge[];
+  nested_level?: number;
+}
+
+export interface NestedTableColumn {
+  col_type: string;
+  description: string;
+  name: string;
+  sort_order: number;
 }
 
 export interface TableOwners {
@@ -125,34 +122,10 @@ export interface Watermark {
   watermark_type: string;
 }
 
-export interface LineageItem {
-  badges: Badge[];
-  cluster: string;
-  database: string;
-  key: string;
-  level: number;
-  name: string;
-  schema: string;
-  usage: number;
-}
-
-export interface Lineage {
-  downstream_entities: LineageItem[];
-  upstream_entities: LineageItem[];
-}
-
-export interface ColumnLineageMap {
-  [columnName: string]: {
-    lineage: Lineage;
-    isLoading: boolean;
-  };
-}
-
-export interface TableLineageParams {
-  key: string;
-}
-
-export interface ColumnLineageParams {
-  key: string;
-  column: string;
+export interface TableQualityChecks {
+  external_url: string;
+  last_run_timestamp: number | null;
+  num_checks_success: number;
+  num_checks_failed: number;
+  num_checks_total: number;
 }

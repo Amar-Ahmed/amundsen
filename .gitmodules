@@ -1,7 +1,7 @@
 [submodule "amundsengremlin"]
 	path = amundsengremlin
-	url = ../amundsengremlin
+	url = https://github.com/amundsen-io/amundsengremlin
 	branch = master
 [submodule "amundsenrds"]
 	path = amundsenrds
-	url = ../amundsenrds.git
+	url = https://github.com/amundsen-io/amundsenrds.git

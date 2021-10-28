@@ -6,7 +6,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#developer-guide)
 [![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://amundsenworkspace.slack.com/join/shared_invite/enQtNTk2ODQ1NDU1NDI0LTc3MzQyZmM0ZGFjNzg5MzY1MzJlZTg4YjQ4YTU0ZmMxYWU2MmVlMzhhY2MzMTc1MDg0MzRjNTA4MzRkMGE0Nzk)
 
-Amundsen Metadata service serves Restful API and is responsible for providing and also updating metadata, such as table & column description, and tags. Metadata service can use Neo4j or Apache Atlas as a persistent layer.
+Amundsen Metadata service serves Restful API and is responsible for providing and also updating metadata, such as table & column description, and tags. Metadata service can use Neo4j, Apache Atlas, AWS Neptune Or Mysql RDS as a persistent layer.
 
 For information about Amundsen and our other services, refer to this [README.md](./../README.md). Please also see our instructions for a [quick start](./../docs/installation.md#bootstrap-a-default-version-of-amundsen-using-docker) setup  of Amundsen with dummy data, and an [overview of the architecture](./../docs/architecture.md#architecture).
 
@@ -34,8 +34,7 @@ $ git clone https://github.com/amundsen-io/amundsenmetadatalibrary.git
 $ cd amundsenmetadatalibrary
 $ python3 -m venv venv
 $ source venv/bin/activate
-$ pip3 install -r requirements.txt
-$ python3 setup.py install
+$ pip3 install -e ".[all]" .
 $ python3 metadata_service/metadata_wsgi.py
 
 -- In a different terminal, verify getting HTTP/1.0 200 OK
@@ -75,7 +74,13 @@ For example, in order to have different config for production, you can inherit C
 This way Metadata service will use production config in production environment. For more information on how the configuration is being loaded and used, here's reference from Flask [doc](http://flask.pocoo.org/docs/1.0/config/#development-production "doc").
 
 # Apache Atlas
-Amundsen Metadata service can use Apache Atlas as a backend. Some of the benefits of using Apache Atlas instead of Neo4j is that Apache Atlas offers plugins to several services (e.g. Apache Hive, Apache Spark) that allow for push based updates. It also allows to set policies on what metadata is accesible and editable by means of Apache Ranger.
+Amundsen Metadata service can use Apache Atlas as a backend. Some of the benefits of using Apache Atlas instead of Neo4j is that Apache Atlas offers plugins to several services (e.g. Apache Hive, Apache Spark) that allow for push based updates. It also allows to set policies on what metadata is accessible and editable by means of Apache Ranger.
+
+Apache Atlas is a data governance service meaning you also get Apache Atlas UI for easy access to your metadata. It is, however, aimed for administrators rather then end-users, which we suggest to direct towards Amundsen UI.
+
+Apache Atlas is so far the only proxy in Amundsen supporting both push and pull for collecting metadata:
+- `Push` method by leveraging Apache Atlas Hive Hook. It's an event listener running alongside Hive Metastore, translating Hive Metastore events into Apache Atlas entities and `pushing` them to Kafka topic, from which Apache Atlas ingests the data by internal processes.
+- `Pull` method by leveraging Amundsen Databuilder integration with Apache Atlas. It means that extractors available in Databuilder can be used to collect metadata about external systems (like PostgresMetadataExtractor) and sending them to Apache Atlas in a shape consumable by Amundsen.
 
 If you would like to use Apache Atlas as a backend for Metadata service you will need to create a [Config](./../metadata/metadata_service/config.py "Config") as mentioned above. Make sure to include the following:
 
@@ -95,7 +100,7 @@ $ docker run -p 5002:5002 --env PROXY_CLIENT=ATLAS --env PROXY_PORT=21000 --env 
 ---
 **NOTE**
 
-The support for Apache Atlas is work in progress. For example, while Apache Atlas supports fine grained access, Amundsen does not support this yet.
+While Apache Atlas supports fine grained access, Amundsen does not support this yet.
 
 # Developer guide
 ## Code style

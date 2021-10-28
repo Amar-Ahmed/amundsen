@@ -6,6 +6,8 @@ from typing import List, Optional
 import attr
 
 from amundsen_common.models.user import User
+from amundsen_common.models.badge import Badge
+from amundsen_common.models.tag import Tag
 from marshmallow3_annotations.ext.attrs import AttrsSchema
 
 
@@ -18,30 +20,6 @@ class Reader:
 class ReaderSchema(AttrsSchema):
     class Meta:
         target = Reader
-        register_as_scheme = True
-
-
-@attr.s(auto_attribs=True, kw_only=True)
-class Tag:
-    tag_type: str
-    tag_name: str
-
-
-class TagSchema(AttrsSchema):
-    class Meta:
-        target = Tag
-        register_as_scheme = True
-
-
-@attr.s(auto_attribs=True, kw_only=True)
-class Badge:
-    badge_name: str = attr.ib()
-    category: str = attr.ib()
-
-
-class BadgeSchema(AttrsSchema):
-    class Meta:
-        target = Badge
         register_as_scheme = True
 
 
@@ -65,6 +43,7 @@ class Stat:
     stat_val: Optional[str] = None
     start_epoch: Optional[int] = None
     end_epoch: Optional[int] = None
+    is_metric: Optional[bool] = None
 
 
 class StatSchema(AttrsSchema):
@@ -148,6 +127,48 @@ class ProgrammaticDescriptionSchema(AttrsSchema):
 
 
 @attr.s(auto_attribs=True, kw_only=True)
+class TableSummary:
+    database: str = attr.ib()
+    cluster: str = attr.ib()
+    schema: str = attr.ib()
+    name: str = attr.ib()
+    description: Optional[str] = attr.ib(default=None)
+    schema_description: Optional[str] = attr.ib(default=None)
+
+
+class TableSummarySchema(AttrsSchema):
+    class Meta:
+        target = TableSummary
+        register_as_scheme = True
+
+
+@attr.s(auto_attribs=True, kw_only=True)
+class SqlJoin:
+    column: str
+    joined_on_table: TableSummary
+    joined_on_column: str
+    join_type: str
+    join_sql: str
+
+
+class SqlJoinSchema(AttrsSchema):
+    class Meta:
+        target = SqlJoin
+        register_as_scheme = True
+
+
+@attr.s(auto_attribs=True, kw_only=True)
+class SqlWhere:
+    where_clause: str
+
+
+class SqlWhereSchema(AttrsSchema):
+    class Meta:
+        target = SqlWhere
+        register_as_scheme = True
+
+
+@attr.s(auto_attribs=True, kw_only=True)
 class Table:
     database: str
     cluster: str
@@ -167,25 +188,11 @@ class Table:
     source: Optional[Source] = None
     is_view: Optional[bool] = attr.ib(default=None, converter=default_if_none)
     programmatic_descriptions: List[ProgrammaticDescription] = []
+    common_joins: Optional[List[SqlJoin]] = None
+    common_filters: Optional[List[SqlWhere]] = None
 
 
 class TableSchema(AttrsSchema):
     class Meta:
         target = Table
-        register_as_scheme = True
-
-
-@attr.s(auto_attribs=True, kw_only=True)
-class TableSummary:
-    database: str = attr.ib()
-    cluster: str = attr.ib()
-    schema: str = attr.ib()
-    name: str = attr.ib()
-    description: Optional[str] = attr.ib(default=None)
-    schema_description: Optional[str] = attr.ib(default=None)
-
-
-class TableSummarySchema(AttrsSchema):
-    class Meta:
-        target = TableSummary
         register_as_scheme = True

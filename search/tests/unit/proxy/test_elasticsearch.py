@@ -5,12 +5,18 @@ import unittest
 from typing import (  # noqa: F401
     Any, Iterable, List,
 )
+from unittest import mock
 from unittest.mock import MagicMock, patch
 
+from amundsen_common.models.api import health_check
+from elasticsearch_dsl import Search
+
 from search_service import create_app
+from search_service.api.feature import FEATURE_INDEX
 from search_service.api.table import TABLE_INDEX
 from search_service.api.user import USER_INDEX
 from search_service.models.dashboard import Dashboard
+from search_service.models.feature import Feature, SearchFeatureResult
 from search_service.models.search_result import SearchResult
 from search_service.models.table import Table
 from search_service.models.tag import Tag
@@ -151,17 +157,6 @@ class TestElasticsearchProxy(unittest.TestCase):
                                                  role_name='swe',
                                                  new_attr='aaa')
 
-        self.mock_dashboard_result = Dashboard(id='mode_dashboard',
-                                               uri='dashboard_uri',
-                                               cluster='gold',
-                                               group_name='mode_dashboard_group',
-                                               group_url='mode_dashboard_group_url',
-                                               product='mode',
-                                               name='mode_dashboard',
-                                               url='mode_dashboard_url',
-                                               description='test_dashboard',
-                                               last_successful_run_timestamp=1000)
-
     def test_setup_client(self) -> None:
         self.es_proxy = ElasticsearchProxy(
             host="http://0.0.0.0:9200",
@@ -170,8 +165,9 @@ class TestElasticsearchProxy(unittest.TestCase):
         )
         a = self.es_proxy.elasticsearch
         for client in [a, a.cat, a.cluster, a.indices, a.ingest, a.nodes, a.snapshot, a.tasks]:
-            self.assertEqual(client.transport.hosts[0]['host'], "0.0.0.0")
-            self.assertEqual(client.transport.hosts[0]['port'], 9200)
+            _host = client.transport.hosts[0]   # type: ignore
+            self.assertEqual(_host['host'], "0.0.0.0")
+            self.assertEqual(_host['port'], 9200)
 
     @patch('search_service.proxy.elasticsearch.Elasticsearch', autospec=True)
     def test_setup_client_with_username_and_password(self, elasticsearch_mock: MagicMock) -> None:
@@ -204,6 +200,23 @@ class TestElasticsearchProxy(unittest.TestCase):
         for client in [a, a.cat, a.cluster, a.indices, a.ingest, a.nodes, a.snapshot, a.tasks]:
             self.assertEqual(client.transport.hosts[0]['host'], "0.0.0.0")
             self.assertEqual(client.transport.hosts[0]['port'], 9200)
+
+    def test_health_elasticsearch(self) -> None:
+        # ES pass
+        mock_elasticsearch = self.es_proxy.elasticsearch
+        with patch.object(mock_elasticsearch.cluster, 'health', return_value={'status': 'ok'}):
+            health_actual = self.es_proxy.health()
+            expected_checks = {'ElasticsearchProxy:connection': {'status': 'ok'}}
+            health_expected = health_check.HealthCheck(status='ok', checks=expected_checks)
+            self.assertEqual(health_actual.status, health_expected.status)
+            self.assertDictEqual(health_actual.checks, health_expected.checks)
+        # ES Fail
+        with patch.object(mock_elasticsearch.cluster, 'health', return_value={'status': 'red'}):
+            health_actual = self.es_proxy.health()
+            expected_checks = {'ElasticsearchProxy:connection': {'status': 'red'}}
+            health_expected = health_check.HealthCheck(status='fail', checks=expected_checks)
+            self.assertDictEqual(health_actual.checks, health_expected.checks)
+            self.assertEqual(health_actual.status, health_expected.status)
 
     @patch('elasticsearch_dsl.Search.execute')
     def test_search_with_empty_query_string(self, mock_search: MagicMock) -> None:
@@ -268,7 +281,6 @@ class TestElasticsearchProxy(unittest.TestCase):
     @patch('elasticsearch_dsl.Search.execute')
     def test_search_with_multiple_result(self,
                                          mock_search: MagicMock) -> None:
-
         mock_results = MagicMock()
         mock_results.hits.total = 2
         mock_results.__iter__.return_value = [TableResponse(result=vars(self.mock_result1)),
@@ -398,29 +410,13 @@ class TestElasticsearchProxy(unittest.TestCase):
         self.assertEqual(self.es_proxy.parse_filters(filter_list,
                                                      index=TABLE_INDEX), '')
 
-    def test_validate_wrong_filters_values(self) -> None:
-        search_request = {
-            "type": "AND",
-            "filters": {
-                "schema": ["test_schema:test_schema"],
-                "table": ["test/table"]
-            },
-            "query_term": "",
-            "page_index": 0
+    def test_parse_filter_escapes_special_characters(self) -> None:
+        filter_list = {
+            'key': ['foo://bar/baz'],
         }
-        self.assertEqual(self.es_proxy.validate_filter_values(search_request), False)
-
-    def test_validate_accepted_filters_values(self) -> None:
-        search_request = {
-            "type": "AND",
-            "filters": {
-                "schema": ["test_schema"],
-                "table": ["test_table"]
-            },
-            "query_term": "a",
-            "page_index": 0
-        }
-        self.assertEqual(self.es_proxy.validate_filter_values(search_request), True)
+        expected_result = r"key:(foo\:\/\/bar\/baz)"
+        self.assertEqual(self.es_proxy.parse_filters(filter_list,
+                                                     index=TABLE_INDEX), expected_result)
 
     def test_parse_query_term(self) -> None:
         term = 'test'
@@ -533,7 +529,6 @@ class TestElasticsearchProxy(unittest.TestCase):
         mock_elasticsearch = self.es_proxy.elasticsearch
         new_index_name = 'tester_index_name'
         mock_uuid.return_value = new_index_name
-        mock_elasticsearch.indices.get_alias.return_value = dict([(new_index_name, {})])
         start_data = [
             Table(id='snowflake://blue.test_schema/bank_accounts', cluster='blue', column_names=['1', '2'],
                   database='snowflake', schema='test_schema', description='A table for something',
@@ -598,12 +593,17 @@ class TestElasticsearchProxy(unittest.TestCase):
                 'programmatic_descriptions': ["test"]
             }
         ]
-        mock_elasticsearch.bulk.return_value = {'errors': False}
+
+        _get_alias = mock.create_autospec(mock_elasticsearch.indices.get_alias)
+        _get_alias.return_value = dict([(new_index_name, {})])
+
+        _bulk = mock.create_autospec(mock_elasticsearch.indices.get_alias)
+        _bulk.return_value = {'errors': False}
 
         expected_alias = 'table_search_index'
         result = self.es_proxy.create_document(data=start_data, index=expected_alias)
         self.assertEqual(expected_alias, result)
-        mock_elasticsearch.bulk.assert_called_with(expected_data)
+        _bulk.assert_called_with(body=expected_data)
 
     def test_update_document_with_no_data(self) -> None:
         expected = ''
@@ -614,7 +614,8 @@ class TestElasticsearchProxy(unittest.TestCase):
     def test_update_document(self, mock_uuid: MagicMock) -> None:
         mock_elasticsearch = self.es_proxy.elasticsearch
         new_index_name = 'tester_index_name'
-        mock_elasticsearch.indices.get_alias.return_value = dict([(new_index_name, {})])
+        _get_alias = mock.create_autospec(mock_elasticsearch.indices.get_alias)
+        _get_alias.return_value = dict([(new_index_name, {})])
         mock_uuid.return_value = new_index_name
         table_key = 'snowflake://blue.test_schema/bitcoin_wallets'
         expected_alias = 'table_search_index'
@@ -656,14 +657,18 @@ class TestElasticsearchProxy(unittest.TestCase):
         ]
         result = self.es_proxy.update_document(data=data, index=expected_alias)
         self.assertEqual(expected_alias, result)
-        mock_elasticsearch.bulk.assert_called_with(expected_data)
+        _bulk = mock.create_autospec(mock_elasticsearch.bulk)
+        _bulk.assert_called_with(body=expected_data)
 
     @patch('uuid.uuid4')
     def test_delete_table_document(self, mock_uuid: MagicMock) -> None:
         mock_elasticsearch = self.es_proxy.elasticsearch
         new_index_name = 'tester_index_name'
         mock_uuid.return_value = new_index_name
-        mock_elasticsearch.indices.get_alias.return_value = dict([(new_index_name, {})])
+
+        _get_alias = mock.create_autospec(mock_elasticsearch.indices.get_alias)
+        _get_alias.return_value = dict([(new_index_name, {})])
+
         expected_alias = 'table_search_index'
         data = ['id1', 'id2']
 
@@ -674,14 +679,16 @@ class TestElasticsearchProxy(unittest.TestCase):
         result = self.es_proxy.delete_document(data=data, index=expected_alias)
 
         self.assertEqual(expected_alias, result)
-        mock_elasticsearch.bulk.assert_called_with(expected_data)
+        _bulk = mock.create_autospec(mock_elasticsearch.bulk)
+        _bulk.assert_called_with(body=expected_data)
 
     @patch('uuid.uuid4')
     def test_delete_user_document(self, mock_uuid: MagicMock) -> None:
         mock_elasticsearch = self.es_proxy.elasticsearch
         new_index_name = 'tester_index_name'
         mock_uuid.return_value = new_index_name
-        mock_elasticsearch.indices.get_alias.return_value = dict([(new_index_name, {})])
+        _get_alias = mock.create_autospec(mock_elasticsearch.indices.get_alias)
+        _get_alias.return_value = dict([(new_index_name, {})])
         expected_alias = 'user_search_index'
         data = ['id1', 'id2']
 
@@ -692,7 +699,28 @@ class TestElasticsearchProxy(unittest.TestCase):
         result = self.es_proxy.delete_document(data=data, index=expected_alias)
 
         self.assertEqual(expected_alias, result)
-        mock_elasticsearch.bulk.assert_called_with(expected_data)
+        _bulk = mock.create_autospec(mock_elasticsearch.bulk)
+        _bulk.assert_called_with(body=expected_data)
+
+    @patch('uuid.uuid4')
+    def test_delete_feature_document(self, mock_uuid: MagicMock) -> None:
+        mock_elasticsearch = self.es_proxy.elasticsearch
+        new_index_name = 'test_indx'
+        mock_uuid.return_value = new_index_name
+        _get_alias = mock.create_autospec(mock_elasticsearch.indices.get_alias)
+        _get_alias.return_value = dict([(new_index_name, {})])
+        expected_alias = 'feature_search_index'
+        data = ['id1', 'id2']
+
+        expected_data = [
+            {'delete': {'_index': new_index_name, '_id': 'id1', '_type': 'feature'}},
+            {'delete': {'_index': new_index_name, '_id': 'id2', '_type': 'feature'}}
+        ]
+        result = self.es_proxy.delete_document(data=data, index=expected_alias)
+
+        self.assertEqual(expected_alias, result)
+        _bulk = mock.create_autospec(mock_elasticsearch.bulk)
+        _bulk.assert_called_with(body=expected_data)
 
     def test_get_instance_string(self) -> None:
         result = self.es_proxy._get_instance('column', 'value')
@@ -709,22 +737,20 @@ class TestElasticsearchProxy(unittest.TestCase):
         self.assertEqual(badges, result)
 
     @patch('search_service.proxy.elasticsearch.ElasticsearchProxy._search_helper')
-    def test_fetch_dashboard_search_results(self,
-                                            mock_search: MagicMock) -> None:
-
-        self.mock_dashboard_result = Dashboard(id='mode_dashboard',
-                                               uri='dashboard_uri',
-                                               cluster='gold',
-                                               group_name='mode_dashboard_group',
-                                               group_url='mode_dashboard_group_url',
-                                               product='mode',
-                                               name='mode_dashboard',
-                                               url='mode_dashboard_url',
-                                               description='test_dashboard',
-                                               last_successful_run_timestamp=1000)
+    def test_fetch_dashboard_search_results(self, mock_search: MagicMock) -> None:
+        mock_dashboard_result = Dashboard(id='mode_dashboard',
+                                          uri='dashboard_uri',
+                                          cluster='gold',
+                                          group_name='mode_dashboard_group',
+                                          group_url='mode_dashboard_group_url',
+                                          product='mode',
+                                          name='mode_dashboard',
+                                          url='mode_dashboard_url',
+                                          description='test_dashboard',
+                                          last_successful_run_timestamp=1000)
 
         mock_search.return_value = SearchResult(total_results=1,
-                                                results=[self.mock_dashboard_result])
+                                                results=[mock_dashboard_result])
 
         expected = SearchResult(total_results=1,
                                 results=[Dashboard(id='mode_dashboard',
@@ -746,3 +772,16 @@ class TestElasticsearchProxy(unittest.TestCase):
         self.assertDictEqual(vars(resp.results[0]),
                              vars(expected.results[0]),
                              "Search result doesn't match with expected result!")
+
+    @patch('search_service.proxy.elasticsearch.ElasticsearchProxy._search_helper')
+    def test_fetch_feature_search_results(self, mock_search: MagicMock) -> None:
+        query_term = 'panda'
+        self.es_proxy.fetch_feature_search_results(query_term=query_term)
+
+        mock_search.assert_called_with(
+            page_index=0,
+            client=Search(using=self.es_proxy.elasticsearch, index=FEATURE_INDEX),
+            query_name=self.es_proxy.get_feature_search_query(query_term),
+            model=Feature,
+            search_result_model=SearchFeatureResult,
+        )

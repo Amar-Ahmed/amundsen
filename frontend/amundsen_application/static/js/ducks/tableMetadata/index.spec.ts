@@ -1,10 +1,10 @@
 import { testSaga } from 'redux-saga-test-plan';
 
 import {
-  Lineage,
   PreviewData,
-  PreviewQueryParams,
+  TablePreviewQueryParams,
   TableMetadata,
+  TableQualityChecks,
   Tag,
   User,
 } from 'interfaces';
@@ -33,13 +33,10 @@ import reducer, {
   initialTableDataState,
   initialState,
   TableMetadataReducerState,
-  getTableLineage,
-  getTableLineageFailure,
-  initialTableLineageState,
-  getTableLineageSuccess,
-  getColumnLineage,
-  getColumnLineageFailure,
-  getColumnLineageSuccess,
+  getTableQualityChecks,
+  getTableQualityChecksSuccess,
+  getTableQualityChecksFailure,
+  emptyQualityChecks,
 } from './reducer';
 
 import {
@@ -55,10 +52,8 @@ import {
   updateColumnDescriptionWorker,
   getPreviewDataWatcher,
   getPreviewDataWorker,
-  getTableLineageWatcher,
-  getTableLineageWorker,
-  getColumnLineageWatcher,
-  getColumnLineageWorker,
+  getTableQualityChecksWatcher,
+  getTableQualityChecksWorker,
 } from './sagas';
 
 import {
@@ -68,8 +63,7 @@ import {
   GetColumnDescription,
   UpdateColumnDescription,
   GetPreviewData,
-  GetTableLineage,
-  GetColumnLineage,
+  GetTableQualityChecks,
 } from './types';
 
 describe('tableMetadata ducks', () => {
@@ -82,14 +76,13 @@ describe('tableMetadata ducks', () => {
   let testKey: string;
   let testIndex: string;
   let testSource: string;
-  let testLineage: Lineage;
+  let testTableQualityChecks: TableQualityChecks;
 
-  let columnName: string;
   let columnIndex: number;
   let emptyPreviewData: PreviewData;
   let newDescription: string;
   let previewData: PreviewData;
-  let queryParams: PreviewQueryParams;
+  let queryParams: TablePreviewQueryParams;
 
   beforeAll(() => {
     expectedData = globalState.tableMetadata.tableData;
@@ -113,24 +106,15 @@ describe('tableMetadata ducks', () => {
     testKey = 'tableKey';
     testIndex = '3';
     testSource = 'search';
-    testLineage = {
-      upstream_entities: [
-        {
-          badges: [],
-          cluster: 'cluster',
-          database: 'database',
-          key: 'key',
-          level: 1,
-          name: 'name',
-          schema: 'schema',
-          usage: 100,
-        },
-      ],
-      downstream_entities: [],
+    testTableQualityChecks = {
+      num_checks_total: 10,
+      num_checks_failed: 2,
+      num_checks_success: 8,
+      external_url: 'test_url',
+      last_run_timestamp: null,
     };
 
     columnIndex = 2;
-    columnName = 'column_name';
     emptyPreviewData = {
       columns: [],
       data: [],
@@ -290,57 +274,24 @@ describe('tableMetadata ducks', () => {
       expect(payload.status).toBe(status);
     });
 
-    it('getTableLineage - returns the action to get table lineage', () => {
-      const action = getTableLineage(testKey);
-      const { payload } = action;
-      expect(action.type).toBe(GetTableLineage.REQUEST);
-      expect(payload.key).toBe(testKey);
-    });
-
-    it('getTableLineage - returns the action to process failure', () => {
+    it('getTableQualityChecks - returns the action to process failure', () => {
       const status = 500;
-      const action = getTableLineageFailure(status);
+      const action = getTableQualityChecksFailure(status);
       const { payload } = action;
-      expect(action.type).toBe(GetTableLineage.FAILURE);
-      expect(payload.lineage).toBe(initialTableLineageState.lineage);
+      expect(action.type).toBe(GetTableQualityChecks.FAILURE);
+      expect(payload.checks).toBe(emptyQualityChecks);
       expect(payload.status).toBe(status);
     });
 
-    it('getTableLineage - returns the action to process success', () => {
-      const status = 200;
-      const action = getTableLineageSuccess(testLineage, status);
-      const { payload } = action;
-      expect(action.type).toBe(GetTableLineage.SUCCESS);
-      expect(payload.lineage).toBe(testLineage);
-      expect(payload.status).toBe(status);
-    });
-
-    it('getColumnLineage - returns the action to get column lineage', () => {
-      const action = getColumnLineage(testKey, columnName);
-      const { payload, meta } = action;
-      expect(action.type).toBe(GetColumnLineage.REQUEST);
-      expect(payload.key).toBe(testKey);
-      expect(payload.columnName).toBe(columnName);
-      expect(meta.analytics).not.toBeNull();
-    });
-
-    it('getColumnLineage - returns the action to process failure', () => {
+    it('getTableQualityChecks - returns the action to process success', () => {
       const status = 500;
-      const action = getColumnLineageFailure(columnName, status);
+      const action = getTableQualityChecksSuccess(
+        testTableQualityChecks,
+        status
+      );
       const { payload } = action;
-      expect(action.type).toBe(GetColumnLineage.FAILURE);
-      expect(payload.columnName).toBe(columnName);
-      expect(payload.lineage).toBe(initialTableLineageState.lineage);
-      expect(payload.status).toBe(status);
-    });
-
-    it('getColumnLineage - returns the action to process success', () => {
-      const status = 200;
-      const action = getColumnLineageSuccess(testLineage, columnName, status);
-      const { payload } = action;
-      expect(action.type).toBe(GetColumnLineage.SUCCESS);
-      expect(payload.columnName).toBe(columnName);
-      expect(payload.lineage).toBe(testLineage);
+      expect(action.type).toBe(GetTableQualityChecks.SUCCESS);
+      expect(payload.checks).toBe(testTableQualityChecks);
       expect(payload.status).toBe(status);
     });
   });
@@ -787,67 +738,37 @@ describe('tableMetadata ducks', () => {
       });
     });
 
-    describe('getTableLineageWatcher', () => {
-      it('takes every GetTableLineage.REQUEST with getTableLineageWorker', () => {
-        testSaga(getTableLineageWatcher)
+    describe('getTableQualityChecksWatcher', () => {
+      it('takes every GetTableQualityChecks.REQUEST with GetTableQualityChecksWorker', () => {
+        testSaga(getTableQualityChecksWatcher)
           .next()
-          .takeEvery(GetTableLineage.REQUEST, getTableLineageWorker)
+          .takeLatest(
+            GetTableQualityChecks.REQUEST,
+            getTableQualityChecksWorker
+          )
           .next()
           .isDone();
       });
     });
 
-    describe('getTableLineageWorker', () => {
-      it('executes flow for getting table lineage', () => {
-        testSaga(getTableLineageWorker, getTableLineage(testKey))
+    describe('getTableQualityChecksWorker', () => {
+      it('executes flow for getting table quality checks', () => {
+        testSaga(getTableQualityChecksWorker, getTableQualityChecks(testKey))
           .next()
-          .call(API.getTableLineage, testKey)
-          .next({ data: testLineage, status: 200 })
-          .put(getTableLineageSuccess(testLineage, 200))
+          .call(API.getTableQualityChecksSummary, testKey)
+          .next({ checks: testTableQualityChecks, status: 200 })
+          .put(getTableQualityChecksSuccess(testTableQualityChecks, 200))
           .next()
           .isDone();
       });
 
       it('handles request error', () => {
-        testSaga(getTableLineageWorker, getTableLineage(testKey))
+        testSaga(getTableQualityChecksWorker, getTableQualityChecks(testKey))
           .next()
-          .call(API.getTableLineage, testKey)
+          .call(API.getTableQualityChecksSummary, testKey)
           // @ts-ignore
           .throw({ status: 500 })
-          .put(getTableLineageFailure(500))
-          .next()
-          .isDone();
-      });
-    });
-
-    describe('getColumnLineageWatcher', () => {
-      it('takes every GetColumnLineage.REQUEST with getColumnLineageWorker', () => {
-        testSaga(getColumnLineageWatcher)
-          .next()
-          .takeEvery(GetColumnLineage.REQUEST, getColumnLineageWorker)
-          .next()
-          .isDone();
-      });
-    });
-
-    describe('getColumnLineageWorker', () => {
-      it('executes flow for getting column lineage', () => {
-        testSaga(getColumnLineageWorker, getColumnLineage(testKey, columnName))
-          .next()
-          .call(API.getColumnLineage, testKey, columnName)
-          .next({ data: testLineage, status: 200 })
-          .put(getColumnLineageSuccess(testLineage, columnName, 200))
-          .next()
-          .isDone();
-      });
-
-      it('handles request error', () => {
-        testSaga(getColumnLineageWorker, getColumnLineage(testKey, columnName))
-          .next()
-          .call(API.getColumnLineage, testKey, columnName)
-          // @ts-ignore
-          .throw({ status: 500 })
-          .put(getColumnLineageFailure(columnName, 500))
+          .put(getTableQualityChecksFailure(500))
           .next()
           .isDone();
       });

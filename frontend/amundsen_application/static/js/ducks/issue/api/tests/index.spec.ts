@@ -67,6 +67,10 @@ describe('createIssue', () => {
       key: 'key',
       title: 'title',
       description: 'description',
+      owner_ids: ['owner_ids'],
+      frequent_user_ids: ['frequent_user_ids'],
+      priority_level: 'priority_level',
+      resource_path: 'resource_path',
     };
     sendNotificationPayload = {
       owners: ['owner1'],

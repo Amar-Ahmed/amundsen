@@ -7,6 +7,7 @@ const configDefault: AppConfig = {
   browse: {
     curatedTags: [],
     showAllTags: true,
+    showBadgesInHome: true,
   },
   date: {
     default: 'MMM DD, YYYY',
@@ -26,9 +27,13 @@ const configDefault: AppConfig = {
   indexUsers: {
     enabled: false,
   },
+  indexFeatures: {
+    enabled: false,
+  },
   userIdLabel: 'email address',
   issueTracking: {
     enabled: false,
+    issueDescriptionTemplate: '',
   },
   logoPath: null,
   logoTitle: 'AMUNDSEN',
@@ -71,6 +76,10 @@ const configDefault: AppConfig = {
           displayName: 'Tableau',
           iconClass: 'icon-tableau',
         },
+        superset: {
+          displayName: 'Superset',
+          iconClass: 'icon-superset',
+        },
       },
       filterCategories: [
         {
@@ -99,6 +108,51 @@ const configDefault: AppConfig = {
         },
       ],
       notices: {},
+    },
+    [ResourceType.feature]: {
+      displayName: 'ML Features',
+      supportedSources: {
+        bigquery: {
+          displayName: 'BigQuery',
+          iconClass: 'icon-bigquery',
+        },
+        delta: {
+          displayName: 'Delta',
+          iconClass: 'icon-delta',
+        },
+        dremio: {
+          displayName: 'Dremio',
+          iconClass: 'icon-dremio',
+        },
+        druid: {
+          displayName: 'Druid',
+          iconClass: 'icon-druid',
+        },
+        hive: {
+          displayName: 'Hive',
+          iconClass: 'icon-hive',
+        },
+        oracle: {
+          displayName: 'Oracle',
+          iconClass: 'icon-oracle',
+        },
+        presto: {
+          displayName: 'Presto',
+          iconClass: 'icon-presto',
+        },
+        postgres: {
+          displayName: 'Postgres',
+          iconClass: 'icon-postgres',
+        },
+        redshift: {
+          displayName: 'Redshift',
+          iconClass: 'icon-redshift',
+        },
+        snowflake: {
+          displayName: 'Snowflake',
+          iconClass: 'icon-snowflake',
+        },
+      },
     },
     [ResourceType.table]: {
       displayName: 'Datasets',
@@ -138,6 +192,10 @@ const configDefault: AppConfig = {
         snowflake: {
           displayName: 'Snowflake',
           iconClass: 'icon-snowflake',
+        },
+        elasticsearch: {
+          displayName: 'Elasticsearch',
+          iconClass: 'icon-elasticsearch',
         },
       },
       filterCategories: [
@@ -196,14 +254,56 @@ const configDefault: AppConfig = {
       },
       notices: {},
     },
+    [ResourceType.feature]: {
+      displayName: 'ML Features',
+      supportedSources: {
+        hive: {
+          displayName: 'Hive',
+          iconClass: 'icon-hive',
+        },
+      },
+      filterCategories: [
+        {
+          categoryId: 'entity',
+          displayName: 'Entity',
+          helpText: 'Enter exact entity name or a regex wildcard pattern',
+          type: FilterType.INPUT_SELECT,
+        },
+        {
+          categoryId: 'name',
+          displayName: 'Feature Name',
+          helpText: 'Enter exact feature name or a regex wildcard pattern',
+          type: FilterType.INPUT_SELECT,
+        },
+        {
+          categoryId: 'group',
+          displayName: 'Feature Group',
+          helpText:
+            'Enter exact feature group name or a regex wildcard pattern',
+          type: FilterType.INPUT_SELECT,
+        },
+        {
+          categoryId: 'tag',
+          displayName: 'Tag',
+          helpText: 'Enter exact tag name or a regex wildcard pattern',
+          type: FilterType.INPUT_SELECT,
+        },
+      ],
+      notices: {},
+    },
     [ResourceType.user]: {
       displayName: 'People',
     },
   },
+  featureLineage: {
+    inAppListEnabled: false,
+  },
   tableLineage: {
+    inAppListEnabled: false,
+    inAppPageEnabled: false,
+    externalEnabled: false,
     iconPath: 'PATH_TO_ICON',
     isBeta: false,
-    isEnabled: false,
     urlGenerator: (
       database: string,
       cluster: string,
@@ -211,10 +311,10 @@ const configDefault: AppConfig = {
       table: string
     ) =>
       `https://DEFAULT_LINEAGE_URL?schema=${schema}&cluster=${cluster}&db=${database}&table=${table}`,
-    inAppListEnabled: false,
   },
   columnLineage: {
     inAppListEnabled: false,
+    inAppPageEnabled: false,
     urlGenerator: (
       database: string,
       cluster: string,
@@ -236,6 +336,9 @@ const configDefault: AppConfig = {
       partitionValue?: string
     ) =>
       `https://DEFAULT_EXPLORE_URL?schema=${schema}&cluster=${cluster}&db=${database}&table=${table}`,
+  },
+  tableQualityChecks: {
+    isEnabled: false,
   },
 };
 
