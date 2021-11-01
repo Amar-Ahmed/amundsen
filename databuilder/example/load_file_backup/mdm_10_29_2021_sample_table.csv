@@ -1,0 +1,529 @@
+name,description,tags,entity_name,table_description,is_view,database,cluster,schema
+mdd_mdm_prvdr_id_idx,"An instance of this entity represent a Provider's Identifying information from a
+source system used by the Master Data Management ( MDM ) Identity Resolution
+Process","MDM, Provider, Provider Identifying Information, Identity Resolution",MDM Provider Identifier Index,"An instance of this entity represent a Provider's Identifying information from a
+source system used by the Master Data Management ( MDM ) Identity Resolution
+Process",Table,hive,gold,hive_mdm
+mdd_cmn_cd_rfrnc,An instance in this entity collects all reference data from various sources in one common location.,"MDM, Provider, Common Code Reference, Reference Data",Common Code Reference,An instance in this entity collects all reference data from various sources in one common location.,Table,hive,gold,hive_mdm
+mdd_spp_mdcr_blg_enrlmt,"An enrollment carried out by an enrolling entity seeking either:
+1. the authority to begin the billing of Medicare for services rendered in an identified U.S. state or states, or
+2. a Reassignment of the billing rights already acquired in a prior enrollment to bill Medicare.","Reassignment,Billing Rights,U.S.,Medicare,Mdm",Shared Provider Profile Medicare Billing Enrollment,"An enrollment carried out by an enrolling entity seeking either:
+1. the authority to begin the billing of Medicare for services rendered in an identified U.S. state or states, or
+2. a Reassignment of the billing rights already acquired in a prior enrollment to bill Medicare.",Table,hive,gold,hive_mdm
+mdd_spp_prvdr_dme_faair,"An instance of this entity represents the Provider information that was submitted
+at a specific point in time relative to the enrollment to bill Medicare of a Provider
+that is considered to be a ""Durable Medical Equipment, Prosthetics, Orthotics, and
+Supplies (DMEPOS) Supplier"". Such an enrollment is typically done via submittal of
+an 855S form.
+Each instance contains the enrollment alert that is associated with the Fraud and
+Abuse Index of Risk Code.
+Alerts are warning codes/indicators of supplier activity used by the National
+Supplier Clearinghouse ( NSC ) and the four Durable Medical Equipment Medicare
+Administrative Carriers (DME MACs). Alerts communicate specific information
+about a supplier's claims-related activities and sanction updates.","MDM, Provider, Fraud Waste and Abuse, FWA, Index of Risk, FAAIR, Durable Medical Equipment, DME, Prosthetics, Orthotics, Supplies, DMEPOS, 855S, National Supplier Clearighouse, NSC, Medicare Administrative Carriers, DME MAC, Alerts",Shared Provider Profile DMEPOS Enrollment Fraud And Abuse Index of Risk,"An instance of this entity represents the Provider information that was submitted
+at a specific point in time relative to the enrollment to bill Medicare of a Provider
+that is considered to be a ""Durable Medical Equipment, Prosthetics, Orthotics, and
+Supplies (DMEPOS) Supplier"". Such an enrollment is typically done via submittal of
+an 855S form.
+Each instance contains the enrollment alert that is associated with the Fraud and
+Abuse Index of Risk Code.
+Alerts are warning codes/indicators of supplier activity used by the National
+Supplier Clearinghouse ( NSC ) and the four Durable Medical Equipment Medicare
+Administrative Carriers (DME MACs). Alerts communicate specific information
+about a supplier's claims-related activities and sanction updates.",Table,hive,gold,hive_mdm
+mdd_prvdr_dm_lcns_hstry,A Healthcare Provider's license information as of a point in time.,"Healthcare Provider,License Information,Mdm",Provider License History,A Healthcare Provider's license information as of a point in time.,Table,hive,gold,hive_mdm
+mdd_prvdr_dm_tax_ident_hstry,A Federal Tax doesn't  Identifier for a Provider at a point in time.,"Provider,Federal Tax,Identifier,Mdm",Provider Federal Tax Identification History,A Federal Tax Identifier for a Provider at a point in time.,Table,hive,gold,hive_mdm
+mdd_prvdr_dm_txnmy_hstry,"An instance in the entity represents authorizing license or certificate given to a
+Health Care Provider in order to officially enable the Provider to carry out a medical
+skill or activity.","MDM, Provider, Taxonomy, History",Provider Taxonomy History,"An instance in the entity represents authorizing license or certificate given to a
+Health Care Provider in order to officially enable the Provider to carry out a medical
+skill or activity.",Table,hive,gold,hive_mdm
+mdd_prvdr_dm_npi_hstry,An instance of this entity contain information about National Provider Identifier associated with a provider,"MDM, Provider, NPI, History, National Provider Identifier",Provider National Provider Identifier History,An instance of this entity contain information about National Provider Identifier associated with a provider,Table,hive,gold,hive_mdm
+mdd_prvdr_dm_npi_pin_lctn_adr_hstry,"A National Provider Identifier( NPI ) and Provider Identification Number (PIN) that is
+valid at a location for a Provider as of a point in time.","MDM, Provider, NPI, History, National Provider Identifier, PIN, Location, Address, Provider Identification Number, Geographic Information",Provider National Provider Identifier Pin Location Address History,"A National Provider Identifier( NPI ) and Provider Identification Number (PIN) that is
+valid at a location for a Provider as of a point in time.",Table,hive,gold,hive_mdm
+mdd_prvdr_dm_lgcy_ident_hstry,"An instance of Health Care Provider Medicare identification in use at a point in time for a Health Care Provider. This identifier has typically been in use for Medicare
+purposes prior to the advent of the National Provider Identifier (NPI).
+Examples are:
+* CMS Certification Number (CCN)
+* Provider Transaction Number (PTAN)
+* National Supplier Clearinghouse (NSC) Number
+* National Council for Prescription Drug Programs (NCPDP) Number","MDM, Provider, Legacy Identifier, History",Provider Legacy Medicare Identification History,"An instance of Health Care Provider Medicare identification in use at a point in time for a Health Care Provider. This identifier has typically been in use for Medicare
+purposes prior to the advent of the National Provider Identifier (NPI).
+Examples are:
+* CMS Certification Number (CCN)
+* Provider Transaction Number (PTAN)
+* National Supplier Clearinghouse (NSC) Number
+* National Council for Prescription Drug Programs (NCPDP) Number",Table,hive,gold,hive_mdm
+mdd_prvdr_dm_adr_hstry,"An instance of this entity represents a location where a post office will deliver mail
+to a Provider at a Point in time ( History )","MDM, Provider, Address, Location, History, Geographic Information",Provider Address History,"An instance of this entity represents a location where a post office will deliver mail
+to a Provider at a Point in time ( History )",Table,hive,gold,hive_mdm
+mdd_prvdr_dm_spclty_hstry,"An instance represents the linkage between a Health Care Provider and an instance of Health Care Provider Medicare Specialty at a point in time. This information is important to enable a Provider to bill Medicare for services rendered
+to Medicare Beneficiaries.","MDM, Provider, Specialty, History",Provider Medicare Specialty History,"An instance represents the linkage between a Health Care Provider and an instance of Health Care Provider Medicare Specialty at a point in time. This information is important to enable a Provider to bill Medicare for services rendered
+to Medicare Beneficiaries.",Table,hive,gold,hive_mdm
+mdd_prvdr_dm_name_hstry,"A name for a Provider. A Provider may have many names, e.g. of different types , or at different times.","MDM, Provider, Provider Name, History",Provider Name History,"A name for a Provider. A Provider may have many names, e.g. of different types , or at different times.",Table,hive,gold,hive_mdm
+mdd_spp_prvdr_reasgnmt_bnfts,"A pairing of:
+1. A Reassigning Health Care Provider who is going to perform health
+care for beneficiaries at a practice location operated by
+another Provider (the Receiving Health Care Provider), and
+2. A Receiving Health Care Provider.
+The Reassigning Provider will reassign his or her Medicare or Medicaid or other benefits (the right to bill Medicare, Medicaid, etc) for services rendered to the relevant beneficiaries) to the Receiving Provider for any services that the Reassigning Provider will carry out while performing health care in conjunction with the Receiving Provider.","MDM, Provider, Benefits, Reassigning Health Care Provider, Beneficiary, Receiving Health Care Provider, Billing",Shared Provider Profile Health Care Provider Reassignment Benefits,"A pairing of:
+1. A Reassigning Health Care Provider who is going to perform health
+care for beneficiaries at a practice location operated by
+another Provider (the Receiving Health Care Provider), and
+2. A Receiving Health Care Provider.
+The Reassigning Provider will reassign his or her Medicare or Medicaid or other benefits (the right to bill Medicare, Medicaid, etc) for services rendered to the relevant beneficiaries) to the Receiving Provider for any services that the Reassigning Provider will carry out while performing health care in conjunction with the Receiving Provider.",Table,hive,gold,hive_mdm
+mdd_spp_prvdr_enrlmt_role_asctn,"An instance of this entity represents the association between a Provider enrolled to bill Medicare, another Provider that furnishes some supporting role to the first Provider, and the Role classification that the supporting Provider carries out.
+Examples include:
+* an individual Provider reassigning Medicare benefits to the other
+Provider
+* a physician carrying out a supervising role at an testing facility","MDM, Provider, Enrollment, Role Classification, Reassigning, Testing Facility",Shared Provider Profile Health Care Provider Enrollment Role Association,"An instance of this entity represents the association between a Provider enrolled to bill Medicare, another Provider that furnishes some supporting role to the first Provider, and the Role classification that the supporting Provider carries out.
+Examples include:
+* an individual Provider reassigning Medicare benefits to the other
+Provider
+* a physician carrying out a supervising role at an testing facility",Table,hive,gold,hive_mdm
+mdd_spp_enrlmt_stus,"An instance contains an enrollment forms enrollment status. Over time an
+enrollment form may have many enrollment statuses. This table stores the historical
+rows from the PEC_ENRLMT_STUS table.","MDM, Provider, Enrollment Status, History",Shared Provider Profile Enrollment Status,"An instance contains an enrollment forms enrollment status. Over time an
+enrollment form may have many enrollment statuses. This table stores the historical
+rows from the PEC_ENRLMT_STUS table.",Table,hive,gold,hive_mdm
+mdd_spp_prvdr_snctn,"An instance of this entity represents the association between a Provider enrolled to bill Medicare, another Provider that furnishes some supporting role to the first Provider, and the Role classification that the supporting Provider carries out.
+Examples include:
+* an individual Provider reassigning Medicare benefits to the other
+Provider
+* a physician carrying out a supervising role at an testing facility
+
+A sanction or Legal Action that has been imposed or levied against a Provider.
+Example: The Department of Health and Human Services (DHHS) Office of Inspector General (OIG) issues Provider sanction data that is updated monthly. This DHHS OIG sanction data is made available by CMS to parties such as the Medicare Administrative Contractors in the Medicare Exclusion Database (MED).","MDM, Provider, Sanction, DHHS, OIG Sanction Data, Role Classification, Legal",Shared Provider Profile Health Care Provider Sanction,"An instance of this entity represents the association between a Provider enrolled to bill Medicare, another Provider that furnishes some supporting role to the first Provider, and the Role classification that the supporting Provider carries out.
+Examples include:
+* an individual Provider reassigning Medicare benefits to the other
+Provider
+* a physician carrying out a supervising role at an testing facility
+
+A sanction or Legal Action that has been imposed or levied against a Provider.
+Example: The Department of Health and Human Services (DHHS) Office of Inspector General (OIG) issues Provider sanction data that is updated monthly. This DHHS OIG sanction data is made available by CMS to parties such as the Medicare Administrative Contractors in the Medicare Exclusion Database (MED).",Table,hive,gold,hive_mdm
+mdd_spp_prvdr_lgl_actn,"An instance of this entity represents the association between a Provider enrolled to
+bill Medicare, another Provider that furnishes some supporting role to the first
+Provider, and the Role classification that the supporting Provider carries out.
+Examples include:
+an individual Provider reassigning Medicare benefits to the other
+Provider
+a physician carrying out a supervising role at an testing facility
+A sanction or Legal Action that has been imposed or levied against a Provider.
+Example: The Department of Health and Human Services (DHHS) Office of
+Inspector General (OIG) issues Provider sanction data that is updated monthly.
+This DHHS OIG sanction data is made available by CMS to parties such as the
+Medicare Administrative Contractors in the Medicare Exclusion Database (MED).","MDM, Provider, Legal, DHHS, OIG Sanction Data, Legal Action",Shared Provider Profile Health Care Provider Legal Action,"An instance of this entity represents the association between a Provider enrolled to
+bill Medicare, another Provider that furnishes some supporting role to the first
+Provider, and the Role classification that the supporting Provider carries out.
+Examples include:
+an individual Provider reassigning Medicare benefits to the other
+Provider
+a physician carrying out a supervising role at an testing facility
+A sanction or Legal Action that has been imposed or levied against a Provider.
+Example: The Department of Health and Human Services (DHHS) Office of
+Inspector General (OIG) issues Provider sanction data that is updated monthly.
+This DHHS OIG sanction data is made available by CMS to parties such as the
+Medicare Administrative Contractors in the Medicare Exclusion Database (MED).",Table,hive,gold,hive_mdm
+mdd_prvdr_dm_lcn_txy_astn_hsty,An instance represents the linkage between a Health Care Provider and an instance of Health Care Provider Medicare Specialty at a point in time.,"MDM, Provider, License, Taxonomy, History, Association",Provider License Taxonomy Association History,An instance represents the linkage between a Health Care Provider and an instance of Health Care Provider Medicare Specialty at a point in time.,Table,hive,gold,hive_mdm
+mdd_prvdr_dm_afltd_pgm_hstry,"A Medicaid/Children's Health Insurance Program(CHIP) health plan, waiver, health
+home entity etc. that the provider is associated with as of a point in time.","MDM, Provider, CHIP, Enrollment, Children's Health Insurance Program, Medicaid, Affiliated, Program, History",Provider Affiliated Program History,"A Medicaid/Children's Health Insurance Program(CHIP) health plan, waiver, health
+home entity etc. that the provider is associated with as of a point in time.",Table,hive,gold,hive_mdm
+mdd_prvdr_dm_bed_type_hstry,"A record to capture the number of various categories of beds available at a provider
+facility as of a point in time.
+Valid Medicaid Bed types are
+Code Description
+1 Intermediate Care Facility for the Intellectually Disabled
+2 Inpatient
+3 Nursing Facility
+4 Title 18 Skilled Nursing Facility (T18 SNF)","MDM, Provider, Bed Type, History, Code, Code Description",Provider Bed Type Usage History,"A record to capture the number of various categories of beds available at a provider
+facility as of a point in time.
+Valid Medicaid Bed types are
+Code Description
+1 Intermediate Care Facility for the Intellectually Disabled
+2 Inpatient
+3 Nursing Facility
+4 Title 18 Skilled Nursing Facility (T18 SNF)",Table,hive,gold,hive_mdm
+mdd_prvdr_dm_type_hstry,"A type of Medicaid provider based on its classification (Classification type 3) as of a
+point in time. Valid values are :
+Code Provider Type Description
+01 Physician
+02 Speech Language Pathologist
+03 Oral Surgery (Dentist only)
+04 Cardiac Rehabilitation and Intensive Cardiac Rehabilitation
+05 Anesthesiology Assistant
+06 Chiropractic
+07 Optometry
+08 Certified Nurse Midwife
+09 Certified Registered Nurse Anesthetist (CRNA)
+10 Mammography Center
+11 Independent Diagnostic Testing Facility (IDTF)
+12 Podiatry
+13 Ambulatory Surgical Center
+14 Nurse Practitioner
+15 Medical Supply Company with Orthotist
+16 Medical Supply Company with Prosthetist
+17 Medical Supply Company with Orthotist-Prosthetist
+18 Other Medical Supply Company
+19 Individual Certified Orthotist
+20 Individual Certified Prosthetist
+21 Individual Certified Prosthetist-Orthotist
+22 Medical Supply Company with Pharmacist
+23 Ambulance Service Provider
+24 Public Health or Welfare Agency
+25 Voluntary Health or Charitable Agency
+26 Psychologist, Clinical
+27 Portable X-Ray Supplier
+28 Audiologist
+29 Physical Therapist in Private Practice
+30 Occupational Therapist in Private Practice
+31 Clinical Laboratory
+32 Clinic or Group Practice
+33 Registered Dietitian or Nutrition Professional
+34 Mass Immunizer Roster Biller
+35 Radiation Therapy Center
+36 Slide Preparation Facility
+37 Licensed Clinical Social Worker
+38 Certified Clinical Nurse Specialist
+39 Advance Diagnostic Imaging
+40 Optician
+41 Physician Assistant
+42 Hospital-General
+43 Skilled Nursing Facility
+44 Intermediate Care Nursing Facility
+45 Other Nursing Facility
+46 Home Health Agency
+47 Pharmacy
+48 Medical Supply Company with Respiratory Therapist
+49 Department Store
+50 Grocery Store
+51 Indian Health Service facility
+52 Oxygen supplier
+53 Pedorthic personnel
+54 Medical supply company with pedorthic personnel
+55 Rehabilitation Agency
+56 Ocularist
+57 All Other","MDM, Provider, Provider Type, History, Provider Classification, Code, Code Description",Provider Type History,"A type of Medicaid provider based on its classification (Classification type 3) as of a
+point in time. Valid values are :
+Code Provider Type Description
+01 Physician
+02 Speech Language Pathologist
+03 Oral Surgery (Dentist only)
+04 Cardiac Rehabilitation and Intensive Cardiac Rehabilitation
+05 Anesthesiology Assistant
+06 Chiropractic
+07 Optometry
+08 Certified Nurse Midwife
+09 Certified Registered Nurse Anesthetist (CRNA)
+10 Mammography Center
+11 Independent Diagnostic Testing Facility (IDTF)
+12 Podiatry
+13 Ambulatory Surgical Center
+14 Nurse Practitioner
+15 Medical Supply Company with Orthotist
+16 Medical Supply Company with Prosthetist
+17 Medical Supply Company with Orthotist-Prosthetist
+18 Other Medical Supply Company
+19 Individual Certified Orthotist
+20 Individual Certified Prosthetist
+21 Individual Certified Prosthetist-Orthotist
+22 Medical Supply Company with Pharmacist
+23 Ambulance Service Provider
+24 Public Health or Welfare Agency
+25 Voluntary Health or Charitable Agency
+26 Psychologist, Clinical
+27 Portable X-Ray Supplier
+28 Audiologist
+29 Physical Therapist in Private Practice
+30 Occupational Therapist in Private Practice
+31 Clinical Laboratory
+32 Clinic or Group Practice
+33 Registered Dietitian or Nutrition Professional
+34 Mass Immunizer Roster Biller
+35 Radiation Therapy Center
+36 Slide Preparation Facility
+37 Licensed Clinical Social Worker
+38 Certified Clinical Nurse Specialist
+39 Advance Diagnostic Imaging
+40 Optician
+41 Physician Assistant
+42 Hospital-General
+43 Skilled Nursing Facility
+44 Intermediate Care Nursing Facility
+45 Other Nursing Facility
+46 Home Health Agency
+47 Pharmacy
+48 Medical Supply Company with Respiratory Therapist
+49 Department Store
+50 Grocery Store
+51 Indian Health Service facility
+52 Oxygen supplier
+53 Pedorthic personnel
+54 Medical supply company with pedorthic personnel
+55 Rehabilitation Agency
+56 Ocularist
+57 All Other",Table,hive,gold,hive_mdm
+mdd_prvdr_dm_authrzd_cos_hstry,"A record to classify the provider into the authorized categories of service for which
+the provider entity has been authorized by the state to render to Medicaid/CHIP
+eligibles as of a point in time. Medicaid defines providers' Service Category based
+on this classification.
+If PROV-CLASSIFICATION-TYPE is 4 (Authorized category of service code) then
+reference the following table for the appropriate PROV-CLASSIFICATION-CODE
+valid value
+PROV-CLASSIFICATION-TYPE = 4
+Code Authorized Category Of Service Code Description
+001 Inpatient hospital services, other than services in an institution for mental
+diseases
+002 Outpatient hospital services
+003 Rural health clinic services
+004 Other ambulatory services furnished by a rural health clinic
+005 Professional laboratory services
+006 Technical laboratory services
+007 Professional radiological services
+008 Technical radiological services
+009 Nursing facility services for individuals age 21 or older (other than
+services in an institution for mental disease)
+010 Early and periodic screening and diagnosis and treatment (EPSDT)
+services
+011 Family planning services and supplies for individuals of child-bearing age
+012 Physicians' services
+013 Medical and surgical services of a dentist
+014 Outpatient substance abuse treatment services.
+015 Medical or other remedial care or services, other than physicians'
+services, provided by licensed practitioners within the scope of practice as defined
+under State law
+016 Home health services - Nursing services
+017 Home health services - Home health aide services
+018 Home health services - Medical supplies, equipment, and appliances
+suitable for use in the home
+019 Home health services - Physical therapy provided by a home health
+agency or by a facility licensed by the State to provide medical rehabilitation
+services
+020 Home health services - Occupational therapy provided by a home health
+agency or by a facility licensed by the State to provide medical rehabilitation
+services
+021 Home health services - Speech pathology and audiology services
+provided by a home health agency or by a facility licensed by the State to provide
+medical rehabilitation services
+022 Private duty nursing services
+023 Advanced practice nurse services
+024 Pediatric nurse
+025 Nurse-midwife service
+026 Nurse practitioner services
+027 Respiratory care for ventilator-dependent individuals
+028 Clinic services
+029 Dental services
+030 Physical therapy services (when not provided under home health
+services)
+Code Authorized category of service code Description
+031 Occupational therapy services (when not provided under home health
+services)
+032 Speech, hearing, and language disorders services (when not provided
+under home health services)
+033 Prescribed drugs
+034 Over-the-counter medications.
+035 Dentures
+036 Prosthetic devices
+037 Eyeglasses
+038 Hearing Aids
+039 Diagnostic services
+040 Screening services
+041 Preventive services
+042 Well-baby and well-child care services as defined by the State.
+043 Rehabilitative services
+044 Inpatient hospital services for individuals age 65 or older in institutions for
+mental diseases
+045 Nursing facility services for individuals age 65 or older in institutions for
+mental diseases
+046 Intermediate care facility (ICF/IIDICF/IID) services
+047 Nursing facility services, other than in institutions for mental diseases
+048 Inpatient psychiatric services for individuals under age 21
+049 Outpatient mental health services, other than Outpatient substance
+abuse treatment services. This TOS includes services furnished in a Stateoperated
+mental hospital and including community-based services.
+050 Inpatient substance abuse treatment services and residential substance
+abuse treatment services.
+051 Personal care services
+052 Primary care case management services
+053 Targeted case management services
+054 Case Management services other than those that meet the definition of
+primary care case management services or targeted case management services
+055 Care coordination services.
+056 Transportation services
+057 Enabling services
+058 Services furnished in a religious nonmedical health care institution
+059 Skilled nursing facility services for individuals under age 21
+060 Emergency hospital services
+061 Critical access hospital services
+062 HCBS - Case management services
+Code Authorized category of service code Description
+063 HCBS - Homemaker services
+064 HCBS - Home health aide services
+065 HCBS - Personal care services
+066 HCBS - Adult day health services
+067 HCBS - Habilitation services
+068 HCBS - Respite care services
+069 HCBS - Day treatment or other partial hospitalization services,
+psychosocial rehabilitation services and clinic services (whether or not furnished in
+a facility) for individuals with chronic mental illness
+070 HCBS - Day Care
+071 HCBS - Training for family members
+072 HCBS - Minor modification to the home
+073 HCBS - Other services requested by the agency and approved by CMS
+as cost effective and necessary to avoid institutionalization
+074 HCBS - Expanded habilitation services - Prevocational services
+075 HCBS - Expanded habilitation services - Educational services
+076 HCBS - Expanded habilitation services - Supported employment
+services, which facilitate paid employment
+077 HCBS-65-plus - Case management services
+078 HCBS-65-plus - Homemaker services
+079 HCBS-65-plus - Home health aide services
+080 HCBS-65-plus - Personal care services
+081 HCBS-65-plus - Adult day health services
+Page 6 of 81
+082 HCBS-65-plus - Respite care services
+083 HCBS-65-plus - Other medical and social services
+084 Sterilizations
+085 Prenatal care and pre-pregnancy family planning services and supplies.
+086 Other Pregnancy-related Procedures
+087 Hospice services
+088 Any other health care services or items specified by the Secretary and
+not excluded under regulations.
+115 Residential care","MDM, Provider, Category of Service, COS, Provider Classification, History",Provider Authorized Category of Service History,"A record to classify the provider into the authorized categories of service for which
+the provider entity has been authorized by the state to render to Medicaid/CHIP
+eligibles as of a point in time. Medicaid defines providers' Service Category based
+on this classification.
+If PROV-CLASSIFICATION-TYPE is 4 (Authorized category of service code) then
+reference the following table for the appropriate PROV-CLASSIFICATION-CODE
+valid value
+PROV-CLASSIFICATION-TYPE = 4
+Code Authorized Category Of Service Code Description
+001 Inpatient hospital services, other than services in an institution for mental
+diseases
+002 Outpatient hospital services
+003 Rural health clinic services
+004 Other ambulatory services furnished by a rural health clinic
+005 Professional laboratory services
+006 Technical laboratory services
+007 Professional radiological services
+008 Technical radiological services
+009 Nursing facility services for individuals age 21 or older (other than
+services in an institution for mental disease)
+010 Early and periodic screening and diagnosis and treatment (EPSDT)
+services
+011 Family planning services and supplies for individuals of child-bearing age
+012 Physicians' services
+013 Medical and surgical services of a dentist
+014 Outpatient substance abuse treatment services.
+015 Medical or other remedial care or services, other than physicians'
+services, provided by licensed practitioners within the scope of practice as defined
+under State law
+016 Home health services - Nursing services
+017 Home health services - Home health aide services
+018 Home health services - Medical supplies, equipment, and appliances
+suitable for use in the home
+019 Home health services - Physical therapy provided by a home health
+agency or by a facility licensed by the State to provide medical rehabilitation
+services
+020 Home health services - Occupational therapy provided by a home health
+agency or by a facility licensed by the State to provide medical rehabilitation
+services
+021 Home health services - Speech pathology and audiology services
+provided by a home health agency or by a facility licensed by the State to provide
+medical rehabilitation services
+022 Private duty nursing services
+023 Advanced practice nurse services
+024 Pediatric nurse
+025 Nurse-midwife service
+026 Nurse practitioner services
+027 Respiratory care for ventilator-dependent individuals
+028 Clinic services
+029 Dental services
+030 Physical therapy services (when not provided under home health
+services)
+Code Authorized category of service code Description
+031 Occupational therapy services (when not provided under home health
+services)
+032 Speech, hearing, and language disorders services (when not provided
+under home health services)
+033 Prescribed drugs
+034 Over-the-counter medications.
+035 Dentures
+036 Prosthetic devices
+037 Eyeglasses
+038 Hearing Aids
+039 Diagnostic services
+040 Screening services
+041 Preventive services
+042 Well-baby and well-child care services as defined by the State.
+043 Rehabilitative services
+044 Inpatient hospital services for individuals age 65 or older in institutions for
+mental diseases
+045 Nursing facility services for individuals age 65 or older in institutions for
+mental diseases
+046 Intermediate care facility (ICF/IIDICF/IID) services
+047 Nursing facility services, other than in institutions for mental diseases
+048 Inpatient psychiatric services for individuals under age 21
+049 Outpatient mental health services, other than Outpatient substance
+abuse treatment services. This TOS includes services furnished in a Stateoperated
+mental hospital and including community-based services.
+050 Inpatient substance abuse treatment services and residential substance
+abuse treatment services.
+051 Personal care services
+052 Primary care case management services
+053 Targeted case management services
+054 Case Management services other than those that meet the definition of
+primary care case management services or targeted case management services
+055 Care coordination services.
+056 Transportation services
+057 Enabling services
+058 Services furnished in a religious nonmedical health care institution
+059 Skilled nursing facility services for individuals under age 21
+060 Emergency hospital services
+061 Critical access hospital services
+062 HCBS - Case management services
+Code Authorized category of service code Description
+063 HCBS - Homemaker services
+064 HCBS - Home health aide services
+065 HCBS - Personal care services
+066 HCBS - Adult day health services
+067 HCBS - Habilitation services
+068 HCBS - Respite care services
+069 HCBS - Day treatment or other partial hospitalization services,
+psychosocial rehabilitation services and clinic services (whether or not furnished in
+a facility) for individuals with chronic mental illness
+070 HCBS - Day Care
+071 HCBS - Training for family members
+072 HCBS - Minor modification to the home
+073 HCBS - Other services requested by the agency and approved by CMS
+as cost effective and necessary to avoid institutionalization
+074 HCBS - Expanded habilitation services - Prevocational services
+075 HCBS - Expanded habilitation services - Educational services
+076 HCBS - Expanded habilitation services - Supported employment
+services, which facilitate paid employment
+077 HCBS-65-plus - Case management services
+078 HCBS-65-plus - Homemaker services
+079 HCBS-65-plus - Home health aide services
+080 HCBS-65-plus - Personal care services
+081 HCBS-65-plus - Adult day health services
+Page 6 of 81
+082 HCBS-65-plus - Respite care services
+083 HCBS-65-plus - Other medical and social services
+084 Sterilizations
+085 Prenatal care and pre-pregnancy family planning services and supplies.
+086 Other Pregnancy-related Procedures
+087 Hospice services
+088 Any other health care services or items specified by the Secretary and
+not excluded under regulations.
+115 Residential care",Table,hive,gold,hive_mdm
+mdd_spp_mdcd_enrlmt,"A provider’s enrollment specific information of state'S Medicaid or Children's Health
+Insurance Program(CHIP) program.","Health Insurance,Program,Medicaid,Provider Enrollment,Chip,Specific Information,Mdm",Shared Provider Profile Medicaid Enrollment,"A provider’s enrollment specific information of state's Medicaid or Children's Health
+Insurance Program(CHIP) program.",Table,hive,gold,hive_mdm
+mdd_spp_mdcd_afltd_grp,"A provider’s relationship with other provider. A provider can be affiliated with a
+group practice or an organization that is authorized to submit Medicaid claims on
+their behalf.","MDM, Provider, Relationship, Affiliation, Group Practice, Organization",Shared Provider Profile Medicaid Affiliated Group,"A provider’s relationship with other provider. A provider can be affiliated with a
+group practice or an organization that is authorized to submit Medicaid claims on
+their behalf.",Table,hive,gold,hive_mdm
+mdd_prvdr_dm_dmgrphc_dtl_hstry,"A provider's additional demographic information as of a point in time. This includes
+Ownership type, Profit Status, Gender etc. as of a point in time.","MDM, Provider, Demographic Information, History",Provider Demographic Detail History,"A provider's additional demographic information as of a point in time. This includes
+Ownership type, Profit Status, Gender etc. as of a point in time.",Table,hive,gold,hive_mdm

@@ -40,6 +40,10 @@ from metadata_service.exception import NotFoundException
 from metadata_service.proxy.base_proxy import BaseProxy
 from metadata_service.proxy.statsd_utilities import timer_with_counter
 from metadata_service.util import UserResourceRel
+# cms code
+from operator import itemgetter
+from metadata_service.entity.schema_detail import SchemaDetail
+from metadata_service.entity.domain import Domain, DomainDetail
 
 _CACHE = CacheManager(**parse_cache_config_options({'cache.type': 'memory'}))
 
@@ -178,7 +182,7 @@ class Neo4jProxy(BaseProxy):
                     end_epoch=int(float(stat['end_epoch']))
                 )
                 col_stats.append(col_stat)
-
+            # add badges fix
             column_badges = self._make_badges(tbl_col_neo4j_record['col_badges'])
 
             last_neo4j_record = tbl_col_neo4j_record
@@ -465,7 +469,10 @@ class Neo4jProxy(BaseProxy):
         """
         _badges = []
         for badge in badges:
-            _badges.append(Badge(badge_name=badge["key"], category=badge["category"]))
+            # cms code
+            for item in str(badge['key']).split('-'):
+                _badges.append(Badge(badge_name=item, category=badge["category"]))
+            # _badges.append(Badge(badge_name=badge["key"], category=badge["category"]))
         return _badges
 
     @timer_with_counter
@@ -2057,3 +2064,139 @@ class Neo4jProxy(BaseProxy):
         return GenerationCode(key=query_result['key'],
                               text=query_result['text'],
                               source=query_result['source'])
+
+# cms code
+    @timer_with_counter
+    def get_schemas(self) -> List:
+        """
+        Get all existing data_assets (schema with the description) from neo4j
+        :return:
+        """
+        LOGGER.info('Get all the data_assets')
+        # todo: Currently the schema with the description is call data assets
+        query = textwrap.dedent("""
+            MATCH (sh:Schema)-[:DESCRIPTION_OF]-(de:Description)
+            RETURN sh.name AS schema, de.description AS description
+        """)
+        records = self._execute_cypher_query(statement=query,param_dict={})
+        results = []
+        # The data assets profile is related to each table, 
+        # so we get one description that include the table name related to it
+        # and we remove that table name from the description to get the data asset
+        for record in records:
+            schema = str(record['schema'].split('_')[1]).upper()
+            schema_title = record['description'].split('.')[0] 
+            schema_description = str(record['description']).replace(f"{schema_title}.",'')
+            results.append(SchemaDetail(
+                schema=schema,
+                schema_title=schema_title,
+                schema_description=schema_description.lstrip()
+                )
+            )
+        return results
+
+
+    @timer_with_counter
+    def get_domains(self) -> List:
+        """
+        Get all existing domain sort by date addedd from neo4j
+        :return:
+        """
+        LOGGER.info('Get all the domains')
+        try:
+            query = textwrap.dedent("""
+                MATCH (d: Domain) 
+                WITH d ORDER BY d.name ASC 
+                RETURN DISTINCT d.name AS name, d.description AS description, d.created AS date_added, d.data_asset AS data_asset
+            """)
+            records = self._execute_cypher_query(statement=query,param_dict={})
+            list_domain_data_asset = []
+            list_domain_no_data_asset = []
+            results = []
+            for record in records:
+                name = str(record['name']).strip()
+                description = record['description']
+                # validate if the domain is related to any schema
+                if record['data_asset']:
+                    list_domain_data_asset.append({
+                        'domain_name': name,
+                        'domain_description': description,
+                        'domain_data_asset':True
+                    })
+                else:
+                    list_domain_no_data_asset.append({
+                        'domain_name': name,
+                        'domain_description': description,
+                        'domain_data_asset':False
+                    })
+            list_domain_data_asset = sorted(list_domain_data_asset, key=itemgetter('domain_name'))
+            list_domain_no_data_asset = sorted(list_domain_no_data_asset, key=itemgetter('domain_name'))
+            for domain in list_domain_data_asset:
+                results.append(
+                    Domain(
+                        domain_name=domain['domain_name'],
+                        domain_description=domain['domain_description'],
+                        domain_data_asset=domain['domain_data_asset']
+                    )
+                )
+            for domain in list_domain_no_data_asset:
+                results.append(
+                    Domain(
+                        domain_name=domain['domain_name'],
+                        domain_description=domain['domain_description'],
+                        domain_data_asset=domain['domain_data_asset']
+                    )
+                )
+            return results
+        except Exception as e:
+            LOGGER.exception(e)
+
+
+
+    @timer_with_counter
+    def get_domain_detail(self, domain_name: str) -> Dict:
+        """
+        Get the domain detail with all the Data Asset Profile related to it
+        :return:
+        """
+        LOGGER.info('Get domain detail')
+        # todo: The domain can related to one or many Data Asset Profile or does not have relation with DAP
+        query = textwrap.dedent("""
+            MATCH (d: Domain)
+            WHERE d.name = $domain_name
+            OPTIONAL MATCH (d)-[r:DOMAIN_OF]-(s:Schema)-[:DESCRIPTION_OF]-(de:Description)
+            WITH COLLECT ({name: s.name, description: de.description}) AS data_asset, d
+            RETURN  d.name AS name, d.description AS description, d.updates AS updates, d.contact AS contact, data_asset
+        """)
+        records = self._execute_cypher_query(statement=query,param_dict={'domain_name': domain_name})
+        record = records.single()
+        # check if the query return any record
+        if record:
+            data_asset_list = []
+            name = record['name']
+            description = str(record['description']).lstrip()
+            updates = record['updates']
+            contact = record['contact']
+            for data_asset in record['data_asset']:
+                if data_asset['name'] is None:
+                    break
+                schema_name = str(data_asset['name'].split('_')[1]).upper()
+                schema_title = data_asset['description'].split('.')[0] 
+                schema_description = str(data_asset['description']).replace(f"{schema_title}.",'')
+                schema_title = f"{schema_name} {schema_title}"
+                data_asset_list.append({
+                    'schema': schema_name,
+                    'schema_description': schema_description.lstrip(),
+                    'schema_title': schema_title
+                })
+                
+            return DomainDetail(
+                domain_name= name,
+                domain_description= description,
+                domain_updates= updates,
+                domain_contact= contact,
+                domain_data_asset= data_asset_list
+            )
+        return None
+
+      
