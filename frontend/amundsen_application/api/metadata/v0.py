@@ -37,7 +37,9 @@ TAGS_ENDPOINT = '/tags/'
 BADGES_ENDPOINT = '/badges/'
 USER_ENDPOINT = '/user'
 DASHBOARD_ENDPOINT = '/dashboard'
-
+# add new endpoint to get the data assests (schemas technically)
+SCHEMAS_ENDPOINT = '/schemas'
+DOMAINS_ENDPOINT = '/domains'
 
 def _get_table_endpoint() -> str:
     metadata_service_base = app.config['METADATASERVICE_BASE']
@@ -1133,3 +1135,67 @@ def _get_feature_metadata(*, feature_key: str, index: int, source: str) -> Dict[
         # explicitly raise the exception which will trigger 500 api response
         results_dict['status_code'] = getattr(e, 'code', HTTPStatus.INTERNAL_SERVER_ERROR)
         return results_dict
+
+# CMS Code
+@metadata_blueprint.route('/schemas', methods=['GET'])
+def get_schemas() -> Response:
+    """
+    call the metadata service endpoint to get the list of all schemas from neo4j
+    :return: a json output containing the list of all schemas, as 'schemas'
+
+    """
+    try:
+        url = app.config['METADATASERVICE_BASE'] + SCHEMAS_ENDPOINT
+        response = request_metadata(url=url)
+        status_code = response.status_code
+
+        if status_code == HTTPStatus.OK:
+            message = 'Success'
+            schemas = response.json().get('schemas')
+        else:
+            message = 'Encountered error: Schemas Unavailable'
+            logging.error(message)
+            schemas = []
+
+        payload = jsonify({'schemas': schemas, 'msg': message})
+        return make_response(payload, status_code)
+    except Exception as e:
+        message = 'Encountered exception: ' + str(e)
+        payload = jsonify({'schemas': [], 'msg': message})
+        logging.exception(message)
+        return make_response(payload, HTTPStatus.INTERNAL_SERVER_ERROR)
+
+# CMS Code
+@metadata_blueprint.route('/domains/', methods=['GET','POST'])
+def get_domains() -> Response:
+    """
+    call the metadata service endpoint to get the list of all domains or a specific domain 
+    if the domain name is sent and a post request
+    :return: a json output containing the list of all domains, as 'domian'
+
+    """
+    try:
+        url = app.config['METADATASERVICE_BASE'] + DOMAINS_ENDPOINT
+
+        if request.method == 'POST':
+            args = request.get_json()
+            domain_name = get_query_param(args, 'domain_name')
+            url = f"{url}/{domain_name}"             
+        response = request_metadata(url=url)
+        status_code = response.status_code
+
+        if status_code == HTTPStatus.OK:
+            message = 'Success'
+            domains = response.json().get('domains')
+        else:
+            message = 'Encountered error: Domains Unavailable'
+            logging.error(message)
+            domains = []
+
+        payload = jsonify({'domains': domains, 'msg': message})
+        return make_response(payload, status_code)
+    except Exception as e:
+        message = 'Encountered exception: ' + str(e)
+        payload = jsonify({'domains': [], 'msg': message})
+        logging.exception(message)
+        return make_response(payload, HTTPStatus.INTERNAL_SERVER_ERROR)
