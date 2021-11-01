@@ -42,6 +42,9 @@ from metadata_service.api.user import (UserDetailAPI, UserFollowAPI,
                                        UserFollowsAPI, UserOwnAPI, UserOwnsAPI,
                                        UserReadsAPI)
 from metadata_service.deprecations import process_deprecations
+# CMS Code
+from metadata_service.api.schema import SchemaAPI
+from metadata_service.api.domain import DomainAPI, DomainDetailAPI
 
 # For customized flask use below arguments to override.
 FLASK_APP_MODULE_NAME = os.getenv('FLASK_APP_MODULE_NAME')
@@ -181,7 +184,10 @@ def create_app(*, config_module_class: str) -> Flask:
     api.add_resource(FeatureGenerationCodeAPI,
                      '/feature/<path:feature_uri>/generation_code')
     app.register_blueprint(api_bp)
-
+    # CMS Code
+    api.add_resource(SchemaAPI,'/schemas/')
+    api.add_resource(DomainAPI,'/domains/')
+    api.add_resource(DomainDetailAPI,'/domains/<string:domain_name>') 
     # cli registration
     proxy_cli = app.config.get('PROXY_CLI')
     if proxy_cli:
