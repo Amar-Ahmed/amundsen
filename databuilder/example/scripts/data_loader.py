@@ -74,6 +74,8 @@ neo4j_endpoint = NEO4J_ENDPOINT
 neo4j_user = 'neo4j'
 neo4j_password = 'test'
 
+folder_name = os.path.dirname(os.path.dirname( os.path.abspath(__file__)))
+
 LOGGER = logging.getLogger(__name__)
 
 
@@ -221,7 +223,7 @@ def create_dashboard_tables_job():
     publisher = Neo4jCsvPublisher()
 
     job_config = ConfigFactory.from_dict({
-        f'{csv_extractor.get_scope()}.file_location': 'example/sample_data/sample_dashboard_table.csv',
+        f'{csv_extractor.get_scope()}.file_location': f'{folder_name}/sample_data/sample_dashboard_table.csv',
         f'{transformer.get_scope()}.{generic_transformer.get_scope()}.{FIELD_NAME}': 'table_ids',
         f'{transformer.get_scope()}.{generic_transformer.get_scope()}.{CALLBACK_FUNCTION}': _str_to_list,
         f'{transformer.get_scope()}.{dict_to_model_transformer.get_scope()}.{MODEL_CLASS}':
@@ -352,10 +354,10 @@ def run_data_loader(schema: str):
     # This task will delete the stale data from the schema that come as parameter
     run_delete_data_job(schema)
 
-    run_table_column_job('example/sample_data/sample_table.csv', 'example/sample_data/sample_col.csv')
-    run_csv_job('example/sample_data/sample_schema_description.csv', 'test_schema_description',
+    run_table_column_job(f'{folder_name}/sample_data/sample_table.csv', f'{folder_name}/sample_data/sample_col.csv')
+    run_csv_job(f'{folder_name}/sample_data/sample_schema_description.csv', 'test_schema_description',
                 'databuilder.models.schema.schema.SchemaModel')
-    run_csv_job('example/sample_data/sample_table_programmatic_source.csv', 'test_programmatic_source',
+    run_csv_job(f'{folder_name}/sample_data/sample_table_programmatic_source.csv', 'test_programmatic_source',
                 'databuilder.models.table_metadata.TableMetadata')
 
     create_dashboard_tables_job().launch()
