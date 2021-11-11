@@ -21,15 +21,12 @@ https://github.com/amundsen-io/amundsendatabuilder#list-of-extractors
 """
 
 import logging
-import os
-import sys
 import uuid
 from datetime import date
 from cypher import Cypher
+from config import Config
 from elasticsearch import Elasticsearch
 from pyhocon import ConfigFactory
-from sqlalchemy.ext.declarative import declarative_base
-
 from databuilder.extractor.csv_extractor import (
     CsvExtractor, CsvTableBadgeExtractor, CsvTableColumnExtractor,
 )
@@ -44,42 +41,31 @@ from databuilder.publisher.elasticsearch_constants import (
 from databuilder.publisher.elasticsearch_publisher import ElasticsearchPublisher
 from databuilder.publisher.neo4j_csv_publisher import Neo4jCsvPublisher
 from databuilder.task.task import DefaultTask
-from databuilder.task.neo4j_staleness_removal_task import Neo4jStalenessRemovalTask
 from databuilder.transformer.base_transformer import ChainedTransformer, NoopTransformer
 from databuilder.transformer.dict_to_model import MODEL_CLASS, DictToModel
 from databuilder.transformer.generic_transformer import (
     CALLBACK_FUNCTION, FIELD_NAME, GenericTransformer,
 )
 
-es_host = os.getenv('CREDENTIALS_ELASTICSEARCH_PROXY_HOST', 'localhost')
-neo_host = os.getenv('CREDENTIALS_NEO4J_PROXY_HOST', 'localhost')
-
-es_port = os.getenv('CREDENTIALS_ELASTICSEARCH_PROXY_PORT', 9200)
-neo_port = os.getenv('CREDENTIALS_NEO4J_PROXY_PORT', 7687)
-if len(sys.argv) > 1:
-    es_host = sys.argv[1]
-if len(sys.argv) > 2:
-    neo_host = sys.argv[2]
-
+LOGGER = logging.getLogger(__name__)
+es_host = Config.get_elastic_search_host()
+es_port = Config.get_elastic_search_port()
 es = Elasticsearch([
     {'host': es_host, 'port': es_port},
 ])
 
-Base = declarative_base()
+neo_host = Config.get_neo4j_host()
+neo_port = Config.get_neo4j_port()
+neo4j_endpoint = f'bolt://{neo_host}:{neo_port}'
+neo4j_user = Config.get_neo4j_user()
+neo4j_password = Config.get_neo4j_password()
 
-NEO4J_ENDPOINT = f'bolt://{neo_host}:{neo_port}'
+folder_name = Config.get_folder_name()
 
-neo4j_endpoint = NEO4J_ENDPOINT
-
-neo4j_user = 'neo4j'
-neo4j_password = 'test'
-
-folder_name = os.path.dirname(os.path.dirname( os.path.abspath(__file__)))
-
-LOGGER = logging.getLogger(__name__)
 
 
 def run_csv_job(file_loc, job_name, model):
+    """ run the task that create nodes and relationship extracting the information for a CSV file"""
     tmp_folder = f'/var/tmp/amundsen/{job_name}'
     node_files_folder = f'{tmp_folder}/nodes'
     relationship_files_folder = f'{tmp_folder}/relationships'
@@ -112,6 +98,7 @@ def run_csv_job(file_loc, job_name, model):
 
 
 def run_table_badge_job(table_path, badge_path):
+    """ run the task to create nodes and relationship extracting the information for a CSV file"""
     tmp_folder = '/var/tmp/amundsen/table_badge'
     node_files_folder = f'{tmp_folder}/nodes'
     relationship_files_folder = f'{tmp_folder}/relationships'
@@ -141,6 +128,7 @@ def run_table_badge_job(table_path, badge_path):
 
 
 def run_table_column_job(table_path, column_path):
+    """ run the task that create nodes and relationship extracting the information for the Column CSV file"""
     tmp_folder = '/var/tmp/amundsen/table_column_'
     node_files_folder = f'{tmp_folder}/nodes'
     relationship_files_folder = f'{tmp_folder}/relationships'
@@ -302,6 +290,7 @@ def create_es_publisher_sample_job(elasticsearch_index_alias='table_search_index
 
 
 def run_delete_data_job(schema: str):
+    """ Delete all the nodes and relationship related to the schema"""
     LOGGER.info("Start process to delete stale data")
     # getting todays date
     today_date = date.today().strftime("%Y-%m-%d")
@@ -386,5 +375,4 @@ def run_data_loader(schema: str):
         entity_type='dashboard',
         elasticsearch_mapping=DASHBOARD_ELASTICSEARCH_INDEX_MAPPING)
     job_es_dashboard.launch()
-
 
