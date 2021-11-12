@@ -1,0 +1,21 @@
+@import "variables";
+@import "typography";
+
+.popular-data-asset-list {
+  .popular-data-assets-header {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: $spacer-2;
+  }
+
+  .popular-data-assets-header-text {
+    @extend %text-title-w1;
+  }
+
+  .list-group {
+    margin-top: 0;
+  }
+}
+// .domain-heading a {
+//   color: #0071bc !important;
+// }

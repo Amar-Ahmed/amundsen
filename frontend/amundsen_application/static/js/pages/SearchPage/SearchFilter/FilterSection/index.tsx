@@ -83,6 +83,9 @@ export class FilterSection extends React.Component<FilterSectionProps> {
               onClick={this.onClearFilter}
               className="btn btn-link clear-button"
               type="button"
+              aria-live="assertive"
+              role="alert"
+              aria-label='Clear button is now active'
             >
               {CLEAR_BTN_TEXT}
             </button>

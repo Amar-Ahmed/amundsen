@@ -57,9 +57,9 @@ export class EditableSection extends React.Component<
 
   static convertText(str: string): string {
     return str
-      .split(new RegExp('[\\s+_]'))
-      .map((x) => x.charAt(0).toUpperCase() + x.slice(1).toLowerCase())
-      .join(' ');
+      // .split(new RegExp('[\\s+_]'))
+      // .map((x) => x.charAt(0).toUpperCase() + x.slice(1).toLowerCase())
+      // .join(' ');
   }
 
   renderButton = (): React.ReactNode => (
@@ -128,9 +128,9 @@ export class EditableSection extends React.Component<
             className="editable-section-label-wrapper"
             onClick={!readOnly ? this.preventDefault : undefined}
           >
-            <span className="section-title title-3">
+            <h4 className="section-title title-3">
               {EditableSection.convertText(title)}
-            </span>
+            </h4>
             {!readOnly ? this.renderButton() : this.renderReadOnlyButton()}
           </div>
         </label>

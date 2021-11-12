@@ -4,13 +4,11 @@
 import { combineReducers } from 'redux';
 
 import dashboard, { DashboardReducerState } from 'ducks/dashboard/reducer';
-import feature, { FeatureReducerState } from 'ducks/feature/reducer';
-import badges, { BadgesReducerState } from 'ducks/badges/reducer';
 import announcements, { AnnouncementsReducerState } from './announcements';
 import feedback, { FeedbackReducerState } from './feedback/reducer';
-import popularResources, {
-  PopularResourcesReducerState,
-} from './popularResources/reducer';
+import popularTables, {
+  PopularTablesReducerState,
+} from './popularTables/reducer';
 import search, { SearchReducerState } from './search/reducer';
 import tableMetadata, {
   TableMetadataReducerState,
@@ -22,44 +20,43 @@ import ui, { UIReducerState } from './ui';
 import bookmarks, { BookmarkReducerState } from './bookmark/reducer';
 import notification, { NotificationReducerState } from './notification/reducer';
 import issue, { IssueReducerState } from './issue/reducer';
-import lineage, { LineageReducerState } from './lineage/reducer';
+/* EPDL */
+import dataAssets, { DataAssetsReducerState } from "./dataAssets/reducer"
 
 export interface GlobalState {
   announcements: AnnouncementsReducerState;
   bookmarks: BookmarkReducerState;
   dashboard: DashboardReducerState;
-  feature: FeatureReducerState;
   feedback: FeedbackReducerState;
   issue: IssueReducerState;
   notification: NotificationReducerState;
-  popularResources: PopularResourcesReducerState;
+  popularTables: PopularTablesReducerState;
   search: SearchReducerState;
   tableMetadata: TableMetadataReducerState;
   lastIndexed: LastIndexedReducerState;
   tags: TagsReducerState;
-  badges: BadgesReducerState;
   user: UserReducerState;
   ui: UIReducerState;
-  lineage: LineageReducerState;
+  /* EPDL */
+  dataAssets: DataAssetsReducerState
 }
 
 const rootReducer = combineReducers<GlobalState>({
   announcements,
   bookmarks,
   dashboard,
-  feature,
   feedback,
   issue,
   notification,
-  popularResources,
+  popularTables,
   search,
   tableMetadata,
   lastIndexed,
   tags,
-  badges,
   user,
   ui,
-  lineage,
+  /* EPDL */
+  dataAssets,
 });
 
 export default rootReducer;

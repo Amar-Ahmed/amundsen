@@ -1,0 +1,10 @@
+.domain-description {
+  font-weight: 600 !important;
+}
+.domains-list-description-container {
+    max-width: 500px !important;
+    white-space: normal !important;
+}
+.capitalize{
+  text-transform: capitalize;
+}

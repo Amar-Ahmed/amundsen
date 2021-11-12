@@ -8,9 +8,11 @@ import { ResourceType, Tag, SearchType } from 'interfaces';
 
 import { updateSearchState } from 'ducks/search/reducer';
 import { UpdateSearchStateRequest } from 'ducks/search/types';
-import { logClick } from 'utils/analytics';
+import { logClick } from 'ducks/utilMethods';
 
 import './styles.scss';
+
+import './tag-info.css'
 
 interface OwnProps {
   data: Tag;
@@ -46,9 +48,13 @@ export class TagInfo extends React.Component<TagInfoProps> {
         className={'btn tag-button' + (this.props.compact ? ' compact' : '')}
         onClick={this.onClick}
       >
-        <span className="tag-name">{name}</span>
+        <span className="tag-name" aria-hidden="true" aria-label={name}>{name}</span>
+        {this.props.compact && <><span className="hide-element">Tag: {name}</span></>}
         {!this.props.compact && (
-          <span className="tag-count">{this.props.data.tag_count}</span>
+          <>
+          <span className="tag-count" aria-hidden="true">{this.props.data.tag_count}</span>
+          <span className="hide-element">{this.props.data.tag_count} instance of tag {name}</span>
+          </>
         )}
       </button>
     );

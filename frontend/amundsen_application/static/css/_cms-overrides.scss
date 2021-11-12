@@ -1,0 +1,67 @@
+@import 'variables';
+
+.display--inline-block {
+  display: inline-block;
+}
+
+// callouts
+
+.bs-callout {
+  padding-bottom: 5px;
+  margin: 0 0 20px 0;
+  border-left: 5px solid #eee;
+  border-radius: 3px;
+
+  p {
+    margin-top: 0;
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.bs-callout-info {
+  border-left-color: $cmsprimarylight;
+
+  h3,
+  h4 {
+    color: $cmsprimarylight;
+  }
+}
+
+.bs-callout-warning {
+  border-left-color: $amber100;
+
+  h3,
+  h4 {
+    color: $amber100;
+  }
+}
+
+.bs-callout-danger {
+  border-left-color: $sunset70;
+
+  h3,
+  h4 {
+    color: $sunset70;
+  }
+}
+
+// // override from layouts.scss - Spacing for intro on dashboard
+// #main > .container {
+//   margin: 32px auto 48px;
+// }
+
+// @media (max-width: $screen-md-max) {
+//   #main > .container {
+//     margin: 32px auto 48px;
+//   }
+// }
+
+// @media (max-width: $screen-sm-max) {
+//   #main > .container {
+//     margin: 32px auto 48px;
+//   }
+// }
+// // end override

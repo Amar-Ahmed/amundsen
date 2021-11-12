@@ -36,8 +36,8 @@ const configDefault: AppConfig = {
     issueDescriptionTemplate: '',
   },
   logoPath: null,
-  logoTitle: 'AMUNDSEN',
-  documentTitle: 'Amundsen - Data Discovery Portal',
+  logoTitle: 'Enterprise User Data Catalog',
+  documentTitle: 'Enterprise User Data Catalog - Data Discovery Portal',
   numberFormat: null,
   mailClientFeatures: {
     feedbackEnabled: false,
@@ -155,7 +155,7 @@ const configDefault: AppConfig = {
       },
     },
     [ResourceType.table]: {
-      displayName: 'Datasets',
+      displayName: 'Tables',
       supportedSources: {
         bigquery: {
           displayName: 'BigQuery',
@@ -199,12 +199,12 @@ const configDefault: AppConfig = {
         },
       },
       filterCategories: [
-        {
-          categoryId: 'database',
-          displayName: 'Source',
-          helpText: 'Enter exact database name or a regex wildcard pattern',
-          type: FilterType.INPUT_SELECT,
-        },
+        // {
+        //   categoryId: 'database',
+        //   displayName: 'Source',
+        //   helpText: 'Enter exact database name or a regex wildcard pattern',
+        //   type: FilterType.INPUT_SELECT,
+        // },
         {
           categoryId: 'column',
           displayName: 'Column',

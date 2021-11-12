@@ -9,9 +9,10 @@ import AppConfig from 'config/config';
 import AvatarLabel, { AvatarLabelProps } from 'components/AvatarLabel';
 import LoadingSpinner from 'components/LoadingSpinner';
 import { ResourceType, UpdateMethod, UpdateOwnerPayload } from 'interfaces';
-import { logClick } from 'utils/analytics';
 
 import { EditableSectionChildProps } from 'components/EditableSection';
+//import { logClick } from 'ducks/utilMethods';
+import { logClick } from 'utils/analytics';
 
 import * as Constants from './constants';
 
@@ -276,7 +277,7 @@ export class OwnerEditor extends React.Component<
 
     return (
       <div className="owner-editor-component">
-        {ownerList}
+        {/* {ownerList}
         {readOnly && !hasItems && (
           <AvatarLabel
             avatarClass="gray-avatar"
@@ -321,7 +322,7 @@ export class OwnerEditor extends React.Component<
               </button>
             </Modal.Footer>
           </Modal>
-        )}
+        )} */}
       </div>
     );
   }

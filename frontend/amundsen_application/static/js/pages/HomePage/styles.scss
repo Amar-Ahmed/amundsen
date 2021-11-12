@@ -4,6 +4,10 @@
 @import 'variables';
 
 .home-page {
+  .home-element-container-half-height {
+    margin-top: $spacer-4;
+  }
+
   .home-element-container {
     margin-top: $spacer-4 * 2;
   }

@@ -7,7 +7,6 @@ import { Link } from 'react-router-dom';
 
 import { UserResource } from 'interfaces';
 import { LoggingParams } from '../types';
-import { logClick } from '../../../utils/analytics';
 
 export interface UserListItemProps {
   user: UserResource;
@@ -37,35 +36,21 @@ class UserListItem extends React.Component<UserListItemProps, {}> {
   };
 
   render() {
-    const { user, logging } = this.props;
+    const { user } = this.props;
     const userInfo = this.renderUserInfo(user);
     return (
       <li className="list-group-item clickable">
-        <Link
-          className="resource-list-item user-list-item"
-          to={this.getLink()}
-          onClick={(e) =>
-            logClick(e, {
-              target_id: 'user_list_item',
-              value: logging.source,
-              position: logging.index.toString(),
-            })
-          }
-        >
+        <Link className="resource-list-item user-list-item" to={this.getLink()}>
           <div className="resource-info">
             <Avatar name={user.display_name} size={24} round />
             <div className="resource-info-text my-auto">
-              <div className="resource-name">{user.display_name}</div>
+              <div className="resource-name title-2">{user.display_name}</div>
               {userInfo && (
                 <div className="body-secondary-3 truncated">
                   <ul>{userInfo}</ul>
                 </div>
               )}
             </div>
-          </div>
-          <div className="resource-type">User</div>
-          <div className="resource-badges">
-            <img className="icon icon-right" alt="" />
           </div>
         </Link>
       </li>

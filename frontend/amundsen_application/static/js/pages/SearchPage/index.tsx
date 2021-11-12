@@ -188,7 +188,7 @@ export class SearchPage extends React.Component<SearchPageProps> {
           <ResourceSelector />
           <SearchFilter />
         </SearchPanel>
-        <main className="search-results">
+        <main className="search-results"  aria-live="polite">
           <h1 className="sr-only">{SEARCHPAGE_TITLE}</h1>
           {this.renderContent()}
         </main>

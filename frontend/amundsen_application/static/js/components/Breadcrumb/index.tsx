@@ -6,6 +6,8 @@ import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 
+import { DATASET_ALT_TXT } from './constants';
+
 import './styles.scss';
 import { loadPreviousSearch } from 'ducks/search/reducer';
 import { LoadPreviousSearchRequest } from 'ducks/search/types';
@@ -32,7 +34,9 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = (
     return (
       <div className="amundsen-breadcrumb">
         <Link to={path} className="btn btn-flat-icon title-3">
-          {direction === 'left' && <img className="icon icon-left" alt="" />}
+          {direction === 'left' && (
+            <img className="icon icon-left" alt={DATASET_ALT_TXT} />
+          )}
           <span>{text}</span>
           {direction === 'right' && <img className="icon icon-right" alt="" />}
         </Link>
@@ -46,7 +50,9 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = (
         onClick={props.loadPreviousSearch}
         className="btn btn-flat-icon title-3"
       >
-        {direction === 'left' && <img className="icon icon-left" alt="" />}
+        {direction === 'left' && (
+          <img className="icon icon-left" alt={DATASET_ALT_TXT} />
+        )}
         {direction === 'right' && <img className="icon icon-right" alt="" />}
       </a>
     </div>

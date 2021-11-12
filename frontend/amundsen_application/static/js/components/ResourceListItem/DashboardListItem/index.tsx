@@ -7,7 +7,6 @@ import { Link } from 'react-router-dom';
 import BookmarkIcon from 'components/Bookmark/BookmarkIcon';
 
 import { getSourceDisplayName, getSourceIconClass } from 'config/config-utils';
-import { logClick } from 'utils/analytics';
 import { buildDashboardURL } from 'utils/navigationUtils';
 import { formatDate } from 'utils/dateUtils';
 
@@ -38,19 +37,12 @@ class DashboardListItem extends React.Component<DashboardListItemProps, {}> {
     `icon resource-icon ${getSourceIconClass(dashboardId, dashboardType)}`;
 
   render() {
-    const { dashboard, logging } = this.props;
+    const { dashboard } = this.props;
     return (
       <li className="list-group-item clickable">
         <Link
           className="resource-list-item table-list-item"
           to={this.getLink()}
-          onClick={(e) =>
-            logClick(e, {
-              target_id: 'dashboard_list_item',
-              value: logging.source,
-              position: logging.index.toString(),
-            })
-          }
         >
           <div className="resource-info">
             <span
@@ -60,7 +52,7 @@ class DashboardListItem extends React.Component<DashboardListItemProps, {}> {
               )}
             />
             <div className="resource-info-text my-auto">
-              <div className="resource-name">
+              <div className="resource-name title-2">
                 <div className="dashboard-name">{dashboard.name}</div>
                 <div className="dashboard-group truncated">
                   {dashboard.group_name}
@@ -74,9 +66,6 @@ class DashboardListItem extends React.Component<DashboardListItemProps, {}> {
                 {dashboard.description}
               </div>
             </div>
-          </div>
-          <div className="resource-type">
-            {getSourceDisplayName(dashboard.product, dashboard.type)}
           </div>
           <div className="resource-badges">
             <div>

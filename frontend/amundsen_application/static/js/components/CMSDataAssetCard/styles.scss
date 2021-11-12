@@ -1,0 +1,39 @@
+
+@import 'variables';
+@import 'typography';
+
+.popular-data-asset-list {
+  .popular-data-assets-header {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: $spacer-2;
+  }
+
+  .popular-data-assets-header-text {
+    @extend %text-title-w1;
+  }
+
+  .list-group {
+    margin-top: 0;
+  }
+}
+.modal-title{
+  text-align: left !important;
+  margin-left: 16px !important;
+  margin-top: 8px !important;
+  font-size: large !important;
+}
+.modal-header {
+  border-bottom: none !important;
+}
+.modal-header span{
+font-size: 32px !important;
+color: black !important;
+}
+.modal-body{
+  text-align: left !important;
+  padding: 36px !important;
+}
+.close{
+  opacity: 1 !important;
+}

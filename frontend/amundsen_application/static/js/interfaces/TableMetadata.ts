@@ -46,6 +46,12 @@ export interface TablePreviewQueryParams {
   tableName: string;
   cluster: string;
 }
+export interface PreviewQueryParams {
+  database: string;
+  schema: string;
+  tableName: string;
+  cluster: string;
+}
 
 export type TableColumnType = TableColumn | NestedTableColumn;
 

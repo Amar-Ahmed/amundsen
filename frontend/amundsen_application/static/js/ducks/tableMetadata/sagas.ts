@@ -13,8 +13,6 @@ import {
   getColumnDescriptionSuccess,
   getPreviewDataFailure,
   getPreviewDataSuccess,
-  getTableQualityChecksSuccess,
-  getTableQualityChecksFailure,
 } from './reducer';
 
 import {
@@ -30,8 +28,6 @@ import {
   UpdateColumnDescriptionRequest,
   UpdateTableDescription,
   UpdateTableDescriptionRequest,
-  GetTableQualityChecksRequest,
-  GetTableQualityChecks,
 } from './types';
 
 export function* getTableDataWorker(action: GetTableDataRequest): SagaIterator {
@@ -66,8 +62,6 @@ export function* getTableDescriptionWorker(
   const state = yield select();
   let { tableData } = state.tableMetadata;
   try {
-    // TODO - Cleanup this pattern of sending in the table metadata and then modifying it and sending it back.
-    // Should just fetch the description and send it back to the reducer.
     tableData = yield call(
       API.getTableDescription,
       state.tableMetadata.tableData
@@ -180,21 +174,4 @@ export function* getPreviewDataWorker(
 }
 export function* getPreviewDataWatcher(): SagaIterator {
   yield takeLatest(GetPreviewData.REQUEST, getPreviewDataWorker);
-}
-
-export function* getTableQualityChecksWorker(
-  action: GetTableQualityChecksRequest
-): SagaIterator {
-  const { key } = action.payload;
-  try {
-    const response = yield call(API.getTableQualityChecksSummary, key);
-    const { checks, status } = response;
-    yield put(getTableQualityChecksSuccess(checks, status));
-  } catch (error) {
-    const { status } = error;
-    yield put(getTableQualityChecksFailure(status));
-  }
-}
-export function* getTableQualityChecksWatcher(): SagaIterator {
-  yield takeLatest(GetTableQualityChecks.REQUEST, getTableQualityChecksWorker);
 }
