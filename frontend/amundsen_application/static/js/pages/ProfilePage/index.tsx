@@ -10,7 +10,7 @@ import { bindActionCreators } from 'redux';
 
 import Breadcrumb from 'components/Breadcrumb';
 import TabsComponent, { TabInfo } from 'components/TabsComponent';
-import { TAB_URL_PARAM } from 'components/TabsComponent/constants';
+
 import { GlobalState } from 'ducks/rootReducer';
 import { getUser, getUserOwn, getUserRead } from 'ducks/user/reducer';
 import { PeopleUser, Resource, ResourceType, ResourceDict } from 'interfaces';
@@ -19,21 +19,17 @@ import {
   GetUserOwnRequest,
   GetUserReadRequest,
 } from 'ducks/user/types';
+
 import ResourceList from 'components/ResourceList';
 import { GetBookmarksForUserRequest } from 'ducks/bookmark/types';
 import { getBookmarksForUser } from 'ducks/bookmark/reducer';
 
-import { logAction } from 'utils/analytics';
 import {
   getDisplayNameByResource,
   indexDashboardsEnabled,
 } from 'config/config-utils';
 
-import {
-  getLoggingParams,
-  getUrlParam,
-  setUrlParam,
-} from 'utils/navigationUtils';
+import { getLoggingParams } from 'utils/logUtils';
 
 import {
   AVATAR_SIZE,
@@ -48,7 +44,6 @@ import {
   OWNED_LABEL,
   OWNED_SOURCE,
   OWNED_TITLE_PREFIX,
-  PROFILE_TAB,
   PROFILE_TEXT,
   READ_LABEL,
   READ_SOURCE,
@@ -162,6 +157,8 @@ export class ProfilePage extends React.Component<
     );
   };
 
+  generateTabKey = (resource: ResourceType) => `tab:${resource}`;
+
   generateTabTitle = (resource: ResourceType) => {
     const {
       bookmarks = [],
@@ -177,14 +174,14 @@ export class ProfilePage extends React.Component<
 
     tabInfo.push({
       content: this.generateTabContent(ResourceType.table),
-      key: PROFILE_TAB.TABLE,
+      key: this.generateTabKey(ResourceType.table),
       title: this.generateTabTitle(ResourceType.table),
     });
 
     if (indexDashboardsEnabled()) {
       tabInfo.push({
         content: this.generateTabContent(ResourceType.dashboard),
-        key: PROFILE_TAB.DASHBOARD,
+        key: this.generateTabKey(ResourceType.dashboard),
         title: this.generateTabTitle(ResourceType.dashboard),
       });
     }
@@ -199,7 +196,6 @@ export class ProfilePage extends React.Component<
   render() {
     const { user } = this.props;
     const isLoading = !user.display_name && !user.email && !user.employee_type;
-    const defaultTab = getUrlParam(TAB_URL_PARAM) || PROFILE_TAB.TABLE;
 
     let avatar: JSX.Element | null = null;
     if (isLoading) {
@@ -322,15 +318,7 @@ export class ProfilePage extends React.Component<
           <div className="profile-body">
             <TabsComponent
               tabs={this.generateTabInfo()}
-              defaultTab={defaultTab}
-              onSelect={(key) => {
-                setUrlParam(TAB_URL_PARAM, key);
-                logAction({
-                  command: 'click',
-                  target_id: 'profile_page_tab',
-                  label: key,
-                });
-              }}
+              defaultTab={this.generateTabKey(ResourceType.table)}
             />
           </div>
         </main>

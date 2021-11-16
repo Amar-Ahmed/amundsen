@@ -14,7 +14,6 @@ export interface AppConfig {
   editableText: EditableTextConfig;
   indexDashboards: IndexDashboardsConfig;
   indexUsers: IndexUsersConfig;
-  indexFeatures: IndexFeaturesConfig;
   userIdLabel?: string /* Temporary configuration due to lacking string customization/translation support */;
   issueTracking: IssueTrackingConfig;
   logoPath: string | null;
@@ -25,11 +24,8 @@ export interface AppConfig {
   announcements: AnnoucementsFeaturesConfig;
   navLinks: Array<LinkConfig>;
   resourceConfig: ResourceConfig;
-  featureLineage: FeatureLineageConfig;
   tableLineage: TableLineageConfig;
-  columnLineage: ColumnLineageConfig;
   tableProfile: TableProfileConfig;
-  tableQualityChecks: TableQualityChecksConfig;
 }
 
 export interface AppConfigCustom {
@@ -40,7 +36,6 @@ export interface AppConfigCustom {
   editableText?: EditableTextConfig;
   indexDashboards?: IndexDashboardsConfig;
   indexUsers?: IndexUsersConfig;
-  indexFeatures?: IndexFeaturesConfig;
   userIdLabel?: string /* Temporary configuration due to lacking string customization/translation support */;
   issueTracking?: IssueTrackingConfig;
   logoPath?: string;
@@ -51,11 +46,8 @@ export interface AppConfigCustom {
   announcements?: AnnoucementsFeaturesConfig;
   navLinks?: Array<LinkConfig>;
   resourceConfig?: ResourceConfig;
-  featureLineage?: FeatureLineageConfig;
   tableLineage?: TableLineageConfig;
-  columnLineage?: ColumnLineageConfig;
   tableProfile?: TableProfileConfig;
-  tableQualityChecks?: TableQualityChecksConfig;
 }
 
 /**
@@ -76,7 +68,6 @@ export interface AnalyticsConfig {
 interface BrowseConfig {
   curatedTags: Array<string>;
   showAllTags: boolean;
-  showBadgesInHome: boolean;
 }
 
 /**
@@ -149,28 +140,6 @@ type SortCriteriaConfig = {
   [key: string]: SortCriteria;
 };
 
-export enum NoticeSeverity {
-  INFO = 'info',
-  WARNING = 'warning',
-  ALERT = 'alert',
-}
-export interface NoticeType {
-  severity: NoticeSeverity;
-  messageHtml: string | ((resourceName: string) => string);
-}
-/**
- * Stats configuration options
- */
-type StatsConfig = {
-  uniqueValueTypeName: string;
-};
-
-/**
- * A list of notices where the key is the 'schema.name' of the table and the value
- * a Notice
- */
-type NoticesConfigType = Record<string, NoticeType>;
-
 /**
  * Base interface for all possible ResourceConfig objects
  *
@@ -181,13 +150,11 @@ interface BaseResourceConfig {
   displayName: string;
   filterCategories?: FilterConfig;
   supportedSources?: SourcesConfig;
-  notices?: NoticesConfigType;
 }
 
 interface TableResourceConfig extends BaseResourceConfig {
   supportedDescriptionSources?: DescriptionSourceConfig;
   sortCriterias?: SortCriteriaConfig;
-  stats?: StatsConfig;
 }
 
 export enum BadgeStyle {
@@ -232,7 +199,6 @@ interface ResourceConfig {
   [ResourceType.dashboard]: BaseResourceConfig;
   [ResourceType.table]: TableResourceConfig;
   [ResourceType.user]: BaseResourceConfig;
-  [ResourceType.feature]: BaseResourceConfig;
 }
 
 /**
@@ -277,50 +243,22 @@ interface TableProfileConfig {
 }
 
 /**
- * FeatureLineageConfig - enable upstream lineage tab for features
- */
-interface FeatureLineageConfig {
-  inAppListEnabled: boolean;
-}
-
-/**
- * TableLineageConfig - Customize the "Table Lineage" links of the "Table Details" page.
- * This feature is intended to link to an external lineage provider.
+ * TableLineageConfig - Customize the "Table Lineage" section of the "Table Details" page.
  *
  * iconPath - Path to an icon image to display next to the lineage URL.
  * isBeta - Adds a "beta" tag to the section header.
  * isEnabled - Whether to show or hide this section
  * urlGenerator - Generate a URL to the third party lineage website
- * inAppListEnabled - Enable the in app Upstream/Downstream tabs for table lineage. Requires backend support.
  */
 interface TableLineageConfig {
   iconPath: string;
   isBeta: boolean;
+  isEnabled: boolean;
   urlGenerator: (
     database: string,
     cluster: string,
     schema: string,
     table: string
-  ) => string;
-  externalEnabled: boolean;
-  inAppListEnabled: boolean;
-  inAppPageEnabled: boolean;
-}
-
-/**
- * ColumnLineageConfig - Configure column level lineage features in Amundsen.
- *
- * inAppListEnabled
- */
-interface ColumnLineageConfig {
-  inAppListEnabled: boolean;
-  inAppPageEnabled: boolean;
-  urlGenerator: (
-    database: string,
-    cluster: string,
-    schema: string,
-    table: string,
-    column: string
   ) => string;
 }
 
@@ -353,16 +291,6 @@ interface IndexUsersConfig {
 }
 
 /**
- * IndexFeaturesConfig - When enabled, ML features will be avaialable as searchable resources. This requires
- * feature objects to be ingested via Databuilder and made available in the metadata and serch services.
- *
- * enabled - Enables/disables this feature in the frontend only
- */
-interface IndexFeaturesConfig {
-  enabled: boolean;
-}
-
-/**
  * EditableTextConfig - Configure max length limits for editable fields
  *
  * tableDescLength - maxlength for table descriptions
@@ -375,12 +303,10 @@ interface EditableTextConfig {
 /**
  * IssueTrackingConfig - configures whether to display the issue tracking feature
  * that allows users to display tickets associated with a table and create ones
- * linked to a table, and allows a customized template that will be prepopulated
- * in the description for reporting an issue
+ * linked to a table
  */
 interface IssueTrackingConfig {
   enabled: boolean;
-  issueDescriptionTemplate: string;
 }
 
 export enum NumberStyle {
@@ -402,12 +328,4 @@ export interface NumberStyleConfig {
 export interface NumberFormatConfig {
   numberSystem: string | null;
   [NumberStyle.DECIMAL]?: NumberStyleConfig;
-}
-
-/**
- * TableQualityChecksConfig - configuration to query and display data quality check status from
- * an external provider. API must be configured.
- */
-export interface TableQualityChecksConfig {
-  isEnabled: boolean;
 }

@@ -65,7 +65,7 @@ Here are the settings and what they should be set to
     ISSUE_TRACKER_CLIENT = None  # type: str (Fully qualified class name and path)
     ISSUE_TRACKER_CLIENT_ENABLED = False  # type: bool (Enabling the feature, must be set to True)
     ISSUE_TRACKER_MAX_RESULTS = None  # type: int (Max issues to display at a time)
-    ISSUE_TRACKER_ISSUE_TYPE_ID = None # type: int (Jira only: Override default issue tracker ID whenever needed for cloud/hosted deployments)
+
 ```
 ## Programmatic Descriptions
 Amundsen supports configuring other mark down supported non-editable description boxes on the table page.
@@ -84,7 +84,7 @@ Programmatic descriptions are referred to by a "description source" which is a u
 In the UI, they will appear on the table page under structured metadata.
 
 In config.py you can then configure the descriptions to have a custom order, as well as whether or not they should exist in the left column or right column.
-```
+```    
 PROGRAMMATIC_DISPLAY = {
     'RIGHT': {
       "test3" : {},
@@ -109,19 +109,14 @@ be company specific which will not directly integrated with Amundsen.
 You can use different combinations of schema and table name for selecting tables.
 
 Here are some examples when this feature can be used:
-1. You want to set ALL tables in your application as un-editable
-2. You want to set all tables with a given schema or schema pattern as un-editable.
-3. You want to set all tables with a specific table name pattern in a given schema pattern as un-editable.
-4. You want to set all tables with a given table name pattern as un-editable.
+1. You want to set all tables with a given schema or schema pattern as un-editable.
+2. You want to set all tables with a specific table name pattern in a given schema pattern as un-editable.
+3. You want to set all tables with a given table name pattern as un-editable.
 
 Amundsen has two variables in `config.py` file which can be used to define match rules:
-1. `ALL_UNEDITABLE_SCHEMAS` : boolean on/off switch for ability to edit tables. This can also be set using the environment variable 'ALL_UNEDITABLE_SCHEMAS'
-2. `UNEDITABLE_SCHEMAS` : Set of schemas where all tables should be un-editable. It takes exact schema name.
-3. `UNEDITABLE_TABLE_DESCRIPTION_MATCH_RULES` : List of MatchRuleObject, where each MatchRuleObject consists of regex for
+1. `UNEDITABLE_SCHEMAS` : Set of schemas where all tables should be un-editable. It takes exact schema name.
+2. `UNEDITABLE_TABLE_DESCRIPTION_MATCH_RULES` : List of MatchRuleObject, where each MatchRuleObject consists of regex for
 schema name or regex for table name or both.
-
-Purpose of `ALL_UNEDITABLE_SCHEMAS` is to provide a blanket on/off switch for disabling editing schemas. This should be used if you plan to up
-all of your schemas via databuilder rather then allow users to do it via the UI.
 
 Purpose of `UNEDITABLE_SCHEMAS` can be fulfilled by `UNEDITABLE_TABLE_DESCRIPTION_MATCH_RULES` but we are keeping both
 variables for backward compatibility.

@@ -10,7 +10,6 @@ import { SearchResults } from 'ducks/search/types';
 import {
   ResourceType,
   DashboardResource,
-  FeatureResource,
   TableResource,
   UserResource,
 } from 'interfaces';
@@ -38,7 +37,6 @@ jest.mock('config/config-utils', () => ({
   getSourceIconClass: jest.fn(),
   indexUsersEnabled: jest.fn(),
   indexDashboardsEnabled: jest.fn(),
-  indexFeaturesEnabled: jest.fn(),
 }));
 
 describe('InlineSearchResults', () => {
@@ -46,7 +44,6 @@ describe('InlineSearchResults', () => {
     const props: InlineSearchResultsProps = {
       isLoading: false,
       dashboards: allResourcesExample.dashboards as SearchResults<DashboardResource>,
-      features: allResourcesExample.features as SearchResults<FeatureResource>,
       tables: allResourcesExample.tables as SearchResults<TableResource>,
       users: allResourcesExample.users as SearchResults<UserResource>,
       className: 'testClass',

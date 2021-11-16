@@ -11,8 +11,7 @@ import LoadingSpinner from 'components/LoadingSpinner';
 import { ResourceType, UpdateMethod, UpdateOwnerPayload } from 'interfaces';
 
 import { EditableSectionChildProps } from 'components/EditableSection';
-//import { logClick } from 'ducks/utilMethods';
-import { logClick } from 'utils/analytics';
+import { logClick } from 'ducks/utilMethods';
 
 import * as Constants from './constants';
 

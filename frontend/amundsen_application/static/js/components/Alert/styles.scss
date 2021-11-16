@@ -22,8 +22,7 @@ $alert-message-line-height: 24px;
     display: inline;
   }
 
-  .alert-triangle-svg-icon,
-  .info-svg-icon {
+  .alert-triangle-svg-icon {
     flex-shrink: 0;
     align-self: center;
     margin-right: $spacer-1;

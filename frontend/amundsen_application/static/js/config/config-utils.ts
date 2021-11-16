@@ -1,46 +1,15 @@
 import AppConfig from 'config/config';
 import { BadgeStyle, BadgeStyleConfig } from 'config/config-types';
+import { TableMetadata } from 'interfaces/TableMetadata';
 import { convertText, CaseType } from 'utils/textUtils';
 
-import { TableMetadata } from 'interfaces/TableMetadata';
-import {
-  AnalyticsConfig,
-  FilterConfig,
-  LinkConfig,
-  NoticeType,
-} from './config-types';
+import { AnalyticsConfig, FilterConfig, LinkConfig } from './config-types';
+
 import { ResourceType } from '../interfaces';
 
 export const DEFAULT_DATABASE_ICON_CLASS = 'icon-database icon-color';
 export const DEFAULT_DASHBOARD_ICON_CLASS = 'icon-dashboard icon-color';
-const WILDCARD_SIGN = '*';
-const RESOURCE_SEPARATOR = '.';
 const ANNOUNCEMENTS_LINK_LABEL = 'Announcements';
-const hasWildcard = (n) => n.indexOf(WILDCARD_SIGN) > -1;
-const withComputedMessage = (notice: NoticeType, resourceName) => {
-  if (typeof notice.messageHtml === 'function') {
-    notice.messageHtml = notice.messageHtml(resourceName);
-  }
-  return notice;
-};
-const resourceMatches = (key: string, resource: string) => {
-  if (key === resource || key === WILDCARD_SIGN) {
-    return true;
-  }
-  if (key.includes(WILDCARD_SIGN)) {
-    const wildcardIndex = key.indexOf(WILDCARD_SIGN);
-    const inverseWildcardIndex = -1 * (key.length - wildcardIndex - 1);
-    if (
-      key.slice(0, wildcardIndex) === resource.slice(0, wildcardIndex) &&
-      (wildcardIndex === key.length - 1 ||
-        key.slice(inverseWildcardIndex) ===
-          resource.slice(inverseWildcardIndex))
-    ) {
-      return true;
-    }
-  }
-  return false;
-};
 
 /**
  * Returns the display name for a given source id for a given resource type.
@@ -85,56 +54,10 @@ export function getSourceIconClass(
     if (resource === ResourceType.table) {
       return DEFAULT_DATABASE_ICON_CLASS;
     }
-    if (resource === ResourceType.feature) {
-      return DEFAULT_DATABASE_ICON_CLASS;
-    }
     return '';
   }
 
   return config.supportedSources[sourceId].iconClass;
-}
-
-/**
- * Returns notices for the given resource name if present
- */
-export function getResourceNotices(
-  resourceType: ResourceType,
-  resourceName: string
-): NoticeType | false {
-  const { notices } = AppConfig.resourceConfig[resourceType];
-
-  if (notices && notices[resourceName]) {
-    const thisNotice = notices[resourceName];
-    return withComputedMessage(thisNotice, resourceName);
-  }
-
-  const wildcardNoticesKeys = Object.keys(notices).filter(hasWildcard);
-  if (wildcardNoticesKeys.length) {
-    const wildcardNoticesArray = new Array(1);
-    let hasNotice: boolean = false;
-
-    wildcardNoticesKeys.forEach((key) => {
-      const decomposedKey = key.split(RESOURCE_SEPARATOR);
-      const decomposedResource = resourceName.split(RESOURCE_SEPARATOR);
-
-      for (let i = 0; i < decomposedKey.length; i++) {
-        if (resourceMatches(decomposedKey[i], decomposedResource[i])) {
-          if (i === decomposedKey.length - 1) {
-            wildcardNoticesArray[0] = notices[key];
-            hasNotice = true;
-          }
-          continue;
-        }
-        break;
-      }
-    });
-    if (hasNotice) {
-      const [noticeFromWildcard] = wildcardNoticesArray;
-      return withComputedMessage(noticeFromWildcard, resourceName);
-    }
-  }
-
-  return false;
 }
 
 /**
@@ -158,15 +81,6 @@ export function getFilterConfigByResource(
  */
 export function getAnalyticsConfig(): AnalyticsConfig {
   return AppConfig.analytics;
-}
-
-/**
- * Returns the stat type name for the unique value stat type
- * @returns string or undefined
- */
-export function getUniqueValueStatTypeName(): string | undefined {
-  return AppConfig.resourceConfig[ResourceType.table].stats
-    ?.uniqueValueTypeName;
 }
 
 /*
@@ -206,13 +120,6 @@ export function indexDashboardsEnabled(): boolean {
 }
 
 /**
- * Returns whether or not ML features should be shown
- */
-export function indexFeaturesEnabled(): boolean {
-  return AppConfig.indexFeatures.enabled;
-}
-
-/**
  * Returns whether or not user features should be shown
  */
 export function indexUsersEnabled(): boolean {
@@ -224,15 +131,6 @@ export function indexUsersEnabled(): boolean {
  */
 export function issueTrackingEnabled(): boolean {
   return AppConfig.issueTracking.enabled;
-}
-
-/**
- * Returns the string that will prepopulate the issue description
- * text field with a template to suggest more detailed information
- * to be provided by the user when an issue is reported
- */
-export function getIssueDescriptionTemplate(): string {
-  return AppConfig.issueTracking.issueDescriptionTemplate;
 }
 
 /**
@@ -388,69 +286,4 @@ export function getDocumentTitle(): string {
  */
 export function getLogoTitle(): string {
   return AppConfig.logoTitle;
-}
-
-/**
- * Returns whether the in-app table lineage list is enabled.
- */
-export function isFeatureListLineageEnabled() {
-  return AppConfig.featureLineage.inAppListEnabled;
-}
-
-/**
- * Returns whether the in-app table lineage list is enabled.
- */
-export function isTableListLineageEnabled() {
-  return AppConfig.tableLineage.inAppListEnabled;
-}
-
-/**
- * Returns whether the in-app column list lineage is enabled.
- */
-export function isColumnListLineageEnabled() {
-  return AppConfig.columnLineage.inAppListEnabled;
-}
-
-/**
- * Returns whether the in-app table lineage page is enabled.
- */
-export function isTableLineagePageEnabled() {
-  return AppConfig.tableLineage.inAppPageEnabled;
-}
-
-/**
- * Returns whether the in-app column lineage page is enabled.
- */
-export function isColumnLineagePageEnabled() {
-  return AppConfig.columnLineage.inAppPageEnabled;
-}
-
-/**
- * Returns the lineage link for a given column
- */
-export function getColumnLineageLink(
-  tableData: TableMetadata,
-  columnName: string
-) {
-  return AppConfig.columnLineage.urlGenerator(
-    tableData.database,
-    tableData.cluster,
-    tableData.schema,
-    tableData.name,
-    columnName
-  );
-}
-
-/**
- * Returns whether table data quality checks are enabled
- */
-export function isTableQualityCheckEnabled() {
-  return AppConfig.tableQualityChecks.isEnabled;
-}
-
-/**
- * Returns whether Available badges section should be shown in Home Page
- */
-export function isShowBadgesInHomeEnabled() {
-  return AppConfig.browse.showBadgesInHome;
 }

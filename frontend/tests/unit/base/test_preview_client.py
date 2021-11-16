@@ -11,13 +11,18 @@ app.config.from_object('amundsen_application.config.LocalConfig')
 
 
 class PreviewClientTest(unittest.TestCase):
+    def setUp(self) -> None:
+        BasePreviewClient.__abstractmethods__ = frozenset()
+        self.client = BasePreviewClient()
 
-    def test_cover_abtract_methods(self) -> None:
-        abstract_methods_set = {
-            '__init__',
-            'get_preview_data',
-            'get_feature_preview_data'
-        }
-        # Use getattr to prevent mypy warning
-        cls_abstrct_methods = getattr(BasePreviewClient, '__abstractmethods__')
-        self.assertEquals(cls_abstrct_methods, abstract_methods_set)
+    def tearDown(self) -> None:
+        pass
+
+    def cover_abtract_methods(self) -> None:
+        with app.test_request_context():
+            try:
+                self.client.get_preview_data()
+            except NotImplementedError:
+                self.assertTrue(True)
+            else:
+                self.assertTrue(False)

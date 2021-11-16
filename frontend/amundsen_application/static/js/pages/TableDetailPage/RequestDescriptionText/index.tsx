@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
+import './styles.scss';
 
+import { GlobalState } from 'ducks/rootReducer';
 import { connect } from 'react-redux';
 import { OpenRequestAction } from 'ducks/notification/types';
 import { openRequestDescriptionDialog } from 'ducks/notification/reducer';
@@ -35,7 +37,7 @@ export class RequestDescriptionText extends React.Component<
   render() {
     return (
       <a
-        className="request-description body-link"
+        className="request-description"
         href="JavaScript:void(0)"
         onClick={this.openRequest}
       >

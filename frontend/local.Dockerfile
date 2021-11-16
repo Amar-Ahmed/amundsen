@@ -22,7 +22,7 @@ RUN pip3 install -r requirements.txt
 
 COPY --from=node-stage /app /app
 
-RUN pip3 install -e .
+RUN python3 setup.py install
 
 ENTRYPOINT [ "python3" ]
 CMD [ "amundsen_application/wsgi.py" ]

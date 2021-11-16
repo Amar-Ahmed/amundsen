@@ -11,9 +11,7 @@ describe('postActionLog', () => {
     axiosMock = jest
       .spyOn(axios, 'post')
       .mockImplementation(() => Promise.resolve());
-    params = {
-      command: 'test',
-    };
+    params = {};
     API.postActionLog(params);
   });
 

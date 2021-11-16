@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from http import HTTPStatus
-import logging
 from typing import Dict, List
 from amundsen_application.base.base_preview_client import BasePreviewClient
 from amundsen_application.models.preview_data import (
@@ -11,7 +10,6 @@ from amundsen_application.models.preview_data import (
     PreviewDataSchema,
 )
 from flask import Response, make_response, jsonify
-from marshmallow import ValidationError
 from google.cloud import bigquery
 
 
@@ -62,16 +60,13 @@ class BaseBigqueryPreviewClient(BasePreviewClient):
             params["schema"],
             params["tableName"],
         )
-        try:
-            data = PreviewDataSchema().dump(preview_data)
-            PreviewDataSchema().load(data)  # for validation only
+        data = PreviewDataSchema().dump(preview_data)[0]
+        errors = PreviewDataSchema().load(data)[1]
+        payload = jsonify({"preview_data": data})
+
+        if not errors:
             payload = jsonify({"preview_data": data})
             return make_response(payload, HTTPStatus.OK)
-        except ValidationError as err:
-            logging.error("PreviewDataSchema serialization error + " + str(err.messages))
-            return make_response(
-                jsonify({"preview_data": {}}), HTTPStatus.INTERNAL_SERVER_ERROR
-            )
-
-    def get_feature_preview_data(self, params: Dict, optionalHeaders: Dict = None) -> Response:
-        pass
+        return make_response(
+            jsonify({"preview_data": {}}), HTTPStatus.INTERNAL_SERVER_ERROR
+        )

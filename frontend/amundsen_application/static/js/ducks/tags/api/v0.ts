@@ -1,10 +1,9 @@
 import axios, { AxiosResponse } from 'axios';
 
-import { ResourceType, Tag } from 'interfaces';
-import { GetDashboardAPI } from 'ducks/dashboard/api/v0';
-import { GetFeatureAPI } from 'ducks/feature/api/v0';
-import { API_PATH, TableDataAPI } from 'ducks/tableMetadata/api/v0';
 import { sortTagsAlphabetical } from 'ducks/utilMethods';
+import { ResourceType, Tag } from 'interfaces';
+import { API_PATH, TableDataAPI } from 'ducks/tableMetadata/api/v0';
+import { GetDashboardAPI } from 'ducks/dashboard/api/v0';
 
 export type AllTagsAPI = {
   msg: string;
@@ -34,30 +33,20 @@ export function getResourceTags(resourceType, uriKey: string) {
         (response.data.dashboard.tags || []).sort(sortTagsAlphabetical)
       );
   }
-  if (resourceType === ResourceType.feature) {
-    return axios
-      .get(`${API_PATH}/feature?key=${uriKey}`)
-      .then((response: AxiosResponse<GetFeatureAPI>) =>
-        (response.data.featureData.tags || []).sort(sortTagsAlphabetical)
-      );
-  }
 }
 
 /* TODO: Typing this method generates redux-saga related type errors that needs more dedicated debugging */
 // TODO - Unify this API and split the logic in the Flask layer.
-export function updateResourceTag(
+export function updateTableTag(
   tagObject,
   resourceType: ResourceType,
   uriKey: string
 ) {
-  const updateTagEndpointMap = {
-    [ResourceType.table]: `${API_PATH}/update_table_tags`,
-    [ResourceType.dashboard]: `${API_PATH}/update_dashboard_tags`,
-    [ResourceType.feature]: `${API_PATH}/update_feature_tags`,
-  };
-  const url = updateTagEndpointMap[resourceType];
-  if (url === undefined) {
-    throw new Error(`Update Tag not supported for ${resourceType}`);
+  let url = '';
+  if (resourceType === ResourceType.table) {
+    url = `${API_PATH}/update_table_tags`;
+  } else if (resourceType === ResourceType.dashboard) {
+    url = `${API_PATH}/update_dashboard_tags`;
   }
   return axios({
     url,

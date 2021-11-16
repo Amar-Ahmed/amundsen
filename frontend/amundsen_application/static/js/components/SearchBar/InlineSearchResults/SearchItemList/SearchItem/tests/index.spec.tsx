@@ -20,7 +20,7 @@ import {
 
 import { SearchItem, SearchItemProps, mapStateToProps } from '..';
 
-jest.mock('utils/analytics', () => ({
+jest.mock('ducks/utilMethods', () => ({
   logClick: jest.fn(() => {}),
 }));
 

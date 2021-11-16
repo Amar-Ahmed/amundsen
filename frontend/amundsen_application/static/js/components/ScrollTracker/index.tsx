@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { throttle } from 'throttle-debounce';
-import { logAction } from 'utils/analytics';
+import { logAction } from 'ducks/utilMethods';
 
 export interface ScrollTrackerProps {
   targetId: string;

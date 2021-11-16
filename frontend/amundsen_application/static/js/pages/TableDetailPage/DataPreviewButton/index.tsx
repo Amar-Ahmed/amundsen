@@ -9,13 +9,9 @@ import { bindActionCreators } from 'redux';
 
 import { getPreviewData } from 'ducks/tableMetadata/reducer';
 import { GlobalState } from 'ducks/rootReducer';
-import { PreviewDataTable } from 'features/PreviewData';
-import {
-  PreviewData,
-  TablePreviewQueryParams,
-  TableMetadata,
-} from 'interfaces';
-import { logClick } from 'utils/analytics';
+import { logClick } from 'ducks/utilMethods';
+import { PreviewData, PreviewQueryParams, TableMetadata } from 'interfaces';
+import * as Constants from './constants';
 
 // TODO: Use css-modules instead of 'import'
 import './styles.scss';
@@ -36,7 +32,7 @@ export interface StateFromProps {
 }
 
 export interface DispatchFromProps {
-  getPreviewData: (queryParams: TablePreviewQueryParams) => void;
+  getPreviewData: (queryParams: PreviewQueryParams) => void;
 }
 
 export interface ComponentProps {
@@ -104,11 +100,60 @@ export class DataPreviewButton extends React.Component<
     this.setState({ showModal: true });
   };
 
+  getSanitizedValue(value) {
+    // Display the string interpretation of the following "false-y" values
+    // return 'Data Exceeds Render Limit' msg if column is too long
+    let sanitizedValue = '';
+    if (value === 0 || typeof value === 'boolean') {
+      sanitizedValue = value.toString();
+    } else if (typeof value === 'object') {
+      sanitizedValue = JSON.stringify(value);
+    } else {
+      sanitizedValue = value;
+    }
+
+    if (sanitizedValue.length > Constants.PREVIEW_COLUMN_MAX_LEN) {
+      return Constants.PREVIEW_COLUMN_MSG;
+    }
+    return sanitizedValue;
+  }
+
   renderModalBody() {
     const { previewData } = this.props;
 
     if (this.props.status === LoadingStatus.SUCCESS) {
-      return <PreviewDataTable isLoading={false} previewData={previewData} />;
+      if (
+        !previewData.columns ||
+        !previewData.data ||
+        previewData.columns.length === 0 ||
+        previewData.data.length === 0
+      ) {
+        return <div>No data available for preview</div>;
+      }
+
+      return (
+        <div className="grid">
+          {previewData.columns.map((col, colId) => {
+            const fieldName = col.column_name;
+            return (
+              <div key={fieldName} id={fieldName} className="grid-column">
+                <div className="grid-cell grid-header subtitle-3">
+                  {fieldName.toUpperCase()}
+                </div>
+                {(previewData.data || []).map((row, rowId) => {
+                  const cellId = `${colId}:${rowId}`;
+                  const dataItemValue = this.getSanitizedValue(row[fieldName]);
+                  return (
+                    <div key={cellId} className="grid-cell">
+                      {dataItemValue}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </div>
+      );
     }
 
     if (this.props.status === LoadingStatus.UNAUTHORIZED) {

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 @import 'variables';
-@import 'typography';
 
 .list-group-item .resource-list-item {
   color: $text-primary;
@@ -42,9 +41,6 @@
     }
 
     .resource-name {
-      @extend %text-title-w2;
-
-      color: $resource-title-color;
       display: flex;
 
       .dashboard-group {
@@ -74,9 +70,9 @@
     }
   }
 
-  .resource-source {
+  .resource-type {
     flex: 2;
-    margin: auto $spacer-3;
+    margin: auto 24px;
   }
 
   .resource-badges {
@@ -84,7 +80,7 @@
     flex: 3;
     flex-wrap: wrap;
     margin-bottom: auto;
-    margin-left: $spacer-3;
+    margin-left: 24px;
     margin-top: auto;
 
     .flag {
@@ -92,12 +88,7 @@
     }
   }
 
-  .resource-entity {
-    display: flex;
-    flex: 2;
-    flex-wrap: wrap;
-    margin-bottom: auto;
-    margin-left: $spacer-3;
-    margin-top: auto;
+  .title-2 {
+    color: $resource-title-color;
   }
 }

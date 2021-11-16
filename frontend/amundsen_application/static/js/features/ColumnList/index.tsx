@@ -161,8 +161,9 @@ const ExpandedRowComponent: React.FC<ExpandedRowProps> = (
 
     return true;
   };
-  return (<>
-    {/* <div className="expanded-row-container">
+
+  return (
+    <div className="expanded-row-container">
       {shouldRenderDescription() && (
         <EditableSection
           title={EDITABLE_SECTION_TITLE}
@@ -179,8 +180,7 @@ const ExpandedRowComponent: React.FC<ExpandedRowProps> = (
         </EditableSection>
       )}
       {rowValue.stats && <ColumnStats stats={rowValue.stats} />}
-    </div> */}
-    </>
+    </div>
   );
 };
 
@@ -236,18 +236,6 @@ const ColumnList: React.FC<ColumnListProps> = ({
         <>
           <div className="column-name">{title}</div>
           <div className="column-desc truncated">{description}</div>
-          <div  className='toggle'>
-          <div >
-          <label className="editable-section-labelz"><div className="editable-section-label-wrapperz">
-          <h4 className="section-title title-3" style={{marginTop:'12px'}}>Description</h4>
-          </div></label>
-          <div > 
-          <div className='markdown-wrapper'>
-          <p style={{marginBottom:'14px'}}>{description}</p>
-          </div>
-          </div>
-          </div>
-          </div>
         </>
       ),
     },

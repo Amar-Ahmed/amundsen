@@ -16,12 +16,7 @@ export const InformationIcon: React.FC<IconProps> = ({
   const id = `info_icon_${uuidv4()}`;
 
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      className="info-svg-icon"
-    >
+    <svg width={size} height={size} viewBox="0 0 24 24">
       <title>Info</title>
       <defs>
         <path
@@ -30,7 +25,7 @@ export const InformationIcon: React.FC<IconProps> = ({
         />
       </defs>
       <g fill="none" fillRule="evenodd">
-        <mask id="prefix__b" fill="#fff">
+        <mask fill="#fff">
           <use xlinkHref={`#${id}`} />
         </mask>
         <use fill={fill} fillRule="nonzero" xlinkHref={`#${id}`} />

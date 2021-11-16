@@ -89,7 +89,7 @@ ReactDOM.render(
     <Provider store={store}>
       <Router history={BrowserHistory}>
         <>
-          <SkipNav href="#main-content" children={undefined}>Skip to main content</SkipNav>
+          <SkipNav href="#main-content">Skip to main content</SkipNav>
           <div id="main">
             <Preloader />
             <Routes />

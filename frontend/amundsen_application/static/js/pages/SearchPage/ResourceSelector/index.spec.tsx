@@ -10,7 +10,6 @@ import { ResourceType } from 'interfaces/Resources';
 import {
   getDisplayNameByResource,
   indexDashboardsEnabled,
-  indexFeaturesEnabled,
   indexUsersEnabled,
 } from 'config/config-utils';
 import {
@@ -23,7 +22,6 @@ import {
 jest.mock('config/config-utils', () => ({
   getDisplayNameByResource: jest.fn(() => 'Resource'),
   indexUsersEnabled: jest.fn(),
-  indexFeaturesEnabled: jest.fn(),
   indexDashboardsEnabled: jest.fn(),
 }));
 
@@ -34,7 +32,6 @@ describe('ResourceSelector', () => {
       tables: globalState.search.tables,
       users: globalState.search.users,
       dashboards: globalState.search.dashboards,
-      features: globalState.search.features,
       setResource: jest.fn(),
       ...propOverrides,
     };
@@ -87,7 +84,6 @@ describe('ResourceSelector', () => {
     let wrapper;
 
     let dashboardOptionConfig;
-    let featureOptionConfig;
     let tableOptionConfig;
     let userOptionConfig;
     let renderRadioOptionSpy;
@@ -101,11 +97,6 @@ describe('ResourceSelector', () => {
         type: ResourceType.dashboard,
         label: getDisplayNameByResource(ResourceType.dashboard),
         count: props.dashboards.total_results,
-      };
-      featureOptionConfig = {
-        type: ResourceType.feature,
-        label: getDisplayNameByResource(ResourceType.feature),
-        count: props.features.total_results,
       };
       tableOptionConfig = {
         type: ResourceType.table,

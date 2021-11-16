@@ -24,7 +24,7 @@ export const RightIcon: React.FC<IconProps> = ({
         />
       </defs>
       <g fill="none" fillRule="evenodd">
-        <mask id="prefix__b" fill="#fff">
+        <mask fill="#fff">
           <use xlinkHref={`#${id}`} />
         </mask>
         <use
