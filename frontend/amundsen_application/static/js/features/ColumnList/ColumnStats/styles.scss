@@ -4,8 +4,6 @@
 @import 'variables';
 @import 'typography';
 
-$column-stats-max-width: 600px;
-
 .column-stats {
   .stat-collection-info {
     color: $text-secondary;
@@ -15,14 +13,14 @@ $column-stats-max-width: 600px;
 
   .column-stats-table {
     display: flex;
-    max-width: $column-stats-max-width;
+    max-width: 600px;
 
     .column-stats-column {
       flex-basis: 50%;
       flex-grow: 1;
 
       &:first-child {
-        margin-right: $spacer-2;
+        margin-right: 16px;
       }
 
       .column-stat-row {
@@ -41,6 +39,7 @@ $column-stats-max-width: 600px;
         .stat-name {
           flex: 100px 1 0;
           padding-left: 4px;
+          text-transform: lowercase;
         }
 
         .stat-value {
@@ -55,7 +54,5 @@ $column-stats-max-width: 600px;
 
   .stat-title {
     @extend %text-title-w3;
-
-    padding-right: $spacer-1;
   }
 }

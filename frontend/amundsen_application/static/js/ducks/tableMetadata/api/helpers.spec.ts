@@ -40,23 +40,23 @@ describe('helpers', () => {
 
   describe('getTableQueryParams', () => {
     it('generates table query params with a key', () => {
-      const key = 'database://cluster.schema/table';
-      const queryString = Helpers.getTableQueryParams({ key });
+      const tableKey = 'database://cluster.schema/table';
+      const queryString = Helpers.getTableQueryParams(tableKey);
       const params = qs.parse(queryString);
 
-      expect(params.key).toEqual(key);
+      expect(params.key).toEqual(tableKey);
       expect(params.index).toEqual(undefined);
       expect(params.source).toEqual(undefined);
     });
 
     it('generates query params with logging params', () => {
-      const key = 'database://cluster.schema/table';
+      const tableKey = 'database://cluster.schema/table';
       const index = '4';
       const source = 'test-source';
-      const queryString = Helpers.getTableQueryParams({ key, index, source });
+      const queryString = Helpers.getTableQueryParams(tableKey, index, source);
       const params = qs.parse(queryString);
 
-      expect(params.key).toEqual(key);
+      expect(params.key).toEqual(tableKey);
       expect(params.index).toEqual(index);
       expect(params.source).toEqual(source);
     });
@@ -90,6 +90,17 @@ describe('helpers', () => {
 
         expect(actual).toEqual(expected);
       });
+    });
+  });
+
+  it('getTableOwnersFromResponseData', () => {
+    expect(Helpers.getTableOwnersFromResponseData(mockResponseData)).toEqual({
+      test: {
+        display_name: 'test',
+        profile_url: 'test.io',
+        email: 'test@test.com',
+        user_id: 'test',
+      },
     });
   });
 
@@ -138,44 +149,22 @@ describe('helpers', () => {
     });
   });
 
-  describe('parseNestedColumns', () => {
-    it('Adds a children array to a column with nested columns', () => {
-      const testColumn = [
-        {
-          badges: [],
-          col_type: 'row(col1 varchar, col2 varchar)',
-          description: '',
-          name: 'amount',
-          sort_order: 0,
-          nested_level: 0,
-          is_editable: false,
-          stats: [],
-        },
-      ];
-      const expectedChildren = [
-        {
-          badges: [],
-          col_type: 'varchar',
-          description: '',
-          name: 'col1',
-          sort_order: 0,
-          nested_level: 1,
-          is_editable: false,
-          stats: [],
-        },
-        {
-          badges: [],
-          col_type: 'varchar',
-          description: '',
-          name: 'col2',
-          sort_order: 1,
-          nested_level: 1,
-          is_editable: false,
-          stats: [],
-        },
-      ];
-      const actual = Helpers.parseNestedColumns(testColumn);
-      expect(actual[0].children).toEqual(expectedChildren);
+  it('createOwnerUpdatePayload', () => {
+    const testId = 'testId@test.com';
+    const testKey = 'testKey';
+    const testMethod = UpdateMethod.PUT;
+    expect(
+      Helpers.createOwnerUpdatePayload(
+        { method: testMethod, id: testId },
+        testKey
+      )
+    ).toMatchObject({
+      method: testMethod,
+      url: `${API.API_PATH}/update_table_owner`,
+      data: {
+        key: testKey,
+        owner: testId,
+      },
     });
   });
 

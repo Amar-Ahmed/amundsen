@@ -10,35 +10,25 @@ import * as ReactMarkdown from 'react-markdown';
 import { getDashboard } from 'ducks/dashboard/reducer';
 import { GetDashboardRequest } from 'ducks/dashboard/types';
 import { GlobalState } from 'ducks/rootReducer';
+import { logClick } from 'ducks/utilMethods';
 import { UpdateSearchStateRequest } from 'ducks/search/types';
 import { updateSearchState } from 'ducks/search/reducer';
 
-import Alert from 'components/Alert';
 import Breadcrumb from 'components/Breadcrumb';
 import BookmarkIcon from 'components/Bookmark/BookmarkIcon';
 import EditableSection from 'components/EditableSection';
 import LoadingSpinner from 'components/LoadingSpinner';
 import TabsComponent, { TabInfo } from 'components/TabsComponent';
-import { TAB_URL_PARAM } from 'components/TabsComponent/constants';
 import ResourceStatusMarker from 'components/ResourceStatusMarker';
 import ResourceList from 'components/ResourceList';
 import TagInput from 'components/Tags/TagInput';
 
-import {
-  getSourceDisplayName,
-  getSourceIconClass,
-  getResourceNotices,
-} from 'config/config-utils';
+import { getSourceDisplayName, getSourceIconClass } from 'config/config-utils';
 import { formatDateTimeShort } from 'utils/dateUtils';
-import {
-  getLoggingParams,
-  getUrlParam,
-  setUrlParam,
-} from 'utils/navigationUtils';
+import { getLoggingParams } from 'utils/logUtils';
 
 import { ResourceType } from 'interfaces';
 import { DashboardMetadata } from 'interfaces/Dashboard';
-import { logAction, logClick } from 'utils/analytics';
 import { NO_TIMESTAMP_TEXT } from '../../constants';
 import {
   ADD_DESC_TEXT,
@@ -48,10 +38,6 @@ import {
   TABLES_PER_PAGE,
   LAST_RUN_SUCCEEDED,
   STATUS_TEXT,
-  DASHBOARD_TAB,
-  TABLES_TAB_TITLE,
-  CHARTS_TAB_TITLE,
-  QUERIES_TAB_TITLE,
 } from './constants';
 import ChartList from './ChartList';
 import QueryList from './QueryList';
@@ -94,29 +80,26 @@ export class DashboardPage extends React.Component<
 > {
   constructor(props) {
     super(props);
-
     const { uri } = this.props.match.params;
 
     this.state = { uri };
   }
 
   componentDidMount() {
-    const { location, getDashboard, match } = this.props;
-    const { index, source } = getLoggingParams(location.search);
-    const { uri } = match.params;
+    const { index, source } = getLoggingParams(this.props.location.search);
+    const { uri } = this.props.match.params;
 
-    getDashboard({ source, uri, searchIndex: index });
+    this.props.getDashboard({ source, uri, searchIndex: index });
     this.setState({ uri });
   }
 
   componentDidUpdate() {
-    const { location, getDashboard, match } = this.props;
-    const { uri } = match.params;
+    const { uri } = this.props.match.params;
 
     if (this.state.uri !== uri) {
-      const { index, source } = getLoggingParams(location.search);
+      const { index, source } = getLoggingParams(this.props.location.search);
       this.setState({ uri });
-      getDashboard({ source, uri, searchIndex: index });
+      this.props.getDashboard({ source, uri, searchIndex: index });
     }
   }
 
@@ -138,68 +121,52 @@ export class DashboardPage extends React.Component<
 
   renderTabs() {
     const tabInfo: TabInfo[] = [];
-    const { dashboard } = this.props;
-    const defaultTab = getUrlParam(TAB_URL_PARAM) || DASHBOARD_TAB.TABLE;
 
     tabInfo.push({
       content: (
         <ResourceList
-          allItems={dashboard.tables}
+          allItems={this.props.dashboard.tables}
           itemsPerPage={TABLES_PER_PAGE}
           source={DASHBOARD_SOURCE}
         />
       ),
-      key: DASHBOARD_TAB.TABLE,
-      title: `${TABLES_TAB_TITLE} (${dashboard.tables.length})`,
+      key: 'tables',
+      title: `Tables (${this.props.dashboard.tables.length})`,
     });
 
-    if (dashboard.chart_names.length > 0) {
+    if (this.props.dashboard.chart_names.length > 0) {
       tabInfo.push({
-        content: <ChartList charts={dashboard.chart_names} />,
-        key: DASHBOARD_TAB.CHARTS,
-        title: `${CHARTS_TAB_TITLE} (${dashboard.chart_names.length})`,
+        content: <ChartList charts={this.props.dashboard.chart_names} />,
+        key: 'charts',
+        title: `Charts (${this.props.dashboard.chart_names.length})`,
       });
     }
 
     tabInfo.push({
       content: (
-        <QueryList product={dashboard.product} queries={dashboard.queries} />
+        <QueryList
+          product={this.props.dashboard.product}
+          queries={this.props.dashboard.queries}
+        />
       ),
-      key: DASHBOARD_TAB.QUERIES,
-      title: `${QUERIES_TAB_TITLE} (${dashboard.queries.length})`,
+      key: 'queries',
+      title: `Queries (${this.props.dashboard.queries.length})`,
     });
 
-    return (
-      <TabsComponent
-        tabs={tabInfo}
-        defaultTab={defaultTab}
-        onSelect={(key) => {
-          setUrlParam(TAB_URL_PARAM, key);
-          logAction({
-            command: 'click',
-            target_id: 'dashboard_page_tab',
-            label: key,
-          });
-        }}
-      />
-    );
+    return <TabsComponent tabs={tabInfo} defaultTab="tables" />;
   }
 
   render() {
-    const { dashboard, isLoading, statusCode } = this.props;
+    const { dashboard, isLoading } = this.props;
     const hasDescription =
       dashboard.description && dashboard.description.length > 0;
     const hasLastRunState =
       dashboard.last_run_state && dashboard.last_run_state.length > 0;
-    const dashboardNotice = getResourceNotices(
-      ResourceType.dashboard,
-      `${dashboard.product}.${dashboard.cluster}.${dashboard.group_name}.${dashboard.name}`
-    );
 
     if (isLoading) {
       return <LoadingSpinner />;
     }
-    if (statusCode === 500) {
+    if (this.props.statusCode === 500) {
       return (
         <div className="container error-label">
           <Breadcrumb />
@@ -266,12 +233,6 @@ export class DashboardPage extends React.Component<
         </header>
         <article className="column-layout-1">
           <aside className="left-panel">
-            {!!dashboardNotice && (
-              <Alert
-                message={dashboardNotice.messageHtml}
-                severity={dashboardNotice.severity}
-              />
-            )}
             <EditableSection
               title="Description"
               readOnly
@@ -332,7 +293,7 @@ export class DashboardPage extends React.Component<
                 <EditableSection title="Tags">
                   <TagInput
                     resourceType={ResourceType.dashboard}
-                    uriKey={dashboard.uri}
+                    uriKey={this.props.dashboard.uri}
                   />
                 </EditableSection>
                 {hasLastRunState && [

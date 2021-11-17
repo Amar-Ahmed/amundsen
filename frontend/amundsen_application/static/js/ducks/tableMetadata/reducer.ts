@@ -2,36 +2,30 @@ import {
   DashboardResource,
   OwnerDict,
   PreviewData,
-  TablePreviewQueryParams,
+  PreviewQueryParams,
   TableMetadata,
-  TableQualityChecks,
   Tag,
 } from 'interfaces';
 
 import {
-  ClickTableQualityLink,
-  ClickTableQualityLinkRequest,
-  GetColumnDescription,
-  GetColumnDescriptionRequest,
-  GetColumnDescriptionResponse,
-  GetPreviewData,
-  GetPreviewDataRequest,
-  GetPreviewDataResponse,
-  GetTableDashboards,
-  GetTableDashboardsResponse,
   GetTableData,
   GetTableDataRequest,
   GetTableDataResponse,
+  GetTableDashboards,
+  GetTableDashboardsResponse,
   GetTableDescription,
   GetTableDescriptionRequest,
   GetTableDescriptionResponse,
-  GetTableQualityChecks,
-  GetTableQualityChecksRequest,
-  GetTableQualityChecksResponse,
-  UpdateColumnDescription,
-  UpdateColumnDescriptionRequest,
   UpdateTableDescription,
   UpdateTableDescriptionRequest,
+  GetColumnDescription,
+  GetColumnDescriptionResponse,
+  GetColumnDescriptionRequest,
+  UpdateColumnDescription,
+  UpdateColumnDescriptionRequest,
+  GetPreviewData,
+  GetPreviewDataRequest,
+  GetPreviewDataResponse,
   UpdateTableOwner,
 } from './types';
 
@@ -66,27 +60,12 @@ export const initialTableDataState: TableMetadata = {
   programmatic_descriptions: {},
 };
 
-export const emptyQualityChecks = {
-  external_url: '',
-  last_run_timestamp: 0,
-  num_checks_success: 0,
-  num_checks_failed: 0,
-  num_checks_total: 0,
-};
-
-export const initialQualityChecksState = {
-  status: null,
-  isLoading: false,
-  checks: emptyQualityChecks,
-};
-
 export const initialState: TableMetadataReducerState = {
   isLoading: true,
   preview: initialPreviewState,
   statusCode: null,
   tableData: initialTableDataState,
   tableOwners: initialOwnersState,
-  tableQualityChecks: initialQualityChecksState,
 };
 
 /* ACTIONS */
@@ -104,6 +83,7 @@ export function getTableData(
     type: GetTableData.REQUEST,
   };
 }
+
 export function getTableDataFailure(): GetTableDataResponse {
   return {
     type: GetTableData.FAILURE,
@@ -115,6 +95,7 @@ export function getTableDataFailure(): GetTableDataResponse {
     },
   };
 }
+
 export function getTableDataSuccess(
   data: TableMetadata,
   owners: OwnerDict,
@@ -246,7 +227,7 @@ export function updateColumnDescription(
 }
 
 export function getPreviewData(
-  queryParams: TablePreviewQueryParams
+  queryParams: PreviewQueryParams
 ): GetPreviewDataRequest {
   return { payload: { queryParams }, type: GetPreviewData.REQUEST };
 }
@@ -275,56 +256,6 @@ export function getPreviewDataSuccess(
   };
 }
 
-export function getTableQualityChecks(
-  key: string
-): GetTableQualityChecksRequest {
-  return {
-    type: GetTableQualityChecks.REQUEST,
-    payload: {
-      key,
-    },
-  };
-}
-export function getTableQualityChecksSuccess(
-  checks: TableQualityChecks,
-  status: number
-): GetTableQualityChecksResponse {
-  return {
-    type: GetTableQualityChecks.SUCCESS,
-    payload: {
-      checks,
-      status,
-    },
-  };
-}
-export function getTableQualityChecksFailure(
-  status: number
-): GetTableQualityChecksResponse {
-  return {
-    type: GetTableQualityChecks.FAILURE,
-    payload: {
-      status,
-      checks: emptyQualityChecks,
-    },
-  };
-}
-
-export function clickDataQualityLink(): ClickTableQualityLinkRequest {
-  return {
-    type: ClickTableQualityLink.REQUEST,
-    meta: {
-      analytics: {
-        name: 'table/clickTableQualityLink',
-        payload: {
-          action: 'click',
-          category: 'table',
-          label: 'see more',
-        },
-      },
-    },
-  };
-}
-
 /* REDUCER */
 export interface TableMetadataReducerState {
   dashboards?: {
@@ -340,11 +271,6 @@ export interface TableMetadataReducerState {
   statusCode: number | null;
   tableData: TableMetadata;
   tableOwners: TableOwnerReducerState;
-  tableQualityChecks: {
-    status: number | null;
-    isLoading: boolean;
-    checks: TableQualityChecks;
-  };
 }
 
 export default function reducer(
@@ -401,28 +327,6 @@ export default function reducer(
       return {
         ...state,
         tableOwners: tableOwnersReducer(state.tableOwners, action),
-      };
-    case GetTableQualityChecks.REQUEST:
-      return {
-        ...state,
-        tableQualityChecks: {
-          status: null,
-          isLoading: true,
-          checks: emptyQualityChecks,
-        },
-      };
-    case GetTableQualityChecks.SUCCESS:
-    case GetTableQualityChecks.FAILURE:
-      const { checks, status } = (<GetTableQualityChecksResponse>(
-        action
-      )).payload;
-      return {
-        ...state,
-        tableQualityChecks: {
-          status,
-          checks,
-          isLoading: false,
-        },
       };
     default:
       return state;

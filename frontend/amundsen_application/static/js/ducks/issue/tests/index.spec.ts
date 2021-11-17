@@ -36,9 +36,6 @@ describe('issue ducks', () => {
   let key;
   let title;
   let description;
-  let ownerIds;
-  let frequentUserIds;
-  let priorityLevel;
   let resourceName;
   let resourcePath;
   let owners;
@@ -51,9 +48,6 @@ describe('issue ducks', () => {
     key = 'table';
     title = 'stuff';
     description = 'This is a test';
-    ownerIds = ['user1@email.com', 'user2@email.com'];
-    frequentUserIds = ['user1@email.com', 'user2@email.com'];
-    priorityLevel = 'P2';
     resourceName = 'resource_name';
     resourcePath = 'resource_path';
     owners = ['email@email'];
@@ -95,10 +89,6 @@ describe('issue ducks', () => {
         key,
         title,
         description,
-        owner_ids: ownerIds,
-        frequent_user_ids: frequentUserIds,
-        priority_level: priorityLevel,
-        resource_path: resourcePath,
       };
       const notificationPayload = {
         sender,
@@ -116,12 +106,6 @@ describe('issue ducks', () => {
       expect(payload.createIssuePayload.key).toBe(key);
       expect(payload.createIssuePayload.title).toBe(title);
       expect(payload.createIssuePayload.description).toBe(description);
-      expect(payload.createIssuePayload.owner_ids).toBe(ownerIds);
-      expect(payload.createIssuePayload.frequent_user_ids).toBe(
-        frequentUserIds
-      );
-      expect(payload.createIssuePayload.priority_level).toBe(priorityLevel);
-      expect(payload.createIssuePayload.resource_path).toBe(resourcePath);
       expect(payload.notificationPayload.options.resource_name).toBe(
         resourceName
       );
@@ -200,10 +184,6 @@ describe('issue ducks', () => {
         key,
         title,
         description,
-        owner_ids: ownerIds,
-        frequent_user_ids: frequentUserIds,
-        priority_level: priorityLevel,
-        resource_path: resourcePath,
       };
       const notificationPayload = {
         sender,
@@ -304,10 +284,6 @@ describe('issue ducks', () => {
           key,
           title,
           description,
-          owner_ids: ownerIds,
-          frequent_user_ids: frequentUserIds,
-          priority_level: priorityLevel,
-          resource_path: resourcePath,
         };
         const notificationPayload = {
           sender,

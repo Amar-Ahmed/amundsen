@@ -15,7 +15,6 @@ local_app = create_app('amundsen_application.config.TestConfig', 'tests/template
 class IssueTest(unittest.TestCase):
 
     def setUp(self) -> None:
-        local_app.config['FRONTEND_BASE'] = 'http://url'
         local_app.config['ISSUE_TRACKER_URL'] = 'url'
         local_app.config['ISSUE_TRACKER_CLIENT_ENABLED'] = True
         self.mock_issue = {
@@ -50,7 +49,7 @@ class IssueTest(unittest.TestCase):
             self.assertEqual(response.status_code, HTTPStatus.ACCEPTED)
 
     @unittest.mock.patch('amundsen_application.api.issue.issue.get_issue_tracker_client')
-    def test_get_jira_issues_missing_config(self, mock_issue_tracker_client: unittest.mock.Mock) -> None:
+    def test_get_jira_issues_missing_config(self, mock_issue_tracker_client) -> None:
         """
         Test request failure if config settings are missing
         :return:
@@ -71,7 +70,7 @@ class IssueTest(unittest.TestCase):
             self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
 
     @unittest.mock.patch('amundsen_application.api.issue.issue.get_issue_tracker_client')
-    def test_get_jira_issues_success(self, mock_issue_tracker_client: unittest.mock.Mock) -> None:
+    def test_get_jira_issues_success(self, mock_issue_tracker_client) -> None:
         """
         Tests successful get request
         :return:
@@ -99,17 +98,13 @@ class IssueTest(unittest.TestCase):
         with local_app.test_client() as test:
             response = test.post('/api/issue/issue', data={
                 'description': 'test description',
-                'owner_ids': ['user1@email.com', 'user2@email.com'],
-                'frequent_user_ids': ['user1@email.com', 'user2@email.com'],
-                'priority_level': 'P2',
                 'title': 'test title',
-                'key': 'key',
-                'resource_path': '/table_detail/cluster/database/schema/table_name'
+                'key': 'key'
             })
             self.assertEqual(response.status_code, HTTPStatus.ACCEPTED)
 
     @unittest.mock.patch('amundsen_application.api.issue.issue.get_issue_tracker_client')
-    def test_create_jira_issue_missing_config(self, mock_issue_tracker_client: unittest.mock.Mock) -> None:
+    def test_create_jira_issue_missing_config(self, mock_issue_tracker_client) -> None:
         """
         Test request failure if config settings are missing
         :return:
@@ -119,12 +114,8 @@ class IssueTest(unittest.TestCase):
         with local_app.test_client() as test:
             response = test.post('/api/issue/issue', data={
                 'description': 'test description',
-                'owner_ids': ['user1@email.com', 'user2@email.com'],
-                'frequent_user_ids': ['user1@email.com', 'user2@email.com'],
-                'priority_level': 'P2',
                 'title': 'test title',
-                'key': 'key',
-                'resource_path': '/table_detail/cluster/database/schema/table_name'
+                'key': 'key'
             })
             self.assertEqual(response.status_code, HTTPStatus.NOT_IMPLEMENTED)
 
@@ -135,12 +126,8 @@ class IssueTest(unittest.TestCase):
          """
         with local_app.test_client() as test:
             response = test.post('/api/issue/issue', data={
-                'owner_ids': ['user1@email.com', 'user2@email.com'],
-                'frequent_user_ids': ['user1@email.com', 'user2@email.com'],
-                'priority_level': 'P2',
                 'key': 'table_key',
                 'title': 'test title',
-                'resource_path': '/table_detail/cluster/database/schema/table_name'
             })
             self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
 
@@ -152,11 +139,7 @@ class IssueTest(unittest.TestCase):
         with local_app.test_client() as test:
             response = test.post('/api/issue/issue', data={
                 'description': 'test description',
-                'owner_ids': ['user1@email.com', 'user2@email.com'],
-                'frequent_user_ids': ['user1@email.com', 'user2@email.com'],
-                'priority_level': 'P2',
-                'title': 'test title',
-                'resource_path': '/table_detail/cluster/database/schema/table_name'
+                'title': 'test title'
             })
             self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
 
@@ -168,80 +151,12 @@ class IssueTest(unittest.TestCase):
         with local_app.test_client() as test:
             response = test.post('/api/issue/issue', data={
                 'description': 'test description',
-                'owner_ids': ['user1@email.com', 'user2@email.com'],
-                'frequent_user_ids': ['user1@email.com', 'user2@email.com'],
-                'priority_level': 'P2',
                 'key': 'table_key',
-                'resource_path': '/table_detail/cluster/database/schema/table_name'
-            })
-            self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
-
-    def test_create_jira_issue_no_resource_path(self) -> None:
-        """
-         Test request failure if resource path is missing
-         :return:
-         """
-        with local_app.test_client() as test:
-            response = test.post('/api/issue/issue', data={
-                'description': 'test description',
-                'owner_ids': ['user1@email.com', 'user2@email.com'],
-                'frequent_user_ids': ['user1@email.com', 'user2@email.com'],
-                'priority_level': 'P2',
-                'title': 'test title',
-                'key': 'key'
-            })
-            self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
-
-    def test_create_jira_issue_no_priority(self) -> None:
-        """
-         Test request failure if priority is missing
-         :return:
-         """
-        with local_app.test_client() as test:
-            response = test.post('/api/issue/issue', data={
-                'description': 'test description',
-                'owner_ids': ['user1@email.com', 'user2@email.com'],
-                'frequent_user_ids': ['user1@email.com', 'user2@email.com'],
-                'title': 'test title',
-                'key': 'key',
-                'resource_path': '/table_detail/cluster/database/schema/table_name'
-            })
-            self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
-
-    def test_create_jira_issue_no_owner_ids(self) -> None:
-        """
-         Test request failure if owner ids are missing
-         :return:
-         """
-        with local_app.test_client() as test:
-            response = test.post('/api/issue/issue', data={
-                'description': 'test description',
-                'frequent_user_ids': ['user1@email.com', 'user2@email.com'],
-                'priority_level': 'P2',
-                'title': 'test title',
-                'key': 'key',
-                'resource_path': '/table_detail/cluster/database/schema/table_name'
-            })
-            self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
-
-    def test_create_jira_issue_no_frequent_user_ids(self) -> None:
-        """
-         Test request failure if frequent user ids are missing
-         :return:
-         """
-        with local_app.test_client() as test:
-            response = test.post('/api/issue/issue', data={
-                'description': 'test description',
-                'owner_ids': ['user1@email.com', 'user2@email.com'],
-                'priority_level': 'P2',
-                'title': 'test title',
-                'key': 'key',
-                'resource_path': '/table_detail/cluster/database/schema/table_name'
             })
             self.assertEqual(response.status_code, HTTPStatus.INTERNAL_SERVER_ERROR)
 
     @unittest.mock.patch('amundsen_application.api.issue.issue.get_issue_tracker_client')
-    def test_create_jira_issue_success(self, mock_issue_tracker_client: unittest.mock.Mock) -> None:
+    def test_create_jira_issue_success(self, mock_issue_tracker_client) -> None:
         """
         Test request returns success and expected outcome
         :return:
@@ -253,12 +168,8 @@ class IssueTest(unittest.TestCase):
                                  content_type='multipart/form-data',
                                  data={
                                      'description': 'test description',
-                                     'owner_ids': ['user1@email.com', 'user2@email.com'],
-                                     'frequent_user_ids': ['user1@email.com', 'user2@email.com'],
-                                     'priority_level': 'P2',
                                      'title': 'title',
-                                     'key': 'key',
-                                     'resource_path': '/table_detail/cluster/database/schema/table_name'
+                                     'key': 'key'
                                  })
             data = json.loads(response.data)
             self.assertEqual(response.status_code, HTTPStatus.OK)

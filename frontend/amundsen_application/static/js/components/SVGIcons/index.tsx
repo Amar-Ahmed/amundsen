@@ -7,6 +7,4 @@ export * from './DownIcon';
 export * from './UpIcon';
 export * from './RightIcon';
 export * from './LeftIcon';
-export * from './RightArrowIcon';
-export * from './LeftArrowIcon';
 export * from './InformationIcon';

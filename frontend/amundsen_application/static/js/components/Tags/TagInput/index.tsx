@@ -52,7 +52,7 @@ export interface DispatchFromProps {
   getAllTags: () => GetAllTagsRequest;
 }
 
-export type TagInputProps = StateFromProps &
+type TagInputProps = StateFromProps &
   OwnProps &
   DispatchFromProps &
   EditableSectionChildProps;
@@ -61,7 +61,7 @@ interface TagInputState {
   showModal: boolean;
 }
 
-export class TagInput extends React.Component<TagInputProps, TagInputState> {
+class TagInput extends React.Component<TagInputProps, TagInputState> {
   private batchEditSet: Map<string, BatchEditState> | {};
 
   public static defaultProps: TagInputProps = {
@@ -286,13 +286,14 @@ export class TagInput extends React.Component<TagInputProps, TagInputState> {
     if (!this.props.isEditing) {
       if (this.props.tags.length === 0) {
         tagBody = (
-          <button
-            className="btn btn-default muted add-btn"
-            onClick={this.startEditing}
-          >
-            <img className="icon icon-plus" alt="" />
-            New
-          </button>
+          // <button
+          //   className="btn btn-default muted add-btn"
+          //   onClick={this.startEditing}
+          // >
+          //   <img className="icon icon-plus" alt="" />
+          //   New
+          // </button>
+          <span>No Available Tags</span>
         );
       } else {
         tagBody = this.props.tags.map((tag, index) => (

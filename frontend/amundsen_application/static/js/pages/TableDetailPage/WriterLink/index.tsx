@@ -5,8 +5,8 @@ import * as React from 'react';
 import { OverlayTrigger, Popover } from 'react-bootstrap';
 
 import AvatarLabel from 'components/AvatarLabel';
+import { logClick } from 'ducks/utilMethods';
 import { TableWriter } from 'interfaces';
-import { logClick } from 'utils/analytics';
 
 export interface WriterLinkProps {
   tableWriter: TableWriter;
@@ -18,18 +18,8 @@ const WriterLink: React.FC<WriterLinkProps> = ({
   if (tableWriter === null || tableWriter.application_url === null) {
     return null;
   }
-
-  let image = '';
-  switch (tableWriter.name) {
-    case 'Airflow':
-      image = '/static/images/airflow.jpeg';
-      break;
-    case 'Databricks':
-      image = '/static/images/icons/logo-databricks.png';
-      break;
-    default:
-      image = '';
-  }
+  const image =
+    tableWriter.name === 'Airflow' ? '/static/images/airflow.jpeg' : '';
 
   return (
     <OverlayTrigger

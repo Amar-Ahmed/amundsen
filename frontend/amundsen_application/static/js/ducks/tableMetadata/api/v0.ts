@@ -2,27 +2,22 @@ import axios, { AxiosResponse, AxiosError } from 'axios';
 
 import {
   PreviewData,
-  TablePreviewQueryParams,
+  PreviewQueryParams,
   TableMetadata,
   DashboardResource,
   UpdateOwnerPayload,
   User,
   Tag,
-  Lineage,
-  ResourceType,
-  TableQualityChecks,
 } from 'interfaces';
 
 /** HELPERS **/
 import { indexDashboardsEnabled } from 'config/config-utils';
 import {
-  createOwnerUpdatePayload,
-  getOwnersDictFromUsers,
-} from 'utils/ownerUtils';
-import {
   getTableQueryParams,
   getRelatedDashboardSlug,
   getTableDataFromResponseData,
+  getTableOwnersFromResponseData,
+  createOwnerUpdatePayload,
   createOwnerNotificationData,
   shouldSendNotification,
 } from './helpers';
@@ -41,17 +36,19 @@ export type TableDataAPI = { tableData: TableData } & MessageAPI;
 export type RelatedDashboardDataAPI = {
   dashboards: DashboardResource[];
 } & MessageAPI;
-export type LineageAPI = { lineage: Lineage } & MessageAPI;
-export type TableQualityChecksAPI = { checks: TableQualityChecks } & MessageAPI;
 
-export function getTableData(key: string, index?: string, source?: string) {
-  const tableQueryParams = getTableQueryParams({ key, index, source });
+export function getTableData(
+  tableKey: string,
+  index?: string,
+  source?: string
+) {
+  const tableQueryParams = getTableQueryParams(tableKey, index, source);
   const tableURL = `${API_PATH}/table?${tableQueryParams}`;
   const tableRequest = axios.get<TableDataAPI>(tableURL);
 
   return tableRequest.then((tableResponse: AxiosResponse<TableDataAPI>) => ({
     data: getTableDataFromResponseData(tableResponse.data),
-    owners: getOwnersDictFromUsers(tableResponse.data.tableData.owners),
+    owners: getTableOwnersFromResponseData(tableResponse.data),
     tags: tableResponse.data.tableData.tags,
     statusCode: tableResponse.status,
   }));
@@ -86,7 +83,7 @@ export function getTableDashboards(tableKey: string) {
 }
 
 export function getTableDescription(tableData: TableMetadata) {
-  const tableParams = getTableQueryParams({ key: tableData.key });
+  const tableParams = getTableQueryParams(tableData.key);
   return axios
     .get(`${API_PATH}/get_table_description?${tableParams}`)
     .then((response: AxiosResponse<DescriptionAPI>) => {
@@ -106,12 +103,12 @@ export function updateTableDescription(
   });
 }
 
-export function getTableOwners(key: string) {
-  const tableParams = getTableQueryParams({ key });
+export function getTableOwners(tableKey: string) {
+  const tableParams = getTableQueryParams(tableKey);
   return axios
     .get(`${API_PATH}/table?${tableParams}`)
     .then((response: AxiosResponse<TableDataAPI>) =>
-      getOwnersDictFromUsers(response.data.tableData.owners)
+      getTableOwnersFromResponseData(response.data)
     );
 }
 
@@ -121,22 +118,13 @@ export function generateOwnerUpdateRequests(
   tableData: TableMetadata
 ): any {
   /* Return the list of requests to be executed */
-  return updateArray.map((updateOwnerPayload) => {
-    const updatePayload = createOwnerUpdatePayload(
-      ResourceType.table,
-      tableData.key,
-      updateOwnerPayload
-    );
-    const notificationData = createOwnerNotificationData(
-      updateOwnerPayload,
-      tableData
-    );
+  return updateArray.map((item) => {
+    const updatePayload = createOwnerUpdatePayload(item, tableData.key);
+    const notificationData = createOwnerNotificationData(item, tableData);
 
     /* Chain requests to send notification on success to desired users */
     return axios(updatePayload)
-      .then(() =>
-        axios.get(`/api/metadata/v0/user?user_id=${updateOwnerPayload.id}`)
-      )
+      .then(() => axios.get(`/api/metadata/v0/user?user_id=${item.id}`))
       .then((response) => {
         if (shouldSendNotification(response.data.user)) {
           return axios.post('/api/mail/v0/notification', notificationData);
@@ -149,13 +137,12 @@ export function getColumnDescription(
   columnIndex: number,
   tableData: TableMetadata
 ) {
+  const tableParams = getTableQueryParams(tableData.key);
   const columnName = tableData.columns[columnIndex].name;
-  const tableParams = getTableQueryParams({
-    key: tableData.key,
-    column_name: columnName,
-  });
   return axios
-    .get(`${API_PATH}/get_column_description?${tableParams}`)
+    .get(
+      `${API_PATH}/get_column_description?${tableParams}&column_name=${columnName}`
+    )
     .then((response: AxiosResponse<DescriptionAPI>) => {
       tableData.columns[columnIndex].description = response.data.description;
       return tableData;
@@ -176,7 +163,7 @@ export function updateColumnDescription(
   });
 }
 
-export function getPreviewData(queryParams: TablePreviewQueryParams) {
+export function getPreviewData(queryParams: PreviewQueryParams) {
   return axios({
     url: '/api/preview/v0/',
     method: 'POST',
@@ -194,22 +181,5 @@ export function getPreviewData(queryParams: TablePreviewQueryParams) {
       }
       const status = response ? response.status : null;
       return Promise.reject({ data, status });
-    });
-}
-
-export function getTableQualityChecksSummary(key: string) {
-  const tableQueryParams = getTableQueryParams({
-    key,
-  });
-  return axios
-    .get(`/api/quality/v0/table/summary?${tableQueryParams}`)
-    .then((response: AxiosResponse<TableQualityChecksAPI>) => ({
-      checks: response.data.checks,
-      status: response.status,
-    }))
-    .catch((e) => {
-      const { response } = e;
-      const status = response ? response.status : null;
-      return Promise.reject({ status });
     });
 }

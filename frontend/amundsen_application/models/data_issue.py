@@ -32,10 +32,6 @@ class Priority(Enum):
 
         return level_to_priority.get(level)
 
-    @staticmethod
-    def get_jira_severity_from_level(level: str) -> str:
-        return Priority[level].jira_severity
-
 
 class DataIssue:
     def __init__(self,

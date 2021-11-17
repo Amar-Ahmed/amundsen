@@ -8,6 +8,15 @@ interface PartitionData {
   value?: string;
 }
 
+interface PreviewColumnItem {
+  column_name: string;
+  column_type: string;
+}
+
+interface PreviewDataItem {
+  id: string;
+}
+
 export interface TableColumnStats {
   stat_type: string;
   stat_val: string;
@@ -15,11 +24,6 @@ export interface TableColumnStats {
   start_epoch: number;
   /** The end date of the stat aggregation period, in unix epoch time */
   end_epoch: number;
-}
-
-export interface ColumnUniqueValues {
-  value: string;
-  count: number;
 }
 
 // TODO - Make this reusable for dashboards
@@ -40,33 +44,27 @@ export interface TableWriter {
   name: string;
 }
 
-export interface TablePreviewQueryParams {
+export interface PreviewQueryParams {
   database: string;
   schema: string;
   tableName: string;
   cluster: string;
 }
 
-export type TableColumnType = TableColumn | NestedTableColumn;
-
-export interface TableColumn {
-  badges: Badge[];
-  col_type: string;
-  col_index?: number;
-  children?: NestedTableColumn[];
-  description: string;
-  is_editable: boolean;
-  name: string;
-  sort_order: number;
-  stats: TableColumnStats[];
-  nested_level?: number;
+export interface PreviewData {
+  columns?: PreviewColumnItem[];
+  data?: PreviewDataItem[];
+  error_text?: string;
 }
 
-export interface NestedTableColumn {
-  col_type: string;
-  description: string;
+export interface TableColumn {
   name: string;
-  sort_order: number;
+  description: string;
+  is_editable: boolean;
+  col_type: string;
+  sort_order: string;
+  stats: TableColumnStats[];
+  badges: Badge[];
 }
 
 export interface TableOwners {
@@ -120,12 +118,4 @@ export interface Watermark {
   partition_key: string;
   partition_value: string;
   watermark_type: string;
-}
-
-export interface TableQualityChecks {
-  external_url: string;
-  last_run_timestamp: number | null;
-  num_checks_success: number;
-  num_checks_failed: number;
-  num_checks_total: number;
 }

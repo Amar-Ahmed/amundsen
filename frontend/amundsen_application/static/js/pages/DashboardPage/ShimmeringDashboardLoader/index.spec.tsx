@@ -20,9 +20,9 @@ describe('ShimmeringDashboardLoader', () => {
       }).not.toThrow();
     });
 
-    it('should render three columns', () => {
+    it('should render three rows', () => {
       const expected = 3;
-      const actual = setup().find('.shimmer-loader-column').length;
+      const actual = setup().find('.shimmer-loader-row').length;
 
       expect(actual).toEqual(expected);
     });

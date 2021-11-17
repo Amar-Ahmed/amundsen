@@ -7,3 +7,5 @@ export const SIZE_SMALL = 'small';
 
 export const INVALID_SYNTAX_MESSAGE =
   "Your search term contains invalid syntax ':'.";
+
+export const SEARCH_BAR_ALT_TEXT = 'Search Bar';

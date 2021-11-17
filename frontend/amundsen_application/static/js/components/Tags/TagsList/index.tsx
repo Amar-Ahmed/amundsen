@@ -45,7 +45,7 @@ const TagsListLabel: React.FC<TagsListTitleProps> = ({
   titleText,
 }: TagsListTitleProps) => (
   <label className="section-label">
-    <span className="section-title title-2">{titleText}</span>
+    <h2 className="section-title title-2">{titleText}</h2>
   </label>
 );
 

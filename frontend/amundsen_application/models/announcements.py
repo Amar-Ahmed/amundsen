@@ -4,7 +4,7 @@
 from marshmallow import Schema, fields, post_dump
 from marshmallow.exceptions import ValidationError
 
-from typing import Dict, List, Any
+from typing import Dict, List
 
 
 class Post:
@@ -29,11 +29,10 @@ class AnnouncementsSchema(Schema):
     posts = fields.Nested(PostSchema, many=True)
 
     @post_dump
-    def validate_data(self, data: Dict, **kwargs: Any) -> Dict:
+    def validate_data(self, data: Dict) -> None:
         posts = data.get('posts', [])
         for post in posts:
             if post.get('date') is None:
                 raise ValidationError('All posts must have a date')
             if post.get('title') is None:
                 raise ValidationError('All posts must have a title')
-        return data

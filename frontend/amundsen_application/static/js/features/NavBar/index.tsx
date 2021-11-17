@@ -10,11 +10,11 @@ import { connect } from 'react-redux';
 import AppConfig from 'config/config';
 import { LinkConfig } from 'config/config-types';
 import { GlobalState } from 'ducks/rootReducer';
+import { logClick } from 'ducks/utilMethods';
 import { Dropdown, MenuItem } from 'react-bootstrap';
 
 import { LoggedInUser } from 'interfaces';
 
-import { logClick } from 'utils/analytics';
 import {
   feedbackEnabled,
   indexUsersEnabled,
@@ -67,7 +67,7 @@ export class NavBar extends React.Component<NavBarProps> {
   }
 
   renderSearchBar = () => {
-    if (this.props.location.pathname !== '/') {
+    if (this.props.location.pathname !== '/' && this.props.location.pathname !== '/myportal/verticalResponse/') {
       return (
         <div className="nav-search-bar">
           <SearchBar size="small" />
@@ -131,9 +131,9 @@ export class NavBar extends React.Component<NavBarProps> {
                   </Dropdown.Menu>
                 </Dropdown>
               )}
-              {loggedInUser && !indexUsersEnabled() && (
+              {/* {loggedInUser && !indexUsersEnabled() && (
                 <div className="nav-bar-avatar">{avatar}</div>
-              )}
+              )} */}
             </div>
           </div>
         </div>

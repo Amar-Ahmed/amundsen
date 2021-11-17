@@ -28,11 +28,16 @@ def load_user(user_data: Dict) -> User:
         # in the user metadata.
         if _str_no_value(user_data.get('profile_url')) and app.config['GET_PROFILE_URL']:
             user_data['profile_url'] = app.config['GET_PROFILE_URL'](user_data['user_id'])
-        return schema.load(user_data)
+        data, errors = schema.load(user_data)
+        return data
     except ValidationError as err:
         return err.messages
 
 
 def dump_user(user: User) -> Dict:
     schema = UserSchema()
-    return schema.dump(user)
+    try:
+        data, errors = schema.dump(user)
+        return data
+    except ValidationError as err:
+        return err.messages

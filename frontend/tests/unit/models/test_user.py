@@ -4,8 +4,6 @@
 import flask
 import unittest
 
-from marshmallow import ValidationError
-
 from amundsen_application.models.user import load_user, dump_user, UserSchema
 
 app = flask.Flask(__name__)
@@ -78,8 +76,8 @@ class UserTest(unittest.TestCase):
         :return:
         """
         with app.test_request_context():
-            with self.assertRaises(ValidationError):
-                UserSchema().load({})
+            data, errors = UserSchema().load({})
+            self.assertEqual(len(errors['_schema']), 1)
 
     def test_raise_error_if_no_user_id(self) -> None:
         """
@@ -87,8 +85,8 @@ class UserTest(unittest.TestCase):
         :return:
         """
         with app.test_request_context():
-            with self.assertRaises(ValidationError):
-                UserSchema().load({'display_name': 'Test User'})
+            data, errors = UserSchema().load({'display_name': 'Test User'})
+            self.assertEqual(len(errors['_schema']), 1)
 
     def test_str_no_value(self) -> None:
         """

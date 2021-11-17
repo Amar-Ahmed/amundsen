@@ -16,7 +16,6 @@ import { GlobalState } from 'ducks/rootReducer';
 import { submitSearchResource, urlDidUpdate } from 'ducks/search/reducer';
 import {
   DashboardSearchResults,
-  FeatureSearchResults,
   SearchResults,
   SubmitSearchResourceRequest,
   TableSearchResults,
@@ -38,7 +37,6 @@ import {
   SEARCH_ERROR_MESSAGE_SUFFIX,
   SEARCH_SOURCE_NAME,
   DASHBOARD_RESOURCE_TITLE,
-  FEATURE_RESOURCE_TITLE,
   TABLE_RESOURCE_TITLE,
   USER_RESOURCE_TITLE,
   SEARCHPAGE_TITLE,
@@ -53,7 +51,6 @@ export interface StateFromProps {
   isLoading: boolean;
   tables: TableSearchResults;
   dashboards: DashboardSearchResults;
-  features: FeatureSearchResults;
   users: UserSearchResults;
 }
 
@@ -90,19 +87,14 @@ export class SearchPage extends React.Component<SearchPageProps> {
           this.props.dashboards,
           ResourceType.dashboard
         );
-      case ResourceType.feature:
-        return this.getTabContent(this.props.features, ResourceType.feature);
-      default:
-        return null;
     }
+    return null;
   };
 
   generateTabLabel = (tab: ResourceType): string => {
     switch (tab) {
       case ResourceType.dashboard:
         return DASHBOARD_RESOURCE_TITLE;
-      case ResourceType.feature:
-        return FEATURE_RESOURCE_TITLE;
       case ResourceType.table:
         return TABLE_RESOURCE_TITLE;
       case ResourceType.user:
@@ -188,7 +180,7 @@ export class SearchPage extends React.Component<SearchPageProps> {
           <ResourceSelector />
           <SearchFilter />
         </SearchPanel>
-        <main className="search-results">
+        <main className="search-results" aria-live="polite">
           <h1 className="sr-only">{SEARCHPAGE_TITLE}</h1>
           {this.renderContent()}
         </main>
@@ -215,7 +207,6 @@ export const mapStateToProps = (state: GlobalState) => {
     tables: state.search.tables,
     users: state.search.users,
     dashboards: state.search.dashboards,
-    features: state.search.features,
   };
 };
 

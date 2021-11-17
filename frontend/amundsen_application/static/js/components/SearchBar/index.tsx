@@ -199,7 +199,9 @@ export class SearchBar extends React.Component<SearchBarProps, SearchBarState> {
           onSubmit={this.handleValueSubmit}
         >
           {/* eslint-disable jsx-a11y/no-autofocus */}
-          <label className="sr-only">{this.props.placeholder}</label>
+          <label className="sr-only" htmlFor="search-input">
+            {this.props.placeholder}
+          </label>
           <input
             id="search-input"
             required
@@ -213,7 +215,10 @@ export class SearchBar extends React.Component<SearchBarProps, SearchBarState> {
           {/* eslint-enable jsx-a11y/no-autofocus */}
           <button className={searchButtonClass} type="submit">
             <span className="sr-only">{Constants.SEARCH_BUTTON_TEXT}</span>
-            <img className="icon icon-search" alt="" />
+            <img
+              className="icon icon-search"
+              alt={Constants.SEARCH_BAR_ALT_TEXT}
+            />
           </button>
           {this.props.size === Constants.SIZE_SMALL && (
             <button

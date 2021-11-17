@@ -5,25 +5,18 @@ import * as React from 'react';
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 
-import {
-  indexDashboardsEnabled,
-  indexFeaturesEnabled,
-  indexUsersEnabled,
-} from 'config/config-utils';
+import { indexDashboardsEnabled, indexUsersEnabled } from 'config/config-utils';
 import { GlobalState } from 'ducks/rootReducer';
 import { updateSearchState } from 'ducks/search/reducer';
 import {
   DashboardSearchResults,
-  FeatureSearchResults,
   TableSearchResults,
   UpdateSearchStateRequest,
   UserSearchResults,
 } from 'ducks/search/types';
 import { ResourceType } from 'interfaces/Resources';
-import { logClick } from 'utils/analytics';
 import {
   DASHBOARD_RESOURCE_TITLE,
-  FEATURE_RESOURCE_TITLE,
   TABLE_RESOURCE_TITLE,
   USER_RESOURCE_TITLE,
 } from '../constants';
@@ -35,7 +28,6 @@ export interface StateFromProps {
   tables: TableSearchResults;
   dashboards: DashboardSearchResults;
   users: UserSearchResults;
-  features: FeatureSearchResults;
 }
 
 export interface DispatchFromProps {
@@ -62,14 +54,7 @@ export class ResourceSelector extends React.Component<ResourceSelectorProps> {
           type="radio"
           name="resource"
           value={option.type}
-          aria-label={option.type}
           checked={this.props.resource === option.type}
-          onClick={(e) =>
-            logClick(e, {
-              target_id: 'search_resource_selector',
-              value: option.type,
-            })
-          }
           onChange={this.onChange}
         />
         <span className="subtitle-2">{option.label}</span>
@@ -103,14 +88,6 @@ export class ResourceSelector extends React.Component<ResourceSelectorProps> {
       });
     }
 
-    if (indexFeaturesEnabled()) {
-      resourceOptions.push({
-        type: ResourceType.feature,
-        label: FEATURE_RESOURCE_TITLE,
-        count: this.props.features.total_results,
-      });
-    }
-
     return (
       <>
         <h2 className="title-2">{RESOURCE_SELECTOR_TITLE}</h2>
@@ -127,7 +104,6 @@ export const mapStateToProps = (state: GlobalState) => ({
   tables: state.search.tables,
   users: state.search.users,
   dashboards: state.search.dashboards,
-  features: state.search.features,
 });
 
 export const mapDispatchToProps = (dispatch: any) =>

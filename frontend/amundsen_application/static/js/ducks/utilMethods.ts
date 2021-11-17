@@ -1,14 +1,8 @@
-import { Badge, Tag } from 'interfaces';
-import * as qs from 'simple-query-string';
+import { Tag } from 'interfaces';
+import { ActionLogParams, postActionLog } from './log/api/v0';
 
 export function sortTagsAlphabetical(a: Tag, b: Tag): number {
   return a.tag_name.localeCompare(b.tag_name);
-}
-
-export function sortBadgesAlphabetical(a: Badge, b: Badge): number {
-  const aBadgeName = a.badge_name || '';
-  const bBadgeName = b.badge_name || '';
-  return aBadgeName.localeCompare(bBadgeName);
 }
 
 export function extractFromObj(
@@ -35,11 +29,39 @@ export function filterFromObj(
     }, {});
 }
 
-/**
- * Takes a parameter objects and generates the query string parameters needed for requests.
- * Example:
- * const queryParameters = getQueryParams({key: tableData.key, column_name: columnName})
- */
-export function getQueryParams(params: object): string {
-  return qs.stringify(params);
+export function logAction(declaredProps: ActionLogParams) {
+  const inferredProps = {
+    location: window.location.pathname,
+  };
+
+  postActionLog({ ...inferredProps, ...declaredProps });
+}
+
+export function logClick(
+  event: React.MouseEvent<HTMLElement>,
+  declaredProps?: ActionLogParams
+) {
+  const target = event.currentTarget;
+  const inferredProps: ActionLogParams = {
+    command: 'click',
+    target_id:
+      target.dataset && target.dataset.type ? target.dataset.type : target.id,
+    label: target.innerText || target.textContent || '',
+  };
+
+  if (target.nodeValue !== null) {
+    inferredProps.value = target.nodeValue;
+  }
+
+  let nodeName = target.nodeName.toLowerCase();
+  if (nodeName === 'a') {
+    if (target.classList.contains('btn')) {
+      nodeName = 'button';
+    } else {
+      nodeName = 'link';
+    }
+  }
+  inferredProps.target_type = nodeName;
+
+  logAction({ ...inferredProps, ...declaredProps });
 }

@@ -38,12 +38,6 @@ const setup = (propOverrides?: Partial<ColumnListProps>) => {
     editUrl: 'https://test.datasource.site/table',
     database: 'testDatabase',
     columns: [],
-    tableParams: {
-      table: 'table',
-      cluster: 'cluster',
-      database: 'database',
-      schema: 'schema',
-    },
     openRequestDescriptionDialog: jest.fn(),
     ...propOverrides,
   };

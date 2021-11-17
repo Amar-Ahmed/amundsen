@@ -2,13 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import urllib.parse
 
 from dataclasses import dataclass
-from marshmallow import EXCLUDE
 from typing import Any, Dict, List
 
 from amundsen_common.models.dashboard import DashboardSummary, DashboardSummarySchema
-from amundsen_common.models.feature import Feature, FeatureSchema
 from amundsen_common.models.popular_table import PopularTable, PopularTableSchema
 from amundsen_common.models.table import Table, TableSchema
 from amundsen_application.models.user import load_user, dump_user
@@ -29,16 +28,14 @@ class TableUri:
 
     @classmethod
     def from_uri(cls, uri: str) -> 'TableUri':
-        """
-        TABLE_KEY_FORMAT = '{db}://{cluster}.{schema}/{tbl}'
-        """
-        pattern = re.compile(r'^(?P<database>.*?)://(?P<cluster>.*)\.(?P<schema>.*?)/(?P<table>.*?)$', re.X)
-
-        groups = pattern.match(uri)
-
-        spec = groups.groupdict() if groups else {}
-
-        return TableUri(**spec)
+        parsed = urllib.parse.urlparse(uri)
+        cluster, schema = parsed.netloc.rsplit('.', 1)
+        return TableUri(
+            database=parsed.scheme,
+            cluster=cluster,
+            schema=schema,
+            table=parsed.path.lstrip('/')
+        )
 
 
 def marshall_table_partial(table_dict: Dict) -> Dict:
@@ -49,9 +46,10 @@ def marshall_table_partial(table_dict: Dict) -> Dict:
 
     TODO - Unify data format returned by search and metadata.
     """
-    schema = PopularTableSchema()
-    table: PopularTable = schema.load(table_dict, unknown=EXCLUDE)
-    results = schema.dump(table)
+    schema = PopularTableSchema(strict=True)
+    # TODO: consider migrating to validate() instead of roundtripping
+    table: PopularTable = schema.load(table_dict).data
+    results = schema.dump(table).data
     # TODO: fix popular tables to provide these? remove if we're not using them?
     # TODO: Add the 'key' or 'id' to the base PopularTableSchema
     results['key'] = f'{table.database}://{table.cluster}.{table.schema}/{table.name}'
@@ -89,9 +87,6 @@ def is_table_editable(schema_name: str, table_name: str, cfg: Any = None) -> boo
     if cfg is None:
         cfg = app.config
 
-    if cfg['ALL_UNEDITABLE_SCHEMAS']:
-        return False
-
     if schema_name in cfg['UNEDITABLE_SCHEMAS']:
         return False
 
@@ -109,9 +104,10 @@ def marshall_table_full(table_dict: Dict) -> Dict:
     :return: Table Dict with sanitized fields
     """
 
-    schema = TableSchema()
-    table: Table = schema.load(table_dict)
-    results: Dict[str, Any] = schema.dump(table)
+    schema = TableSchema(strict=True)
+    # TODO: consider migrating to validate() instead of roundtripping
+    table: Table = schema.load(table_dict).data
+    results: Dict[str, Any] = schema.dump(table).data
 
     is_editable = is_table_editable(results['schema'], results['name'])
     results['is_editable'] = is_editable
@@ -153,9 +149,9 @@ def marshall_dashboard_partial(dashboard_dict: Dict) -> Dict:
     :param dashboard_dict: Dict of partial dashboard metadata
     :return: partial dashboard Dict
     """
-    schema = DashboardSummarySchema(unknown=EXCLUDE)
-    dashboard: DashboardSummary = schema.load(dashboard_dict)
-    results = schema.dump(dashboard)
+    schema = DashboardSummarySchema(strict=True)
+    dashboard: DashboardSummary = schema.load(dashboard_dict).data
+    results = schema.dump(dashboard).data
     results['type'] = 'dashboard'
     # TODO: Bookmark logic relies on key, opting to add this here to avoid messy logic in
     # React app and we have to clean up later.
@@ -175,21 +171,6 @@ def marshall_dashboard_full(dashboard_dict: Dict) -> Dict:
     dashboard_dict['owners'] = [_map_user_object_to_schema(owner) for owner in dashboard_dict['owners']]
     dashboard_dict['tables'] = [marshall_table_partial(table) for table in dashboard_dict['tables']]
     return dashboard_dict
-
-
-def marshall_lineage_table(table_dict: Dict) -> Dict:
-    """
-    Decorate lineage entries with database, schema, cluster, and table
-    :param table_dict:
-    :return: table entry with additional fields
-    """
-    table_key = str(table_dict.get('key'))
-    table_uri = TableUri.from_uri(table_key)
-    table_dict['database'] = table_uri.database
-    table_dict['schema'] = table_uri.schema
-    table_dict['cluster'] = table_uri.cluster
-    table_dict['name'] = table_uri.table
-    return table_dict
 
 
 def _convert_prog_descriptions(prog_descriptions: List = None) -> Dict:
@@ -257,26 +238,3 @@ def _get_partition_data(watermarks: Dict) -> Dict:
     return {
         'is_partitioned': False
     }
-
-
-def marshall_feature_full(feature_dict: Dict) -> Dict:
-    """
-    Forms the full version of a table Dict, with additional and sanitized fields
-    :param table_dict: Table Dict from metadata service
-    :return: Table Dict with sanitized fields
-    """
-
-    schema = FeatureSchema()
-    feature: Feature = schema.load(feature_dict)
-    results: Dict[str, Any] = schema.dump(feature)
-
-    # TODO do we need this for Features?
-    # is_editable = is_table_editable(results['schema'], results['name'])
-    # results['is_editable'] = is_editable
-
-    results['owners'] = [_map_user_object_to_schema(owner) for owner in results['owners']]
-
-    prog_descriptions = results['programmatic_descriptions']
-    results['programmatic_descriptions'] = _convert_prog_descriptions(prog_descriptions)
-
-    return results

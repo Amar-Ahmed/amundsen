@@ -2,24 +2,21 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import * as React from 'react';
-import { ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { GlobalState } from 'ducks/rootReducer';
 
 import { createIssue } from 'ducks/issue/reducer';
 import { CreateIssueRequest } from 'ducks/issue/types';
-import { logClick } from 'utils/analytics';
+import './styles.scss';
+import { logClick } from 'ducks/utilMethods';
 import {
   TableMetadata,
   CreateIssuePayload,
   NotificationPayload,
   NotificationType,
 } from 'interfaces';
-import { getIssueDescriptionTemplate } from 'config/config-utils';
 import * as Constants from './constants';
-
-import './styles.scss';
 
 export interface ComponentProps {
   tableKey: string;
@@ -35,14 +32,12 @@ export interface DispatchFromProps {
 
 export interface StateFromProps {
   tableOwners: string[];
-  frequentUsers: string[];
   userEmail: string;
   tableMetadata: TableMetadata;
 }
 
 interface ReportTableIssueState {
   isOpen: boolean;
-  issuePriority: string;
 }
 
 export type ReportTableIssueProps = StateFromProps &
@@ -56,7 +51,7 @@ export class ReportTableIssue extends React.Component<
   constructor(props) {
     super(props);
 
-    this.state = { isOpen: false, issuePriority: Constants.PRIORITY.P2 };
+    this.state = { isOpen: false };
   }
 
   submitForm = (event) => {
@@ -74,32 +69,18 @@ export class ReportTableIssue extends React.Component<
   };
 
   getCreateIssuePayload = (formData: FormData): CreateIssuePayload => {
-    const {
-      tableKey,
-      tableMetadata: { cluster, database, schema, name },
-      tableOwners,
-      frequentUsers,
-    } = this.props;
-    const { issuePriority } = this.state;
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
-    const resourcePath = `/table_detail/${cluster}/${database}/${schema}/${name}`;
 
     return {
       title,
       description,
-      owner_ids: tableOwners,
-      frequent_user_ids: frequentUsers,
-      priority_level: issuePriority,
-      key: tableKey,
-      resource_path: resourcePath,
+      key: this.props.tableKey,
     };
   };
 
   getNotificationPayload = (): NotificationPayload => {
-    const {
-      tableMetadata: { cluster, database, schema, name },
-    } = this.props;
+    const { cluster, database, schema, name } = this.props.tableMetadata;
     const owners = this.props.tableOwners;
     const resourceName = `${schema}.${name}`;
     const resourcePath = `/table_detail/${cluster}/${database}/${schema}/${name}`;
@@ -122,24 +103,18 @@ export class ReportTableIssue extends React.Component<
     this.setState({ isOpen: !this.state.isOpen });
   };
 
-  handlePriorityChange = (event) => {
-    this.setState({ issuePriority: event });
-  };
-
   render() {
-    const { isOpen, issuePriority } = this.state;
-
     return (
       <>
         {/* eslint-disable jsx-a11y/anchor-is-valid */}
         <a
           href="javascript:void(0)"
-          className="body-link"
+          className="report-table-issue-link"
           onClick={this.toggle}
         >
           {Constants.REPORT_DATA_ISSUE_TEXT}
         </a>
-        {isOpen && (
+        {this.state.isOpen && (
           <div className="report-table-issue-modal">
             <h3 className="data-issue-header">
               {Constants.REPORT_DATA_ISSUE_TEXT}
@@ -169,36 +144,11 @@ export class ReportTableIssue extends React.Component<
                   rows={5}
                   required
                   maxLength={2000}
-                >
-                  {getIssueDescriptionTemplate()}
-                </textarea>
+                />
               </div>
-              <label htmlFor="priority">{Constants.PRIORITY_LABEL}</label>
-              <div className="report-table-issue-buttons">
-                <ToggleButtonGroup
-                  type="radio"
-                  name="priority"
-                  id="priority"
-                  value={issuePriority}
-                  onChange={this.handlePriorityChange}
-                >
-                  <ToggleButton value={Constants.PRIORITY.P3}>
-                    {Constants.PRIORITY.P3}
-                  </ToggleButton>
-                  <ToggleButton value={Constants.PRIORITY.P2}>
-                    {Constants.PRIORITY.P2}
-                  </ToggleButton>
-                  <ToggleButton value={Constants.PRIORITY.P1}>
-                    {Constants.PRIORITY.P1}
-                  </ToggleButton>
-                  <ToggleButton value={Constants.PRIORITY.P0}>
-                    {Constants.PRIORITY.P0}
-                  </ToggleButton>
-                </ToggleButtonGroup>
-                <button className="btn btn-primary submit" type="submit">
-                  {Constants.SUBMIT_BUTTON_LABEL}
-                </button>
-              </div>
+              <button className="btn btn-primary submit" type="submit">
+                Submit
+              </button>
             </form>
             <div className="data-owner-notification">
               {Constants.TABLE_OWNERS_NOTE}
@@ -210,18 +160,13 @@ export class ReportTableIssue extends React.Component<
   }
 }
 export const mapStateToProps = (state: GlobalState) => {
-  const { tableMetadata, user } = state;
-  const ownerObj = tableMetadata.tableOwners.owners;
+  const ownerObj = state.tableMetadata.tableOwners.owners;
   const tableOwnersEmails = Object.keys(ownerObj);
-  const frequentUserIds = tableMetadata.tableData.table_readers.map(
-    (reader) => reader.user.user_id
-  );
-  const userEmail = user.loggedInUser.email;
+  const userEmail = state.user.loggedInUser.email;
   return {
     userEmail,
     tableOwners: tableOwnersEmails,
-    frequentUsers: frequentUserIds,
-    tableMetadata: tableMetadata.tableData,
+    tableMetadata: state.tableMetadata.tableData,
   };
 };
 

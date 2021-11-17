@@ -22,20 +22,21 @@ import { pageViewed } from 'ducks/ui';
 import rootReducer from 'ducks/rootReducer';
 import rootSaga from 'ducks/rootSaga';
 
+import DashboardPage from './pages/DashboardPage';
 import AnnouncementPage from './pages/AnnouncementPage';
 import BrowsePage from './pages/BrowsePage';
-import DashboardPage from './pages/DashboardPage';
-import FeaturePage from './pages/FeaturePage';
 import HomePage from './pages/HomePage';
 import NotFoundPage from './pages/NotFoundPage';
 import SearchPage from './pages/SearchPage';
 import ProfilePage from './pages/ProfilePage';
 import TableDetail from './pages/TableDetailPage';
-import LineagePage from './pages/LineagePage';
+import DomainDetailsPage from './pages/DomainDetailsPage/index'
+import DomainsPage from 'pages/DomainsPage';
 
 import Preloader from './components/Preloader';
 import Footer from './features/Footer';
 import NavBar from './features/NavBar';
+import SkipNav from './components/CMSSkipNav';
 
 const sagaMiddleware = createSagaMiddleware();
 const createStoreWithMiddleware = applyMiddleware(
@@ -62,24 +63,23 @@ const Routes: React.FC = () => {
   return (
     <>
       <Route component={NavBar} />
-      <Switch>
-        <Route path="/announcements" component={AnnouncementPage} />
-        <Route path="/browse" component={BrowsePage} />
-        <Route path="/dashboard/:uri" component={DashboardPage} />
-        <Route path="/feature/:group/:name/:version" component={FeaturePage} />
-        <Route path="/search" component={SearchPage} />
-        <Route
-          path="/table_detail/:cluster/:database/:schema/:table"
-          component={TableDetail}
-        />
-        <Route
-          path="/lineage/:resource/:cluster/:database/:schema/:table"
-          component={LineagePage}
-        />
-        <Route path="/user/:userId" component={ProfilePage} />
-        <Route path="/404" component={NotFoundPage} />
-        <Route path="/" component={HomePage} />
-      </Switch>
+      <div id="main-content">
+        <Switch>
+          <Route path="/announcements" component={AnnouncementPage} />
+          <Route path="/browse" component={BrowsePage} />
+          <Route path="/domains/:name" component={DomainDetailsPage} />
+          <Route path="/domains" component={DomainsPage} />
+          <Route path="/dashboard/:uri" component={DashboardPage} />
+          <Route path="/search" component={SearchPage} />
+          <Route
+            path="/table_detail/:cluster/:database/:schema/:table"
+            component={TableDetail}
+          />
+          <Route path="/user/:userId" component={ProfilePage} />
+          <Route path="/404" component={NotFoundPage} />
+          <Route path="/" component={HomePage} />
+        </Switch>
+      </div>
     </>
   );
 };
@@ -88,11 +88,14 @@ ReactDOM.render(
   <DocumentTitle title={getDocumentTitle()}>
     <Provider store={store}>
       <Router history={BrowserHistory}>
-        <div id="main">
-          <Preloader />
-          <Routes />
-          <Footer />
-        </div>
+        <>
+          <SkipNav href="#main-content">Skip to main content</SkipNav>
+          <div id="main">
+            <Preloader />
+            <Routes />
+            <Footer />
+          </div>
+        </>
       </Router>
     </Provider>
   </DocumentTitle>,

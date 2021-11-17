@@ -1,8 +1,5 @@
 import { all } from 'redux-saga/effects';
 
-// Badge
-import { getAllBadgesWatcher } from 'ducks/badges/sagas';
-
 // AnnouncementPage
 
 import {
@@ -14,22 +11,10 @@ import {
 
 // Dashboard
 import { getDashboardWatcher } from 'ducks/dashboard/sagas';
-import {
-  getFeatureWatcher,
-  getFeatureCodeWatcher,
-  getFeatureDescriptionWatcher,
-  getFeatureLineageWatcher,
-  updateFeatureDescriptionWatcher,
-  updateFeatureOwnerWatcher,
-  getFeaturePreviewDataWatcher,
-} from 'ducks/feature/sagas';
-
 import { getAnnouncementsWatcher } from './announcements/sagas';
 
 // Notifications
 import { submitNotificationWatcher } from './notification/sagas';
-
-// Feature
 
 // FeedbackForm
 import { submitFeedbackWatcher } from './feedback/sagas';
@@ -37,8 +22,8 @@ import { submitFeedbackWatcher } from './feedback/sagas';
 // Issues
 import { createIssueWatcher, getIssuesWatcher } from './issue/sagas';
 
-// PopularResources
-import { getPopularResourcesWatcher } from './popularResources/sagas';
+// PopularTables
+import { getPopularTablesWatcher } from './popularTables/sagas';
 // Search
 import {
   inlineSearchWatcher,
@@ -61,7 +46,6 @@ import {
   getColumnDescriptionWatcher,
   getPreviewDataWatcher,
   getTableDescriptionWatcher,
-  getTableQualityChecksWatcher,
   updateColumnDescriptionWatcher,
   updateTableDescriptionWatcher,
 } from './tableMetadata/sagas';
@@ -80,15 +64,12 @@ import {
   getUserWatcher,
 } from './user/sagas';
 
-// Lineage
-import {
-  getColumnLineageWatcher,
-  getTableLineageWatcher,
-  getTableColumnLineageWatcher,
-} from './lineage/sagas';
+/* EPDL */
+import { getDataAssetsWatcher } from './dataAssets/sagas'
 
 export default function* rootSaga() {
   yield all([
+    getDataAssetsWatcher(),
     // AnnouncementPage
     getAnnouncementsWatcher(),
     // Bookmarks
@@ -100,14 +81,6 @@ export default function* rootSaga() {
     getDashboardWatcher(),
     // Notification
     submitNotificationWatcher(),
-    // Feature
-    getFeatureWatcher(),
-    getFeatureCodeWatcher(),
-    getFeatureLineageWatcher(),
-    getFeaturePreviewDataWatcher(),
-    getFeatureDescriptionWatcher(),
-    updateFeatureDescriptionWatcher(),
-    updateFeatureOwnerWatcher(),
     // FeedbackForm
     submitFeedbackWatcher(),
     // Issues
@@ -125,19 +98,16 @@ export default function* rootSaga() {
     submitSearchResourceWatcher(),
     updateSearchStateWatcher(),
     urlDidUpdateWatcher(),
-    // PopularResources
-    getPopularResourcesWatcher(),
+    // PopularTables
+    getPopularTablesWatcher(),
     // Tags
     getAllTagsWatcher(),
     updateResourceTagsWatcher(),
     // TableDetail
     getTableDataWatcher(),
-
     getColumnDescriptionWatcher(),
-
     getPreviewDataWatcher(),
     getTableDescriptionWatcher(),
-    getTableQualityChecksWatcher(),
     updateColumnDescriptionWatcher(),
     updateTableDescriptionWatcher(),
     updateTableOwnerWatcher(),
@@ -148,11 +118,5 @@ export default function* rootSaga() {
     getUserWatcher(),
     getUserOwnWatcher(),
     getUserReadWatcher(),
-    // Lineage
-    getTableLineageWatcher(),
-    getColumnLineageWatcher(),
-    getTableColumnLineageWatcher(),
-    // Badges
-    getAllBadgesWatcher(),
   ]);
 }

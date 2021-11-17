@@ -9,13 +9,16 @@ import { RouteComponentProps } from 'react-router';
 import { resetSearchState } from 'ducks/search/reducer';
 import { UpdateSearchStateReset } from 'ducks/search/types';
 
-import MyBookmarks from 'components/Bookmark/MyBookmarks';
+// import MyBookmarks from 'components/Bookmark/MyBookmarks';
 import Breadcrumb from 'components/Breadcrumb';
-import PopularTables from 'components/PopularResources';
+// import PopularTables from 'components/PopularTables';
 import SearchBar from 'components/SearchBar';
 import TagsListContainer from 'components/Tags';
 import Announcements from 'components/Announcements';
-import BadgesListContainer from 'components/Badges';
+
+import CMSIntro from 'components/CMSIntro';
+import DataAssets from 'components/CMSDataAssetCard';
+import DomainCard from 'components/CMSDomainCard';
 
 import { announcementsEnabled } from 'config/config-utils';
 
@@ -47,26 +50,37 @@ export class HomePage extends React.Component<HomePageProps> {
             }`}
           >
             <h1 className="sr-only">{HOMEPAGE_TITLE}</h1>
-            <SearchBar />
-            <div className="filter-breadcrumb pull-right">
-              <Breadcrumb
-                direction="right"
-                path="/search"
-                text={SEARCH_BREADCRUMB_TEXT}
-              />
+
+            {/* <div>
+              <CMSIntro />
+            </div> */}
+
+            <div className="home-element-container-half-height">
+              <SearchBar />
+              <div className="filter-breadcrumb pull-right">
+                <Breadcrumb
+                  direction="right"
+                  path="/search"
+                  text={SEARCH_BREADCRUMB_TEXT}
+                />
+              </div>
             </div>
             <div className="home-element-container">
-              <BadgesListContainer shortBadgesList />
+              <DomainCard/>
             </div>
+            <div className="home-element-container">
+              <DataAssets />
+            </div>
+
             <div className="home-element-container">
               <TagsListContainer shortTagsList />
             </div>
-            <div className="home-element-container">
+            {/* <div className="home-element-container">
               <MyBookmarks />
-            </div>
-            <div className="home-element-container">
+            </div> */}
+            {/* <div className="home-element-container">
               <PopularTables />
-            </div>
+            </div> */}
           </div>
           {announcementsEnabled() && (
             <div className="col-xs-12 col-md-offset-1 col-md-3">

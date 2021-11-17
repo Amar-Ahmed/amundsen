@@ -14,7 +14,7 @@ import { connect } from 'react-redux';
 
 import { updateSearchState } from 'ducks/search/reducer';
 import { UpdateSearchStateRequest } from 'ducks/search/types';
-import { logClick } from 'utils/analytics';
+import { logClick } from 'ducks/utilMethods';
 
 import { ResourceType } from 'interfaces/Resources';
 
@@ -47,15 +47,15 @@ export class TableHeaderBullets extends React.Component<TableHeaderBulletsProps>
     return (
       <ul className="header-bullets">
         <li>{getDisplayNameByResource(ResourceType.table)}</li>
-        <li>
+        {/* <li>
           <Link to="/search" onClick={this.handleClick}>
             {getSourceDisplayName(
               this.props.database || '',
               ResourceType.table
             )}
           </Link>
-        </li>
-        <li>{this.props.cluster || ''}</li>
+        </li> */}
+        {/* <li>{this.props.cluster || ''}</li> */}
         {isViewCheck && <li>{TABLE_VIEW_TEXT}</li>}
       </ul>
     );
@@ -68,7 +68,7 @@ export const mapDispatchToProps = (dispatch: any) =>
       searchDatabase: (databaseText: string) =>
         updateSearchState({
           filters: {
-            [ResourceType.table]: { database: databaseText },
+            [ResourceType.table]: { database: { [databaseText]: true } },
           },
           submitSearch: true,
         }),

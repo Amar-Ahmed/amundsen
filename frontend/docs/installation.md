@@ -5,10 +5,10 @@
 The following instructions are for setting up a standalone version of the Amundsen application. This approach is ideal for local development.
 ```bash
 # Clone repo
-$ git clone https://github.com/amundsen-io/amundsen.git
+$ git clone https://github.com/lyft/amundsenfrontendlibrary.git
 
 # Build static content
-$ cd amundsen/frontend/amundsen_application/static
+$ cd amundsenfrontendlibrary/amundsen_application/static
 $ npm install
 $ npm run build # or npm run dev-build for un-minified source
 $ cd ../../
@@ -16,7 +16,8 @@ $ cd ../../
 # Install python resources
 $ python3 -m venv venv
 $ source venv/bin/activate
-$ pip3 install -e ".[all]" .
+$ pip3 install -r requirements.txt
+$ python3 setup.py install
 
 # Start server
 $ python3 amundsen_application/wsgi.py

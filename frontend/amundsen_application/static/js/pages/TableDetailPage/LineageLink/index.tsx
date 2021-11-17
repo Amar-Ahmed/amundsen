@@ -5,26 +5,22 @@ import * as React from 'react';
 
 import AvatarLabel from 'components/AvatarLabel';
 import AppConfig from 'config/config';
+import { logClick } from 'ducks/utilMethods';
 import { TableMetadata } from 'interfaces/TableMetadata';
-import { logClick } from 'utils/analytics';
 
 export interface LineageLinkProps {
   tableData: TableMetadata;
 }
 
-export const LineageLink: React.FC<LineageLinkProps> = ({
+const LineageLink: React.FC<LineageLinkProps> = ({
   tableData,
 }: LineageLinkProps) => {
   const config = AppConfig.tableLineage;
-  if (!config.externalEnabled) {
-    return null;
-  }
+  if (!config.isEnabled) return null;
 
   const { database, cluster, schema, name } = tableData;
   const href = config.urlGenerator(database, cluster, schema, name);
-  if (!href) {
-    return null;
-  }
+  if (!href) return null;
 
   const label = 'Lineage';
 

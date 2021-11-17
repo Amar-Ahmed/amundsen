@@ -1,9 +1,8 @@
 # Copyright Contributors to the Amundsen project.
 # SPDX-License-Identifier: Apache-2.0
-import json
 
 from typing import Dict, Optional
-from flask import Flask, session
+from flask import Flask
 from amundsen_application.config import LocalConfig
 from amundsen_application.models.user import load_user, User
 
@@ -17,11 +16,10 @@ def get_access_headers(app: Flask) -> Optional[Dict]:
     as Authorization header.
     """
     try:
-        # noinspection PyUnresolvedReferences
-        access_token = json.dumps(app.auth_client.token)
+        access_token = app.oidc.get_access_token()
         return {'Authorization': 'Bearer {}'.format(access_token)}
     except Exception:
-        return {}
+        return None
 
 
 def get_auth_user(app: Flask) -> User:
@@ -33,7 +31,8 @@ def get_auth_user(app: Flask) -> User:
     :param app: The instance of the current app.
     :return: A class UserInfo (Note, there isn't a UserInfo class, so we use Any)
     """
-    user_info = load_user(session.get("user"))
+    from flask import g
+    user_info = load_user(g.oidc_id_token)
     return user_info
 
 
