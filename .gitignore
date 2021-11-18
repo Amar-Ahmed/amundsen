@@ -33,6 +33,8 @@ build/
 # Front-end dev
 frontend/amundsen_application/.*/
 frontend/amundsen_application/static/dist/
+frontend/amundsen_application/static/package.json
+frontend/amundsen_application/static/package-lock.json
 npm-debug.log
 frontend/**/env
 node_modules/
