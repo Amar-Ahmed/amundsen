@@ -2084,9 +2084,10 @@ class Neo4jProxy(BaseProxy):
         # so we get one description that include the table name related to it
         # and we remove that table name from the description to get the data asset
         for record in records:
-            schema = str(record['schema'].split('_')[1]).upper()
-            schema_title = record['description'].split('.')[0] 
-            schema_description = str(record['description']).replace(f"{schema_title}.",'')
+            schema = str(record['schema']).upper()
+            schema_title = record['description'].split('|')[0] 
+            schema_description = record['description'].split('|')[1]
+
             results.append(SchemaDetail(
                 schema=schema,
                 schema_title=schema_title,
@@ -2180,10 +2181,9 @@ class Neo4jProxy(BaseProxy):
             for data_asset in record['data_asset']:
                 if data_asset['name'] is None:
                     break
-                schema_name = str(data_asset['name'].split('_')[1]).upper()
-                schema_title = data_asset['description'].split('.')[0] 
-                schema_description = str(data_asset['description']).replace(f"{schema_title}.",'')
-                schema_title = f"{schema_name} {schema_title}"
+                schema_name = str(data_asset['name']).upper()
+                schema_title = data_asset['description'].split('|')[0] 
+                schema_description = data_asset['description'].split('|')[1]
                 data_asset_list.append({
                     'schema': schema_name,
                     'schema_description': schema_description.lstrip(),
