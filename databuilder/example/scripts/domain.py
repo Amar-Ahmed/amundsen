@@ -82,6 +82,6 @@ class Domain:
             # create the script for the noes
             self.create_domain(param_dictionary=param_dictionary)
             for data_asset in domain.get('data_asset'):
-                schema_key = f"{database}://{cluster}.{data_asset}"
+                schema_key = f"{database}://{cluster}.hive_{data_asset}"
                 # create the script for the relationship
                 self.create_relationship(domain_name=domain.get('name'), schema_key=schema_key)
