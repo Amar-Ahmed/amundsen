@@ -63,11 +63,11 @@ export class DomainsPage extends Component {
                     path="/"
                     text='Home'
                   />
-                  <span className='current-link'> Domain</span>
+                  <span className='current-link'> Domains</span>
                 </div>
               </div>
               <div className="row" style={{ marginTop: '36px' }}>
-                <h2>{'Domain'}</h2>
+                <h2>{'Domains'}</h2>
               </div>
               <div className="row " style={{ marginTop: '24px' }}>
                 <p className='subtitle-3'>A domain is a body of knowledge in a specific area that provides context for data meaning and usage. It reflects how data consumers and contributors think and talk about their data. Domains provide an organizing structure for information about the data described in the Enterprise User Data Catalog. It promotes understanding by providing a business context for data assets and potentially the relationships between assets.</p>

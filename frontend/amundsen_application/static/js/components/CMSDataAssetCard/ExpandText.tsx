@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Modal } from 'react-bootstrap';
+import {v4 as uuid} from "uuid"
 
 import CMSLink from 'components/CMSLinkify';
 
@@ -35,6 +36,7 @@ export default function ExpandText({
       </span>
       {isNeeded && (
         <button
+          id={`showmore-button-${uuid()}`}
           className="display--inline-block btn btn-link"
           onClick={() => setIsExpanded(true)}
         >

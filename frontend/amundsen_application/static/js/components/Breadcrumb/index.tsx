@@ -37,7 +37,7 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = (
           {direction === 'left' && (
             <img className="icon icon-left" alt={DATASET_ALT_TXT} />
           )}
-          <span>{text}</span>
+          <span id={`breadcrumb-span-${text}`}>{text}</span>
           {direction === 'right' && <img className="icon icon-right" alt="" />}
         </Link>
       </div>

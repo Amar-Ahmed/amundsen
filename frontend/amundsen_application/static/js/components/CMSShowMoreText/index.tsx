@@ -6,9 +6,11 @@ type CMSShowMoreTextProps = {
   text: string;
   limit?: number;
   className?: string;
+  id?: string;
 };
 
 export default function CMSShowMoreText({
+  id,
   text,
   className,
   limit = 250,
@@ -32,6 +34,7 @@ export default function CMSShowMoreText({
 
       {isNeeded && (
         <button
+          id={id}
           className="display--inline-block btn btn-link"
           onClick={() => setIsExpanded(!isExpanded)}
         >

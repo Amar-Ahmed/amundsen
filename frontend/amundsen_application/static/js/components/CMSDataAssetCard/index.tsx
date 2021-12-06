@@ -67,8 +67,6 @@ export class DataAssets extends React.Component<DataAssetProps, DataAssetsState>
     const startIndex = (this.state.activePage - 1) * DATA_ASSETS_PER_PAGE;
     const content = (
       <div className="row">
-
-
         <div className="col-sm-12">
           <div className="row">
             {this.props.dataAssets.slice(
@@ -78,6 +76,7 @@ export class DataAssets extends React.Component<DataAssetProps, DataAssetsState>
               <div className="col-sm-4" key={index}>
                 <h3>
                   <a
+                    id={`dataasset-anchor-${asset.schema.toLowerCase()}`}
                     className=""
                     href={`/search?resource=table&index=0&filters=%7B"schema"%3A"hive_${asset.schema.toLowerCase()}"%7D`}
                   >
@@ -110,10 +109,10 @@ export class DataAssets extends React.Component<DataAssetProps, DataAssetsState>
     );
 
     return (
-      <article className="popular-data-asset-list">
+      <article id="dataasset-popular-list" className="popular-data-asset-list">
         <div><hr /></div>
-        <div className="popular-data-assets-header">
-          <h2 className="popular-data-assets-header-text">
+        <div id="dataasset-popular-list-header" className="popular-data-assets-header">
+          <h2 id="dataasset-popular-list-header-label" className="popular-data-assets-header-text">
             {DATA_ASSETS_LABEL}
           </h2>
           <InfoButton infoText={DATA_ASSETS_INFO_TEXT} />

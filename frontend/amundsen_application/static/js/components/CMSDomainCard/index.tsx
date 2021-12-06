@@ -42,8 +42,6 @@ export default class CMSDomainCard extends React.Component<{}, DomainsState> {
     const startIndex = (this.state.activePage - 1) * DOMAINS_PER_PAGE;
     const content = (
       <div className="row">
-
-
         <div className="col-sm-12">
           <div className="row">
             {DOMAINS.slice(
@@ -51,8 +49,9 @@ export default class CMSDomainCard extends React.Component<{}, DomainsState> {
               startIndex + DOMAINS_PER_PAGE
             ).map((domain, index) => (
               <div className="col-sm-4" key={index}>
-                <h3 className='domain-heading'>
+                <h3 id={`domain-heading-${domain.title.replace(/\s+/, '-')}`} className='domain-heading'>
                   <a
+                    id={`domain-heading-anchor-${domain.title}`}
                     className=""
                     href={`/domains${domain.path}`}
                   >
@@ -60,7 +59,7 @@ export default class CMSDomainCard extends React.Component<{}, DomainsState> {
                   </a>
                 </h3>
 
-                <CMSShowMoreText text={domain.description} />
+                <CMSShowMoreText id={`domain-show-more-less-${domain.title.replace(/\s+/, '-')}`} text={domain.description} />
               </div>
             ))}
             {/* <div className="col-sm-4 bs-callout bs-callout-info">
@@ -73,7 +72,10 @@ export default class CMSDomainCard extends React.Component<{}, DomainsState> {
           <br />
           <div className="row view-all">
             <div style={{display: "flex", justifyContent: "flex-end"}}>
-              <a href='/domains' style={{ color: "#0071bc", textDecoration: "underline", fontWeight: "bold"}}>
+              <a 
+                id="domains-anchor-view-all" 
+                href='/domains'
+                style={{ color: "#0071bc", textDecoration: "underline", fontWeight: "bold"}}>
                 View All Domains
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
