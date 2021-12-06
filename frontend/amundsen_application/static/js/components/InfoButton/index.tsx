@@ -39,6 +39,7 @@ const InfoButton: React.FC<InfoButtonProps> = ({
       overlay={popoverHoverFocus}
     >
       <button
+        id="info-button"
         className={`btn info-button ${size === IconSizes.SMALL ? 'small' : ''}`}
         type="button"
       >

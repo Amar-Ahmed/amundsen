@@ -16,7 +16,7 @@ export const InformationIcon: React.FC<IconProps> = ({
   const id = `info_icon_${uuidv4()}`;
 
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24">
+    <svg id={`information-icon-${id}`} width={size} height={size} viewBox="0 0 24 24">
       <title>Info</title>
       <defs>
         <path

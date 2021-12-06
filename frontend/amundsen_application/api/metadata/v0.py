@@ -800,7 +800,7 @@ def get_schemas() -> Response:
 
     """
     try:
-        url = app.config['METADATASERVICE_BASE'] + SCHEMAS_ENDPOINT
+        url = f"{app.config['METADATASERVICE_BASE']}{SCHEMAS_ENDPOINT}/"
         response = request_metadata(url=url)
         status_code = response.status_code
 

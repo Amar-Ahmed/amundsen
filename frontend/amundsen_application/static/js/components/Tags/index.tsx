@@ -48,7 +48,7 @@ export class TagsListContainer extends React.Component<TagsListContainerProps> {
       shortTagsList,
     } = this.props;
     return (
-      <article className="tag-list">
+      <article id="tag-list" className="tag-list">
         <TagsList
           curatedTags={curatedTags}
           popularTags={popularTags}

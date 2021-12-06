@@ -54,28 +54,17 @@ export class DomainDetailsPage extends Component {
       })
     }
   }
-  //  if (domain.domain_data_asset.length > 0) {
-  //   return (<tr>
-  //     <td className='title-3'><a href={`/domains/${domain.domain_name}`} style={{ color: '#0071BC' }}>{domain.domain_name}</a></td>
-  //     <td className='domains-list-description-container'>
-  //       <Truncate text={domain.domain_description} />
-  //     </td>
-  //   </tr>)
-  // } else {
-  //   return (<tr>
-  //     <td className='title-3'>N/A</td>
-  //     <td className='domains-list-description-container'>
-  //       <Truncate text={'N/As'} />
-  //     </td>
-  //   </tr>)
-  // }
+
   render() {
     this.getDataAssetList()
     let descriptionContent = ''
+    let updatesContent = ''
     if (this.state.domainDetails.length > 0) {
       descriptionContent = this.state.domainDetails[0].domain_description
+      updatesContent = this.state.domainDetails[0].domain_updates
     } else {
       descriptionContent = ''
+      updatesContent = ''
     }
     return (
       <>
@@ -92,7 +81,7 @@ export class DomainDetailsPage extends Component {
                   <Breadcrumb
                     direction="right"
                     path="/domains"
-                    text='Domain'
+                    text='Domains'
                   />
                   <span className='current-link capitalize'>{this.props.match.params.name}</span>
                 </div>
@@ -110,10 +99,10 @@ export class DomainDetailsPage extends Component {
                 >
                   <Tab eventKey="updates" title="Updates" tabClassName={`${this.state.activeTab === 'updates' ? 'selected-tab' : ''}`}>
                     <TextContainer title={'Description'} content={descriptionContent} />
-                    {/* <TextContainer title={'Updates'} content={''} />
-                    <TextContainer title={'Contact'} content={''} /> */}
+                    <TextContainer title={'Updates'} content={updatesContent} />
+                    {/* <TextContainer title={'Contact'} content={''} /> */}
                   </Tab>
-                  <Tab eventKey="data-asset" title="Data Asset" tabClassName={`${this.state.activeTab === 'data-asset' ? 'selected-tab' : ''}`}>
+                  <Tab eventKey="data-asset" title="Data Assets" tabClassName={`${this.state.activeTab === 'data-asset' ? 'selected-tab' : ''}`}>
                     <TextContainer title={'Data Assets'} content={''} />
                     <Table responsive>
                       <thead>
@@ -126,16 +115,6 @@ export class DomainDetailsPage extends Component {
                         {/* {this.renderDataAssetList()} */}
                         {this.getDataAssetList()}
                         {/* <tr>
-                          <td>1</td>
-                          <td>abc</td>
-                        </tr>
-                        <tr>
-                          <td>2</td>
-                          <td>abc</td>
-                        </tr>
-                        <tr>
-                          <td>3</td>
-                          <td>abc</td>
                         </tr> */}
                       </tbody>
                     </Table>
