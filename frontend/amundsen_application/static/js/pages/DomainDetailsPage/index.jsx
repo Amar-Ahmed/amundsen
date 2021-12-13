@@ -45,7 +45,7 @@ export class DomainDetailsPage extends Component {
         return (<tr>
           <td className='title-3'>
             <a href={`/search?resource=table&index=0&filters=%7B"schema"%3A"hive_${domain.schema.toLowerCase()}"%7D`}
-              style={{ color: '#0071BC' }} >{domain.schema}
+              style={{ color: '#0071BC' }} >{domain.schema_title}
             </a></td>
           <td className='domains-list-description-container'>
             <Truncate text={domain.schema_description} />
