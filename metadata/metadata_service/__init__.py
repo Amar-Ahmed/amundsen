@@ -43,7 +43,7 @@ from metadata_service.api.user import (UserDetailAPI, UserFollowAPI,
                                        UserReadsAPI)
 from metadata_service.deprecations import process_deprecations
 # CMS Code
-from metadata_service.api.schema import SchemaAPI
+from metadata_service.api.schema import SchemaAPI, SchemaDetailAPI
 from metadata_service.api.domain import DomainAPI, DomainDetailAPI
 
 # For customized flask use below arguments to override.
@@ -186,6 +186,7 @@ def create_app(*, config_module_class: str) -> Flask:
     app.register_blueprint(api_bp)
     # CMS Code
     api.add_resource(SchemaAPI,'/schemas/')
+    api.add_resource(SchemaDetailAPI,'/schemas/<string:schema_name>')
     api.add_resource(DomainAPI,'/domains/')
     api.add_resource(DomainDetailAPI,'/domains/<string:domain_name>') 
     # cli registration
