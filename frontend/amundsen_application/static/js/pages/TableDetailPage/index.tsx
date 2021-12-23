@@ -204,9 +204,19 @@ export class TableDetail extends React.Component<
     if (!descriptions) {
       return null;
     }
-
+    let schemaTitle = ''
+    if (location.pathname.includes('hive_bic')) {
+      schemaTitle = 'BIC'
+    }
+    if (location.pathname.includes('hive_mdm')) {
+      schemaTitle = 'PMI/SPP from MDM'
+    }
+    if (location.pathname.includes('hive_hcdr')) {
+      schemaTitle = 'QPP-UDS'
+    }
+    
     return descriptions.map((d) => (
-      <EditableSection title='Data Asset Profile' key={`prog_desc:${d.source}`} readOnly>
+      <EditableSection title={schemaTitle} key={`prog_desc:${d.source}`} readOnly>
         <EditableText maxLength={999999} value={d.source} editable={false} />
       </EditableSection>
     ));
