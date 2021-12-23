@@ -1,5 +1,6 @@
 # coment the boto3 to run locally
 import boto3
+import json
 import urllib.parse
 import logging
 import os
@@ -12,6 +13,7 @@ logger.setLevel(logging.DEBUG)
 
 # coment the netx two lines  to run locally
 s3 = boto3.client('s3')
+step_function = boto3.client('stepfunctions')
 
 # Uncoment this to run locally
 # project_directory = os.path.dirname( os.path.abspath(__file__))
@@ -38,7 +40,17 @@ def lambda_handler(event, context):
             obj_data_builder = Data_Builder(tmp_data_dir= tmp_file_dir)
             schema_name = obj_data_builder.data_builder(bucket_name, excel_file_path)
             print('*****Process Done*****')
-
+            # Call the step function
+            # The transaction id is the step function's name
+            transaction_id = str(uuid.uuid1())
+            input = {
+                "schema_name": schema_name
+            }
+            response = step_function.start_execution(
+                stateMachineArn= '',
+                name= transaction_id,
+                input= json.dumps(input)
+            )
             return {
                 'schema_name': schema_name,
                 'response': 200
