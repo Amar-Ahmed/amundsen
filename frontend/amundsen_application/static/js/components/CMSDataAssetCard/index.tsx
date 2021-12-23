@@ -83,12 +83,12 @@ export class DataAssets extends React.Component<DataAssetProps, DataAssetsState>
                     {asset.schema_title}
                   </a>
                 </h3>
-                <ExpandText key={index} title={asset.schema_title} text={asset.schema_description}  />
+                <ExpandText key={index} title={asset.schema_title} text={asset.schema_description} id={`data-asset-${asset.schema}`} />
               </div>
             ))}
             <div className="col-sm-4 bs-callout bs-callout-info">
-              <h3>{DATA_ASSETS_HELP_TEXT.title}</h3>
-              <p>
+              <h3 id='call-out-header' tabIndex={0}>{DATA_ASSETS_HELP_TEXT.title}</h3>
+              <p id='call-out-textfield' tabIndex={0}>
                 <CMSLink text={DATA_ASSETS_HELP_TEXT.description} />
               </p>
             </div>
@@ -112,7 +112,7 @@ export class DataAssets extends React.Component<DataAssetProps, DataAssetsState>
       <article id="dataasset-popular-list" className="popular-data-asset-list">
         <div><hr /></div>
         <div id="dataasset-popular-list-header" className="popular-data-assets-header">
-          <h2 id="dataasset-popular-list-header-label" className="popular-data-assets-header-text">
+          <h2 id="dataasset-popular-list-header-label" className="popular-data-assets-header-text" tabIndex={0}>
             {DATA_ASSETS_LABEL}
           </h2>
           <InfoButton infoText={DATA_ASSETS_INFO_TEXT} />

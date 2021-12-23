@@ -59,15 +59,9 @@ export default class CMSDomainCard extends React.Component<{}, DomainsState> {
                   </a>
                 </h3>
 
-                <CMSShowMoreText id={`domain-show-more-less-${domain.title.replace(/\s+/, '-')}`} text={domain.description} />
+                <CMSShowMoreText id={`domain-${domain.title.replace(/\s+/, '-')}`} text={domain.description} />
               </div>
             ))}
-            {/* <div className="col-sm-4 bs-callout bs-callout-info">
-              <h3>{'DATA_ASSETS_HELP_TEXT.title'}</h3>
-              <p>
-                <CMSLink text={'DATA_ASSETS_HELP_TEXT.description'} />
-              </p>
-            </div> */}
           </div>
           <br />
           <div className="row view-all">
@@ -101,7 +95,7 @@ export default class CMSDomainCard extends React.Component<{}, DomainsState> {
       <article className="popular-data-asset-list">
         <div><hr /></div>
         <div className="popular-data-assets-header">
-          <h2 className="popular-data-assets-header-text">
+          <h2 id='homepage-domain-title' className="popular-data-assets-header-text" tabIndex={0}>
             {FEATURED_DOMAINS_LABEL}
           </h2>
         </div>

@@ -52,7 +52,7 @@ export class TagInfo extends React.Component<TagInfoProps> {
         {this.props.compact && <><span className="hide-element">Tag: {name}</span></>}
         {!this.props.compact && (
           <>
-          <span className="tag-count" aria-hidden="true">{this.props.data.tag_count}</span>
+          <span id={`tag-count-${name.replace(/\s+/, '-')}`} className="tag-count" aria-hidden="true">{this.props.data.tag_count}</span>
           <span className="hide-element">{this.props.data.tag_count} instance of tag {name}</span>
           </>
         )}

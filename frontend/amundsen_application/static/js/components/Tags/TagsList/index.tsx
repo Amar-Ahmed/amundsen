@@ -68,12 +68,12 @@ const ShortTagsList: React.FC<TagsListProps> = ({
   return (
     <div className="short-tag-list">
       {!hasCuratedTags && hasPopularTags && (
-        <h2 className="tag-list-title" id="browse-header">
+        <h2 className="tag-list-title" id="browse-popular-tags-header" tabIndex={0}>
           {POPULAR_TAGS_TITLE}
         </h2>
       )}
       {hasCuratedTags && (
-        <h2 className="tag-list-title" id="browse-header">
+        <h2 className="tag-list-title" id="browse-curated-tags-header">
           {CURATED_TAGS_TITLE}
         </h2>
       )}
@@ -81,7 +81,7 @@ const ShortTagsList: React.FC<TagsListProps> = ({
         <TagsListBlock tags={popularTags} />
       )}
       {hasCuratedTags && <TagsListBlock tags={curatedTags} />}
-      <Link to={BROWSE_PAGE_PATH} id="browse-tags-link" className="browse-tags-link">
+      <Link to={BROWSE_PAGE_PATH} id="browse-tags-link" className="browse-tags-link" style={{ color: "#0071bc", textDecoration: "underline", fontWeight: "bold" }}>
         {BROWSE_MORE_TAGS_TEXT}
       </Link>
     </div>

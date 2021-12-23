@@ -60,13 +60,15 @@ class PaginatedApiResourceList extends React.Component<
               })}
             </ul>
             {totalItemsCount > itemsPerPage && (
-              <Pagination
-                activePage={activePage + 1}
-                itemsCountPerPage={itemsPerPage}
-                totalItemsCount={totalItemsCount}
-                pageRangeDisplayed={Constants.PAGINATION_PAGE_RANGE}
-                onChange={this.onPagination}
-              />
+              <div id="pagination-container">
+                <Pagination
+                  activePage={activePage + 1}
+                  itemsCountPerPage={itemsPerPage}
+                  totalItemsCount={totalItemsCount}
+                  pageRangeDisplayed={Constants.PAGINATION_PAGE_RANGE}
+                  onChange={this.onPagination}
+                />
+              </div>
             )}
           </>
         )}
