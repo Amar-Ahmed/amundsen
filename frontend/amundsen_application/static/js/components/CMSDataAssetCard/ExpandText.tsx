@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
 import { Modal } from 'react-bootstrap';
-import {v4 as uuid} from "uuid"
 
 import CMSLink from 'components/CMSLinkify';
+import '../../GlobalStyles/hide-element.css'
 
 type CMSShowMoreTextProps = {
   title: string;
   text: string;
   limit?: number;
   className?: string;
+  id?: string;
 };
 
 export default function ExpandText({
   title,
   text,
+  id,
   className,
   limit = 250,
 }: CMSShowMoreTextProps) {
@@ -25,22 +27,21 @@ export default function ExpandText({
 
   const isNeeded = text.length >= limit;
   const ellipsis = isNeeded ? '...' : '';
-  // const shownText =
-  //   !isNeeded || isExpanded ? text : `${text.substring(0, limit)}${ellipsis}`;
   const shownText = `${text.substring(0, limit)}${ellipsis}`;
 
   return (
     <div className={className}>
-      <span>
+      <span id={`${id}-textfield`} tabIndex={0}>
         <CMSLink text={shownText} />
       </span>
       {isNeeded && (
         <button
-          id={`showmore-button-${uuid()}`}
+          id={`${id}-show-more-less-button`}
           className="display--inline-block btn btn-link"
           onClick={() => setIsExpanded(true)}
         >
           {'more'}
+          <span className='hide-element'>{`${id}-show-more-less-toggle`}</span>
         </button>
       )}
       <DataAssetModal

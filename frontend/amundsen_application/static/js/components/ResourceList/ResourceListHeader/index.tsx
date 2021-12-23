@@ -34,7 +34,7 @@ const ResourceListHeader: React.FC<ResourceListHeaderProps> = ({
   return (
     <div className="resource-list-header">
       <span className="resource">
-        <span className="resource-text">{RESOURCE_HEADER_TITLE}</span>
+        <span id="resource-header-title" className="resource-text">{RESOURCE_HEADER_TITLE}</span>
       </span>
     </div>
   );

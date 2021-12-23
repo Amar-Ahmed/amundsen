@@ -114,7 +114,7 @@ export class SearchPage extends React.Component<SearchPageProps> {
     if (searchTerm.length === 0 && !hasFilters) {
       return (
         <div className="search-list-container">
-          <div className="search-error body-placeholder">
+          <div id ="search-error-default-message" className="search-error body-placeholder">
             {SEARCH_DEFAULT_MESSAGE}
           </div>
         </div>
@@ -125,7 +125,7 @@ export class SearchPage extends React.Component<SearchPageProps> {
     if (total_results === 0 && (searchTerm.length > 0 || hasFilters)) {
       return (
         <div className="search-list-container">
-          <div className="search-error body-placeholder">
+          <div id ="search-error-prefix-message" className="search-error body-placeholder">
             {SEARCH_ERROR_MESSAGE_PREFIX}
             <i>{tabLabel.toLowerCase()}</i>
             {SEARCH_ERROR_MESSAGE_SUFFIX}
@@ -138,7 +138,7 @@ export class SearchPage extends React.Component<SearchPageProps> {
     if (page_index < 0 || startIndex > total_results) {
       return (
         <div className="search-list-container">
-          <div className="search-error body-placeholder">
+          <div id ="page-index-error-message" className="search-error body-placeholder">
             {PAGE_INDEX_ERROR_MESSAGE}
           </div>
         </div>

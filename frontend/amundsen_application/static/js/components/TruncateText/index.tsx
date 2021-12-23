@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
+import '../../GlobalStyles/hide-element.css'
 
 type TruncateTextProps = {
+  id?: string;
   text: string;
   limit?: number;
   className?: string;
 };
 
 export default function TruncateText({
+  id,
   text,
   className,
   limit = 200,
@@ -24,16 +27,18 @@ export default function TruncateText({
 
   return (
     <div className={className}>
-      <span>
+      <span id={`${id}-textfield`} tabIndex={0}>
         {shownText}
       </span>
 
       {isNeeded && (
         <button
+          id={`${id}-show-more-less-button`}
           className="display--inline-block btn btn-link"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           {isExpanded ? '...less' : 'more'}
+          <span className='hide-element'>{`${id}-show-more-less-toggle`}</span>
         </button>
       )}
     </div>

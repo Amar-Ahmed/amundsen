@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 import CMSLink from 'components/CMSLinkify';
+import '../../GlobalStyles/hide-element.css'
 
 type CMSShowMoreTextProps = {
   text: string;
@@ -28,17 +29,18 @@ export default function CMSShowMoreText({
 
   return (
     <div className={className}>
-      <span>
+      <span id={`${id}-textfield`} tabIndex={0}>
         <CMSLink text={shownText} />
       </span>
 
       {isNeeded && (
         <button
-          id={id}
+          id={`${id}-show-more-less-button`}
           className="display--inline-block btn btn-link"
           onClick={() => setIsExpanded(!isExpanded)}
         >
           {isExpanded ? '...less' : 'more'}
+          <span className='hide-element'>{`${id}-show-more-less-toggle`}</span>
         </button>
       )}
     </div>

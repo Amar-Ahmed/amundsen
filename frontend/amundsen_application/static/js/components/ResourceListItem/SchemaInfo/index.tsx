@@ -32,7 +32,7 @@ const SchemaInfo: React.FC<SchemaInfoProps> = ({
         placement={placement}
         overlay={popoverHoverFocus}
       >
-        <span className="underline">{schema}</span>
+        <span id={`${schema}-text`} className="underline">{schema}</span>
       </OverlayTrigger>
       .{table}
     </>
