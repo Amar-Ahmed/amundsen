@@ -145,7 +145,7 @@ const ExpandingCell: React.FC<ExpandingCellProps> = ({
 }: ExpandingCellProps) => {
   const isExpanded = expandedRows.includes(index);
   const cellStyling = { width: EXPANDING_CELL_WIDTH };
-  
+
   return (
     <td
       className="ams-table-cell ams-table-expanding-cell"
@@ -154,6 +154,7 @@ const ExpandingCell: React.FC<ExpandingCellProps> = ({
     >
       <button
         type="button"
+        id={'ams-table-expanding-button'}
         className="ams-table-expanding-button"
         onClick={() => {
           const newExpandedRows = isExpanded
@@ -214,11 +215,10 @@ const Table: React.FC<TableProps> = ({
     body = data.map((item, index) => (
       <React.Fragment key={`index:${index}`}>
         <tr
-          className={`ams-table-row ${
-            expandRow && expandedRows.includes(index)
-              ? 'has-child-expanded'
-              : ''
-          }`}
+          className={`ams-table-row ${expandRow && expandedRows.includes(index)
+            ? 'has-child-expanded'
+            : ''
+            }`}
           key={`index:${index}`}
           style={rowStyles}
         >
@@ -269,9 +269,8 @@ const Table: React.FC<TableProps> = ({
         </tr>
         {expandRow ? (
           <tr
-            className={`ams-table-expanded-row ${
-              expandedRows.includes(index) ? 'is-expanded' : ''
-            }`}
+            className={`ams-table-expanded-row ${expandedRows.includes(index) ? 'is-expanded' : ''
+              }`}
             key={`expandedIndex:${index}`}
           >
             <td className="ams-table-cell">
@@ -299,6 +298,8 @@ const Table: React.FC<TableProps> = ({
 
           return (
             <th
+            tabIndex={0}
+              id={title + '-table-header'}
               className={`ams-table-heading-cell ${getCellAlignmentClass(
                 horAlign
               )}`}

@@ -94,7 +94,7 @@ export class ColumnType extends React.Component<
     const { columnName, type } = this.props;
 
     if (this.nestedType === null) {
-      return <p className="column-type">{type}</p>;
+      return <p tabIndex={0} id={type + '-column-type'} className="column-type">{type}</p>;
     }
 
     const popoverHover = (

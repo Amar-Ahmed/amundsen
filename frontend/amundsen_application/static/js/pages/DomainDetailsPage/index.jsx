@@ -103,8 +103,19 @@ export class DomainDetailsPage extends Component {
                       title={'Description'}
                       content={descriptionContent}
                     />
-                    <TextContainer title={'Updates'} content={updatesContent} />
-                    {/* <TextContainer title={'Contact'} content={''} /> */}
+                    {/* <TextContainer title={'Updates'} content={updatesContent} /> */}
+                    <div
+                      className="row text-container"
+                      style={{ marginTop: '24px', marginLeft: '4px' }}
+                    >
+                      <h4 className="text-container-title" tabIndex={0}>{'Updates'}</h4>
+                      <div tabIndex={0}>
+                        {updatesContent.split("\n").map((i, key) => {
+                          return <div style={{marginTop:'14px'}}key={key}>{i}</div>;
+                        })}
+                      </div>
+                      <br />
+                    </div>
                   </Tab>
                   <Tab
                     eventKey="data-asset"
@@ -114,7 +125,6 @@ export class DomainDetailsPage extends Component {
                       : ''
                       }`}
                   >
-                    {/* <TextContainer title={'Data Assets'} content={''} /> */}
                     <div
                       className="row text-container"
                       style={{ marginTop: '24px', marginLeft: '4px', marginBottom: '24px' }}
