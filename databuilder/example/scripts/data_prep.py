@@ -153,7 +153,7 @@ def main() -> None:
         returning to the top of the loop and processing the next file """
     
     # call Nipun's shell script to download source file from s3
-    # download_files(get_contributor_files_script)
+    download_files()
     sys.stdout.write("begin processing source files\n")
     logging.basicConfig(level=logging.INFO)
 
