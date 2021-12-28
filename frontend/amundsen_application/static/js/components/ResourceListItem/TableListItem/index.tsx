@@ -71,7 +71,7 @@ class TableListItem extends React.Component<TableListItemProps, {}> {
                   resourceType={table.type}
                 /> */}
               </div>
-              <div id={`${table.name}-description`} className="body-secondary-3 truncated">
+              <div id={`${table.name.replace(/\s+/, '-')}-description`} className="body-secondary-3 truncated">
                 {table.description}
               </div>
             </div>

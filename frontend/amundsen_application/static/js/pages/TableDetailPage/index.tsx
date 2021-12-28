@@ -64,6 +64,7 @@ import TableReportsDropdown from './ResourceReportsDropdown';
 import RequestDescriptionText from './RequestDescriptionText';
 import RequestMetadataForm from './RequestMetadataForm';
 import ListSortingDropdown from './ListSortingDropdown';
+import axios, { AxiosResponse } from 'axios'
 
 import * as Constants from './constants';
 
@@ -118,6 +119,7 @@ const ErrorMessage = () => (
 export interface StateProps {
   sortedBy: SortCriteria;
   currentTab: string;
+  schemaTitle: string;
 }
 
 export class TableDetail extends React.Component<
@@ -131,6 +133,7 @@ export class TableDetail extends React.Component<
   state = {
     sortedBy: SORT_CRITERIAS.sort_order,
     currentTab: COLUMN_TAB_KEY,
+    schemaTitle: '',
   };
 
   componentDidMount() {
@@ -140,6 +143,7 @@ export class TableDetail extends React.Component<
     this.key = this.getTableKey();
     getTableData(this.key, index, source);
     this.didComponentMount = true;
+    this.postSchemaTitle()
   }
 
   componentDidUpdate() {
@@ -152,6 +156,13 @@ export class TableDetail extends React.Component<
       this.key = newKey;
       getTableData(this.key, index, source);
     }
+  }
+
+  getSchema() {
+    const { match } = this.props;
+    const { params } = match;
+
+    return `${params.schema}`;
   }
 
   getDisplayName() {
@@ -184,6 +195,13 @@ export class TableDetail extends React.Component<
     this.props.searchSchema(schemaText);
   };
 
+  postSchemaTitle() {
+    const body = { schema_name: this.getSchema() };
+    return axios.post('/api/metadata/v0/schemas', body)
+      .then(response => this.setState({ schemaTitle: response.data.schemas[0].schema_title }))
+      .catch(err => console.log(err))
+  }
+
   renderProgrammaticDesc = (
     descriptions: ProgrammaticDescription[] | undefined
   ) => {
@@ -204,17 +222,8 @@ export class TableDetail extends React.Component<
     if (!descriptions) {
       return null;
     }
-    let schemaTitle = ''
-    if (location.pathname.includes('hive_bic')) {
-      schemaTitle = 'BIC'
-    }
-    if (location.pathname.includes('hive_mdm')) {
-      schemaTitle = 'PMI/SPP from MDM'
-    }
-    if (location.pathname.includes('hive_hcdr')) {
-      schemaTitle = 'QPP-UDS'
-    }
-    
+    let schemaTitle = this.state.schemaTitle
+
     return descriptions.map((d) => (
       <EditableSection title={schemaTitle} key={`prog_desc:${d.source}`} readOnly>
         <EditableText maxLength={999999} value={d.source} editable={false} />
@@ -293,7 +302,7 @@ export class TableDetail extends React.Component<
       />
     );
   }
-  
+
   render() {
     const { isLoading, statusCode, tableData } = this.props;
     const { currentTab } = this.state;
@@ -308,15 +317,15 @@ export class TableDetail extends React.Component<
       const data = tableData;
       const editText = data.source
         ? `${Constants.EDIT_DESC_TEXT} ${getDescriptionSourceDisplayName(
-            data.source.source_type
-          )}`
+          data.source.source_type
+        )}`
         : '';
       const ownersEditText = data.source
         ? // TODO rename getDescriptionSourceDisplayName to more generic since
-          // owners also edited on the same file?
-          `${Constants.EDIT_OWNERS_TEXT} ${getDescriptionSourceDisplayName(
-            data.source.source_type
-          )}`
+        // owners also edited on the same file?
+        `${Constants.EDIT_OWNERS_TEXT} ${getDescriptionSourceDisplayName(
+          data.source.source_type
+        )}`
         : '';
       const editUrl = data.source ? data.source.source : '';
 
@@ -327,6 +336,10 @@ export class TableDetail extends React.Component<
             <div className="header-section">
               <Breadcrumb />
               <span
+                id={
+                  'icon-header-' +
+                  getSourceIconClass(data.database, ResourceType.table)
+                }
                 className={
                   'icon icon-header ' +
                   getSourceIconClass(data.database, ResourceType.table)
@@ -335,10 +348,12 @@ export class TableDetail extends React.Component<
             </div>
             <div className="header-section header-title">
               <h1
+                tabIndex={0}
+                id={`${data.schema}.${data.name}-header`}
                 className="header-title-text truncated"
                 title={`${data.schema}.${data.name}`}
               >
-                <Link to="/search" onClick={this.handleClick}>
+                <Link id={data.schema + '-anchor'} to="/search" onClick={this.handleClick}>
                   {data.schema}
                 </Link>
                 .{data.name}

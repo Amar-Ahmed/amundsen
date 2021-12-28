@@ -181,6 +181,10 @@ export class DashboardPage extends React.Component<
           <div className="header-section">
             <Breadcrumb />
             <span
+              id={`icon-${getSourceIconClass(
+                dashboard.product,
+                ResourceType.dashboard
+              )}`}
               className={`icon icon-header ${getSourceIconClass(
                 dashboard.product,
                 ResourceType.dashboard
@@ -188,7 +192,7 @@ export class DashboardPage extends React.Component<
             />
           </div>
           <div className="header-section header-title">
-            <h1 className="header-title-text truncated" title={dashboard.name}>
+            <h1 id={dashboard.name + '-header'} className="header-title-text truncated" title={dashboard.name}>
               {dashboard.name}
             </h1>
             <BookmarkIcon
@@ -304,9 +308,9 @@ export class DashboardPage extends React.Component<
                     <time className="last-successful-run-timestamp body-2 text-primary">
                       {dashboard.last_successful_run_timestamp
                         ? formatDateTimeShort({
-                            epochTimestamp:
-                              dashboard.last_successful_run_timestamp,
-                          })
+                          epochTimestamp:
+                            dashboard.last_successful_run_timestamp,
+                        })
                         : NO_TIMESTAMP_TEXT}
                     </time>
                   </section>,
@@ -316,8 +320,8 @@ export class DashboardPage extends React.Component<
                       <time className="last-run-timestamp body-2 text-primary">
                         {dashboard.last_run_timestamp
                           ? formatDateTimeShort({
-                              epochTimestamp: dashboard.last_run_timestamp,
-                            })
+                            epochTimestamp: dashboard.last_run_timestamp,
+                          })
                           : NO_TIMESTAMP_TEXT}
                       </time>
                       <div className="last-run-state">

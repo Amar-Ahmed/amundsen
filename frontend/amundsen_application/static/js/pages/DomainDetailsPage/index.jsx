@@ -114,6 +114,7 @@ export class DomainDetailsPage extends Component {
                           return <div style={{marginTop:'14px'}}key={key}>{i}</div>;
                         })}
                       </div>
+                      <br />
                     </div>
                   </Tab>
                   <Tab

@@ -234,8 +234,8 @@ const ColumnList: React.FC<ColumnListProps> = ({
       field: 'content',
       component: ({ title, description }: ContentType) => (
         <>
-          <div className="column-name">{title}</div>
-          <div className="column-desc truncated">{description}</div>
+          <div tabIndex={0} id={title.replace(/\s+/, '-') + '-column-name'} className="column-name">{title}</div>
+          <div tabIndex={0} id={title.replace(/\s+/, '-') + '-column-description'} className="column-desc truncated">{description}</div>
         </>
       ),
     },

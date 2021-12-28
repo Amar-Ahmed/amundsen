@@ -57,23 +57,21 @@ export class EditableSection extends React.Component<
 
   static convertText(str: string): string {
     return str
-      // .split(new RegExp('[\\s+_]'))
-      // .map((x) => x.charAt(0).toUpperCase() + x.slice(1).toLowerCase())
-      // .join(' ');
+    // .split(new RegExp('[\\s+_]'))
+    // .map((x) => x.charAt(0).toUpperCase() + x.slice(1).toLowerCase())
+    // .join(' ');
   }
 
   renderButton = (): React.ReactNode => (
     <button
-      className={`btn btn-flat-icon edit-button ${
-        this.state.isEditing ? 'active' : ''
-      }`}
+      className={`btn btn-flat-icon edit-button ${this.state.isEditing ? 'active' : ''
+        }`}
       onClick={this.toggleEdit}
     >
       <span className="sr-only">{Constants.EDIT_TEXT}</span>
       <img
-        className={`icon icon-small icon-edit ${
-          this.state.isEditing ? 'icon-color' : ''
-        }`}
+        className={`icon icon-small icon-edit ${this.state.isEditing ? 'icon-color' : ''
+          }`}
         alt=""
       />
     </button>
@@ -125,16 +123,17 @@ export class EditableSection extends React.Component<
       <section className="editable-section">
         <label className="editable-section-label">
           <div
+            tabIndex={0}
             className="editable-section-label-wrapper"
             onClick={!readOnly ? this.preventDefault : undefined}
           >
-            <h4 className="section-title title-3">
+            <h4 id={title.replace(/\s+/, '-') + '-header'} className="section-title title-3">
               {EditableSection.convertText(title)}
             </h4>
             {!readOnly ? this.renderButton() : this.renderReadOnlyButton()}
           </div>
         </label>
-        <div className="editable-section-content">{childrenWithProps}</div>
+        <div tabIndex={0} id={title.replace(/\s+/, '-') + '-description'} className="editable-section-content">{childrenWithProps}</div>
       </section>
     );
   }
