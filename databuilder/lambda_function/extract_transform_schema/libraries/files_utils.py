@@ -18,7 +18,9 @@ class File_Utils:
     
     def fetch_contributor_name(self) -> str:
         """ parses contributor name from filename"""
-        contributor_name=str(self.file_name).split("_")[0]
+        index = self.file_name.rindex('_')
+        contributor_name=self.file_name[0:index]
+
         return contributor_name
 
 

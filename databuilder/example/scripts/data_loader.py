@@ -376,3 +376,6 @@ def run_data_loader(schema: str):
         elasticsearch_mapping=DASHBOARD_ELASTICSEARCH_INDEX_MAPPING)
     job_es_dashboard.launch()
 
+
+# if __name__ == '__main__':
+#     run_delete_data_job(schema='mdm_pmi_spp')

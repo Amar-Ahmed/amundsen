@@ -51,7 +51,7 @@ class DataFrameCSV():
         # create database, cluster, schema columns
         self.data_frame['database']= "hive"
         self.data_frame['cluster']= "gold"
-        self.data_frame['schema']= f"hive_{str(self.contributor_name).lower()}"
+        self.data_frame['schema']= str(self.contributor_name).lower()
 
     def build_dataframe(self):
         pass
@@ -121,6 +121,6 @@ class DataFrameSchemaDescription(DataFrameCSV):
         # create an empty data frame
         # and the schema key, schema and description columns
         self.data_frame = pd.DataFrame()
-        self.data_frame['schema_key']= [f"hive://gold.hive_{str(self.contributor_name).lower()}"]
-        self.data_frame['schema']= [f"hive_{str(self.contributor_name).lower()}"]
+        self.data_frame['schema_key']= [f"hive://gold.{str(self.contributor_name).lower()}"]
+        self.data_frame['schema']= [str(self.contributor_name).lower()]
         self.data_frame['description']= [f"{self.data_asset_title}|{data_asset_description}"]
