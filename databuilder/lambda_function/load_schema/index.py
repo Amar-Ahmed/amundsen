@@ -27,11 +27,11 @@ def lambda_handler(event, context):
         list_files_s3 = list(csv_bucket.objects.filter(Prefix=csv_dir))
         # files list that are required for the load process
         list_files = [
-            'sample_table.csv',
-            'sample_col.csv',
-            'sample_table_programmatic_source.csv',
-            'sample_schema_description.csv',
-            'sample_dashboard_table.csv'
+            'data_table.csv',
+            'data_col.csv',
+            'data_table_programmatic_source.csv',
+            'data_schema_description.csv',
+            'data_dashboard_table.csv'
             ]
         # check if the files exists in the bucket
         # download the file in the tmp directory
