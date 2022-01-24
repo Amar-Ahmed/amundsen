@@ -6,7 +6,7 @@ import datetime
 from .cypher import Cypher
 
 
-LOGGER = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 """
     This class generate the script from the domains list to

@@ -11,11 +11,12 @@ from .config import Config
 LOGGER = logging.getLogger(__name__)
 
 #establish the connection
-neo_host = Config.get_neo4j_host()
-neo_port = Config.get_neo4j_port()
+config = Config()
+neo_host = config.get_neo4j_host()
+neo_port = config.get_neo4j_port()
 neo4j_endpoint = f'bolt://{neo_host}:{neo_port}'
-neo4j_user = Config.get_neo4j_user()
-neo4j_password = Config.get_neo4j_password()
+neo4j_user = config.get_neo4j_user()
+neo4j_password = config.get_neo4j_password()
 
 """
     This class makes the connection with Neo4j and execute the queries
