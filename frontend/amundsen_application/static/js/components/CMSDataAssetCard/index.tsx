@@ -50,7 +50,6 @@ export class DataAssets extends React.Component<DataAssetProps, DataAssetsState>
   }
 
   componentDidMount() {
-    console.log("CALL /SCHEMAS")
     this.props.getDataAssets()
   }
 
@@ -78,7 +77,7 @@ export class DataAssets extends React.Component<DataAssetProps, DataAssetsState>
                   <a
                     id={`dataasset-anchor-${asset.schema.toLowerCase()}`}
                     className=""
-                    href={`/search?resource=table&index=0&filters=%7B"schema"%3A"hive_${asset.schema.toLowerCase()}"%7D`}
+                    href={`/search?resource=table&index=0&filters=%7B"schema"%3A"${asset.schema.toLowerCase()}"%7D`}
                   >
                     {asset.schema_title}
                   </a>
@@ -86,14 +85,14 @@ export class DataAssets extends React.Component<DataAssetProps, DataAssetsState>
                 <ExpandText key={index} title={asset.schema_title} text={asset.schema_description} id={`data-asset-${asset.schema}`} />
               </div>
             ))}
-            <div className="col-sm-4 bs-callout bs-callout-info">
-              <h3 id='call-out-header' tabIndex={0}>{DATA_ASSETS_HELP_TEXT.title}</h3>
+            <div className="col-sm-4" style={{background:'#D6D7D9'}}>
+              <h3 id='call-out-header' tabIndex={0}style={{color:'black'}}>{DATA_ASSETS_HELP_TEXT.title}</h3>
               <p id='call-out-textfield' tabIndex={0}>
                 <CMSLink text={DATA_ASSETS_HELP_TEXT.description} />
               </p>
             </div>
           </div>
-          <div className="row">
+          {/* <div className="row">
             <div className="col-sm-12">
               <Pagination
                 activePage={this.state.activePage}
@@ -102,6 +101,29 @@ export class DataAssets extends React.Component<DataAssetProps, DataAssetsState>
                 pageRangeDisplayed={5}
                 onChange={this.handlePageChange.bind(this)}
               />
+            </div>
+          </div> */}
+          <div className="row view-all">
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <a
+                id="data-assets-anchor-view-all"
+                href='/data_assets'
+                style={{ color: "#0071bc", textDecoration: "underline", fontWeight: "bold" }}>
+                View all Data Assets
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  height="24"
+                  viewBox="0 0 24 15"
+                  width="24"
+                  style={{ marginLeft: "0.5rem" }}
+                >
+                  <path d="M0 0h24v24H0z" fill="none" />
+                  <path
+                    d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"
+                    fill='#0071bc'
+                  />
+                </svg>
+              </a>
             </div>
           </div>
         </div>

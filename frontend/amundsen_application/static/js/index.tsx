@@ -32,6 +32,7 @@ import ProfilePage from './pages/ProfilePage';
 import TableDetail from './pages/TableDetailPage';
 import DomainDetailsPage from './pages/DomainDetailsPage/index'
 import DomainsPage from 'pages/DomainsPage';
+import DataAssetsPage from 'pages/DataAssetsPage';
 
 import Preloader from './components/Preloader';
 import Footer from './features/Footer';
@@ -69,6 +70,7 @@ const Routes: React.FC = () => {
           <Route path="/browse" component={BrowsePage} />
           <Route path="/domains/:name" component={DomainDetailsPage} />
           <Route path="/domains" component={DomainsPage} />
+          <Route path="/data_assets" component={DataAssetsPage} />
           <Route path="/dashboard/:uri" component={DashboardPage} />
           <Route path="/search" component={SearchPage} />
           <Route

@@ -36,7 +36,7 @@ export class DomainDetailsPage extends Component {
           <tr>
             <td className="title-3">
               <a
-                href={`/search?resource=table&index=0&filters=%7B"schema"%3A"hive_${domain.schema.toLowerCase()}"%7D`}
+                href={`/search?resource=table&index=0&filters=%7B"schema"%3A"${domain.schema.toLowerCase()}"%7D`}
                 style={{ color: '#0071BC' }}
               >
                 {domain.schema_title}

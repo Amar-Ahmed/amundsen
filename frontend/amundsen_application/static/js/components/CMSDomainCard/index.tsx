@@ -70,7 +70,7 @@ export default class CMSDomainCard extends React.Component<{}, DomainsState> {
                 id="domains-anchor-view-all" 
                 href='/domains'
                 style={{ color: "#0071bc", textDecoration: "underline", fontWeight: "bold"}}>
-                View All Domains
+                View all Domains
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   height="24"
