@@ -37,7 +37,7 @@ class DataFrameCSV():
         self.data_frame['cluster']= "gold"
         self.data_frame['schema']= str(self.contributor_name).lower()
 
-    def create_csv(self, csv_file_name: str) -> pd.DataFrame:
+    def create_csv(self, csv_file_name: str, xls_full_path: str) -> pd.DataFrame:
         """ With the new data frame create the CSV file in the folder where will
             be consume for the data loader process
         """
@@ -49,7 +49,7 @@ class DataFrameCSV():
         # comment this to run locally
         # save the file in S3
         s3 = boto3.resource("s3")
-        se_transform_data_path = f"transform_data/{csv_file_name}"
+        se_transform_data_path = f"{xls_full_path}/{csv_file_name}"
         bucket = s3.Bucket(self.bucket_name) 
         bucket.upload_file(folder_data_path, se_transform_data_path)
         return self.data_frame

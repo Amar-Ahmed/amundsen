@@ -4,7 +4,7 @@ import logging
 import logging
 import sys
 import xlrd
-from typing import Any, Tuple
+from typing import Any, Tuple, Optional
 import pandas as pd
 from .files_utils import File_Utils
 from .data_frame_utils import DataFrameTable, DataFrameColumn, DataFrameDataAsset, DataFrameSchemaDescription
@@ -21,7 +21,7 @@ class Data_Builder:
         self.tmp_data_dir = tmp_data_dir
 
 
-    def _create_tables(self, xls_path: str, contributor_name: str, bucket_name: str) -> pd.DataFrame:
+    def _create_tables(self, xls_path: str, contributor_name: str, bucket_name: str, xls_full_path: str) -> pd.DataFrame:
         """ Extract the Tables information, transform the data to a new format and
             load the new Data Frame in a new CSV
         """
@@ -34,10 +34,10 @@ class Data_Builder:
         )
         data_frame_table.create_dataframe(excel_path=xls_path)
         df_tables = data_frame_table.build_data_frame()
-        data_frame_table.create_csv('data_table.csv')
+        data_frame_table.create_csv('data_table.csv', xls_full_path)
         return df_tables
 
-    def _create_columns(self, xls_path: str, contributor_name: str, bucket_name: str) -> None:
+    def _create_columns(self, xls_path: str, contributor_name: str, bucket_name: str, xls_full_path: str) -> None:
         """ Extract the Columns information, transform the data to a new format and
             load the new Data Frame in a new CSV
         """
@@ -50,9 +50,9 @@ class Data_Builder:
         )
         data_frame_column.create_dataframe(excel_path=xls_path)
         data_frame_column.build_data_frame()
-        data_frame_column.create_csv('data_column.csv')
+        data_frame_column.create_csv('data_column.csv', xls_full_path)
 
-    def _create_data_asset_profile(self, xls_path: str, contributor_name: str, df_tables: pd.DataFrame, bucket_name: str,  data_asset_title: str) -> None:
+    def _create_data_asset_profile(self, xls_path: str, contributor_name: str, df_tables: pd.DataFrame, bucket_name: str,  data_asset_title: str, xls_full_path: str) -> None:
         """ Extract the Data Asset Profile information, transform the data to a new format and
             load the new Data Frame in a new CSV
         """
@@ -66,7 +66,7 @@ class Data_Builder:
         )
         data_frame_data_asset.create_dataframe(excel_path=xls_path)
         data_frame_data_asset.build_data_frame(df_tables= df_tables)
-        data_frame_data_asset.create_csv('data_table_programmatic_source.csv')
+        data_frame_data_asset.create_csv('data_table_programmatic_source.csv', xls_full_path)
 
         # Generate the schema's description (data asset profile)
         # create an empty data frame
@@ -80,7 +80,7 @@ class Data_Builder:
         )
         data_asset_description = data_frame_data_asset.get_data_asset_description()
         data_frame_description.build_data_frame(data_asset_description= data_asset_description)
-        data_frame_description.create_csv('data_schema_description.csv')
+        data_frame_description.create_csv('data_schema_description.csv', xls_full_path)
 
 
     def _get_data(self, file: bytes) -> Tuple[str, str, str]:
@@ -105,13 +105,13 @@ class Data_Builder:
         return xls_path, contributor_name, file_name, data_asset_title
 
 
-    def data_builder(self, bucket_name: str, file_path: str) -> str:
+    def data_builder(self, bucket_name: str, file_path: str, xls_full_path: str) -> str:
 
         # Get the path, file name and contributor
         xls_path, contributor_name, file_name, data_asset_title  = self._get_data(file_path)
         logging.info(f"File name: {file_name}")
         # create tables, columns, and data asset profile dataframes
-        df_tables = self._create_tables(xls_path, contributor_name, bucket_name)
-        self._create_columns(xls_path, contributor_name, bucket_name)
-        self._create_data_asset_profile(xls_path, contributor_name, df_tables, bucket_name, data_asset_title)
+        df_tables = self._create_tables(xls_path, contributor_name, bucket_name, xls_full_path)
+        self._create_columns(xls_path, contributor_name, bucket_name, xls_full_path)
+        self._create_data_asset_profile(xls_path, contributor_name, df_tables, bucket_name, data_asset_title, xls_full_path)
         return contributor_name

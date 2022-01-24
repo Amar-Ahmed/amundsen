@@ -8,59 +8,62 @@ import shutil
 import uuid
 from libraries.data_builder import Data_Builder
 
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
-# coment the netx two lines  to run locally
 s3 = boto3.client('s3')
 step_function = boto3.client('stepfunctions')
-
 # Uncoment this to run locally
 # project_directory = os.path.dirname( os.path.abspath(__file__))
 tmp_file_dir = "/tmp" 
 
-
 # coment the function lammbda_handler  to run locally
 def lambda_handler(event, context):
-    print("**Start Lambda Function**")
+    logging.info("**Start Process Extract and Transform Schema**")
+    # Get the object from the event and show its content type
+    logging.info("Get the object from the event")
+    print(event)
     object_get_context = event["Records"][0]
     s3_data = object_get_context["s3"]
     object = s3_data["object"]
-    # Get the object from the event and show its content type
+    # get the bucket name
     bucket_name = s3_data['bucket']['name']
+    # get the file name and the directory path
     file_name = urllib.parse.unquote_plus(s3_data['object']['key'], encoding='utf-8')
-    print(f"Bucket: {bucket_name}")
-    print(f"File name: {file_name}")
-    print(f"Extension: {file_name.split('.')[-1]}")
-    if str(file_name.split('.')[-1]).lower() == 'xlsx': 
-        try:
-            s3 = boto3.resource('s3')
-            excel_file_path = os.path.join(tmp_file_dir,file_name)
-            s3.Bucket(bucket_name).download_file(file_name, excel_file_path)
-            obj_data_builder = Data_Builder(tmp_data_dir= tmp_file_dir)
-            schema_name = obj_data_builder.data_builder(bucket_name, excel_file_path)
-            print('*****Process Done*****')
-            # Call the step function
-            # The transaction id is the step function's name
-            transaction_id = str(uuid.uuid1())
-            input = {
-                "schema_name": schema_name
-            }
-            response = step_function.start_execution(
-                stateMachineArn= '',
-                name= transaction_id,
-                input= json.dumps(input)
-            )
-            return {
-                'schema_name': schema_name,
-                'response': 200
-            } 
-        except Exception as e:
-            print(e)
-            print('Error getting object {} from bucket {}. Make sure they exist and your bucket is in the same region as this function.'.format(file_name, bucket_name))
-            raise e
-
-
+    file_full_path = str(os.path.dirname(file_name)).strip('/')
+    # validate the file, it has to be a Excel and come from the subfolder mdm and data-dictionaries
+    if str(file_name.split('.')[-1]).lower() == 'xlsx' and file_full_path in ['amundsen/mdm','amundsen/data-dictionaries']: 
+        excel_file_path = os.path.join(tmp_file_dir,file_name.split('/')[-1])
+        if file_full_path:
+            file_full_path = f"{file_full_path}/transform_data"
+        else:
+            file_full_path='transform_data'
+        # Download the file in to a temp folder
+        s3 = boto3.resource('s3')
+        s3.Bucket(bucket_name).download_file(file_name, excel_file_path)
+        # Run the code that extract and transfor the data
+        obj_data_builder = Data_Builder(tmp_data_dir= tmp_file_dir)
+        schema_name = obj_data_builder.data_builder(bucket_name, excel_file_path, file_full_path)
+        # Call the step function
+        # The transaction id is the step function's name
+        transaction_id = str(uuid.uuid1())
+        input = {
+            "schema_name": schema_name,
+            "bucket_name": bucket_name,
+            "data_full_path": file_full_path
+        }
+        # call the step function
+        response = step_function.start_execution(
+            stateMachineArn= 'arn:aws:states:us-east-1:310946103770:stateMachine:Amundsen-DataBuilder-StepFunction',
+            name= transaction_id,
+            input= json.dumps(input)
+        )
+        return {
+            'bucket_name': bucket_name,
+            'data_full_path': file_full_path,
+            'schema_name': schema_name,
+            'response': 200
+        } 
+        logging.info('*****Process Done*****')
 
 # # Uncoment this code when run the lambda function locally
 # if __name__ == '__main__':

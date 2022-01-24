@@ -61,6 +61,3 @@ class File_Utils:
             for data_asset in data_asset_list_raw:
                 data_asset_list.append(data_asset.strip().lower())
         return data_asset_list
-    
-
-    

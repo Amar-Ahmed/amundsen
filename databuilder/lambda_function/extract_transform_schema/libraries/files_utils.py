@@ -3,9 +3,9 @@ import logging
 import pandas as pd
 import re
 from typing import List, Union, Any
-# Download/Install NLP Dependencies
 import spacy
-nlp_sm = spacy.load("en_core_web_sm")
+#nlp_sm = spacy.load("en_core_web_sm")
+nlp_sm = spacy.load('/opt/python/lib/python3.7/site-packages/en_core_web_sm/en_core_web_sm-3.2.0')
 
 
 class File_Utils:

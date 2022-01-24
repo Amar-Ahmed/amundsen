@@ -52,21 +52,22 @@ LOGGER = logging.getLogger(__name__)
 class Data_Loader:
 
     def __init__(self, csv_folder: str):
-        self._es_host = Config.get_elastic_search_host()
-        self._es_port = Config.get_elastic_search_port()
+        config = Config()
+        self._es_host = config.get_elastic_search_host()
+        self._es_port = config.get_elastic_search_port()
         self._elastic_search = Elasticsearch([
             {'host': self._es_host, 'port': self._es_port},
         ])
-        self._neo_host = Config.get_neo4j_host()
-        self._neo_port = Config.get_neo4j_port()
+        self._neo_host = config.get_neo4j_host()
+        self._neo_port = config.get_neo4j_port()
         self._neo4j_endpoint = f'bolt://{self._neo_host}:{self._neo_port}'
-        self._neo4j_user = Config.get_neo4j_user()
-        self._neo4j_password = Config.get_neo4j_password()
+        self._neo4j_user = config.get_neo4j_user()
+        self._neo4j_password = config.get_neo4j_password()
         self._folder_name = csv_folder
 
     def run_csv_job(self, file_loc, job_name, model):
         """ run the task that create nodes and relationship extracting the information for a CSV file"""
-        tmp_folder = f'/var/tmp/amundsen/{job_name}'
+        tmp_folder = f'/tmp/amundsen/{job_name}'
         node_files_folder = f'{tmp_folder}/nodes'
         relationship_files_folder = f'{tmp_folder}/relationships'
         csv_extractor = CsvExtractor()
@@ -95,7 +96,7 @@ class Data_Loader:
 
     def run_table_badge_job(self, table_path, badge_path):
         """ run the task to create nodes and relationship extracting the information for a CSV file"""
-        tmp_folder = '/var/tmp/amundsen/table_badge'
+        tmp_folder = '/tmp/amundsen/table_badge'
         node_files_folder = f'{tmp_folder}/nodes'
         relationship_files_folder = f'{tmp_folder}/relationships'
         extractor = CsvTableBadgeExtractor()
@@ -125,7 +126,7 @@ class Data_Loader:
 
     def run_table_column_job(self, table_path, column_path):
         """ run the task that create nodes and relationship extracting the information for the Column CSV file"""
-        tmp_folder = '/var/tmp/amundsen/table_column_'
+        tmp_folder = '/tmp/amundsen/table_column'
         node_files_folder = f'{tmp_folder}/nodes'
         relationship_files_folder = f'{tmp_folder}/relationships'
         extractor = CsvTableColumnExtractor()
@@ -155,7 +156,7 @@ class Data_Loader:
 
     def create_last_updated_job(self):
         # loader saves data to these folders and publisher reads it from here
-        tmp_folder = '/var/tmp/amundsen/last_updated_data'
+        tmp_folder = '/tmp/amundsen/last_updated_data'
         node_files_folder = f'{tmp_folder}/nodes'
         relationship_files_folder = f'{tmp_folder}/relationships'
         task = DefaultTask(extractor=EsLastUpdatedExtractor(),
@@ -184,7 +185,7 @@ class Data_Loader:
 
     def create_dashboard_tables_job(self, dashboard_file_path: str):
         # loader saves data to these folders and publisher reads it from here
-        tmp_folder = '/var/tmp/amundsen/dashboard_table'
+        tmp_folder = '/tmp/amundsen/dashboard_table'
         node_files_folder = f'{tmp_folder}/nodes'
         relationship_files_folder = f'{tmp_folder}/relationships'
         csv_extractor = CsvExtractor()
@@ -236,8 +237,7 @@ class Data_Loader:
                                         if None is given (default) it uses the `Table` query baked into the Publisher
         """
         # loader saves data to this location and publisher reads it from here
-        extracted_search_data_path = '/var/tmp/amundsen/search_data.json'
-
+        extracted_search_data_path = '/tmp/amundsen/search_data.json'
         task = DefaultTask(loader=FSElasticsearchJSONLoader(),
                         extractor=Neo4jSearchDataExtractor(),
                         transformer=NoopTransformer())
@@ -274,7 +274,7 @@ class Data_Loader:
 
     def run_delete_data_job(self, schema: str):
         """ Delete all the nodes and relationship related to the schema"""
-        LOGGER.info("Start process to delete stale data")
+        logging.info("Start process to delete stale data")
         # getting todays date
         today_date = date.today().strftime("%Y-%m-%d")
         DEFAULT_TARGET_RELATIONS = [
@@ -311,7 +311,7 @@ class Data_Loader:
         # delete the relation that does not have the schema in the key
         for label in DEFAULT_TARGET_RELATIONS:
             cypher.delete_relationship(label=label, schema=schema)
-        LOGGER.info("End process to delete stale data")
+        logging.info("End process to delete stale data")
 
     def run_data_loader(self, schema: str):
         # Uncomment next line to get INFO level logging
@@ -319,10 +319,10 @@ class Data_Loader:
 
         # This task will delete the stale data from the schema that come as parameter
         self.run_delete_data_job(schema)
-
+        print(f"tmp folder: {self._folder_name}")
         self.run_table_column_job(
-            f'{self._folder_name}/tmp/data_table.csv', 
-            f'{self._folder_name}/tmp/data_column.csv'
+             f'{self._folder_name}/tmp/data_table.csv', 
+             f'{self._folder_name}/tmp/data_column.csv'
         )
         self.run_csv_job(
             f'{self._folder_name}/tmp/data_schema_description.csv', 
@@ -334,7 +334,7 @@ class Data_Loader:
             'test_programmatic_source',
             'databuilder.models.table_metadata.TableMetadata'
         )
-        dashboard_file_path = str(os.path.join(self._folder_name,'tmp','data_dashboard_table.csv')) 
+        dashboard_file_path = str(os.path.join(self._folder_name,'/tmp','data_dashboard_table.csv')) 
         self.create_dashboard_tables_job(dashboard_file_path).launch()
         self.create_last_updated_job().launch()
         job_es_table = self.create_es_publisher_sample_job(
@@ -344,25 +344,4 @@ class Data_Loader:
             model_name='databuilder.models.table_elasticsearch_document.TableESDocument')
         job_es_table.launch()
 
-        # job_es_user = create_es_publisher_sample_job(
-        #     elasticsearch_index_alias='user_search_index',
-        #     elasticsearch_doc_type_key='user',
-        #     model_name='databuilder.models.user_elasticsearch_document.UserESDocument',
-        #     entity_type='user',
-        #     elasticsearch_mapping=USER_ELASTICSEARCH_INDEX_MAPPING)
-        # job_es_user.launch()
 
-        # job_es_dashboard = create_es_publisher_sample_job(
-        #     elasticsearch_index_alias='dashboard_search_index',
-        #     elasticsearch_doc_type_key='dashboard',
-        #     model_name='databuilder.models.dashboard_elasticsearch_document.DashboardESDocument',
-        #     entity_type='dashboard',
-        #     elasticsearch_mapping=DASHBOARD_ELASTICSEARCH_INDEX_MAPPING)
-        # job_es_dashboard.launch()
-
-
-# if __name__ == '__main__':
-#     schema = 'mdm_pmi_spp'
-#     print(folder_name)
-#     run_data_loader(schema)
-#     #run_delete_data_job(schema)
