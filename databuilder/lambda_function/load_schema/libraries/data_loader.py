@@ -277,6 +277,10 @@ class Data_Loader:
         logging.info("Start process to delete stale data")
         # getting todays date
         today_date = date.today().strftime("%Y-%m-%d")
+
+        # delete elasticsearch index
+        self._elastic_search.indices.delete(index='_all', ignore=[400, 404])
+
         DEFAULT_TARGET_RELATIONS = [
             "TAG_OF",
             "TAGGED_BY",
