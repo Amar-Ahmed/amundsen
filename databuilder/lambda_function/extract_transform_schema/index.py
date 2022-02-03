@@ -49,7 +49,8 @@ def lambda_handler(event, context):
         input = {
             "schema_name": schema_name,
             "bucket_name": bucket_name,
-            "data_full_path": file_full_path
+            "data_full_path": file_full_path,
+            "file_name": file_name.split('/')[-1]
         }
         # call the step function
         response = step_function.start_execution(
@@ -61,6 +62,7 @@ def lambda_handler(event, context):
             'bucket_name': bucket_name,
             'data_full_path': file_full_path,
             'schema_name': schema_name,
+            'file_name': file_name.split('/')[-1],
             'response': 200
         } 
         logging.info('*****Process Done*****')

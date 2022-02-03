@@ -58,3 +58,13 @@ class Config:
         # return  os.getenv('CREDENTIALS_NEO4J_PROXY_PASSWORD','test')
         return  self.config.get('password','test')
 
+    def get_recipient_alert(self):
+        parameter = ssm.get_parameter(Name='amundsen-recipient-alert', WithDecryption=True)
+        return parameter['Parameter']['Value']
+    
+    def get_sender_alert(self):
+        parameter = ssm.get_parameter(Name='amundsen-sender-alert', WithDecryption=True)
+        return parameter['Parameter']['Value']
+
+    def get_aws_region(self):
+        return "us-east-1"
