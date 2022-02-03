@@ -4,6 +4,7 @@ import os
 import logging
 import sys
 from libraries.data_loader import Data_Loader
+from libraries.email import Email
 
 logging.basicConfig(level=logging.INFO)
 tmp_dir = "/tmp/" 
@@ -23,6 +24,8 @@ def lambda_handler(event, context):
     # Get the transform data directory path
     data_full_path = event['data_full_path']
     logging.info(f"Transform data folder:: {data_full_path}")
+    # Get the excel file name
+    excel_file_name = event['file_name']
     # download transfor data
     s3 = boto3.resource('s3')
     csv_bucket = s3.Bucket(bucket_name)
@@ -47,6 +50,9 @@ def lambda_handler(event, context):
     # run the data loader process
     data_loader = Data_Loader(csv_folder='')
     data_loader.run_data_loader(schema_name)
+    # Sending the email alert
+    email = Email(schema_name=schema_name, file_name=excel_file_name)
+    email.send_email()
     return { 
         "statusCode": 200,
         "run_domain_process": True,
