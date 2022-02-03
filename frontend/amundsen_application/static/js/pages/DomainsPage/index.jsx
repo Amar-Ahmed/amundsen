@@ -48,7 +48,7 @@ export class DomainsPage extends Component {
               <span className="capitalize" tabIndex={0}>{domain.domain_name}</span>
             </td>
             <td className="domains-list-description-container">
-              <Truncate id={domain.domain_name.replace(/\s+/, '-')} text={domain.domain_description} />
+              <Truncate id={domain.domain_name.replace(/\s+/, '-')} text={domain.domain_description} role='domain'/>
             </td>
           </tr>
         );
