@@ -29,6 +29,7 @@ export class DomainsPage extends Component {
           <tr>
             <td className="title-3">
               <a
+                id={`domain-anchor-${domain.domain_name.replace(/\s+/, '-')}`}
                 className="capitalize"
                 href={`/domains/${domain.domain_name}/`}
               >
@@ -36,7 +37,7 @@ export class DomainsPage extends Component {
               </a>
             </td>
             <td className="domains-list-description-container">
-              <Truncate id={domain.domain_name.replace(/\s+/, '-')} text={domain.domain_description} />
+              <Truncate id={domain.domain_name.replace(/\s+/, '-')} text={domain.domain_description} role='domain'/>
             </td>
           </tr>
         );
@@ -44,7 +45,7 @@ export class DomainsPage extends Component {
         return (
           <tr>
             <td className="title-3">
-              <span className="capitalize">{domain.domain_name}</span>
+              <span className="capitalize" tabIndex={0}>{domain.domain_name}</span>
             </td>
             <td className="domains-list-description-container">
               <Truncate id={domain.domain_name.replace(/\s+/, '-')} text={domain.domain_description} />

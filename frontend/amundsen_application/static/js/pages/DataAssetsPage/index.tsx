@@ -51,7 +51,7 @@ export class DataAssetsPage extends React.Component<DataAssetProps> {
               </a>
             </td>
             <td className="data-asset-list-description-container">
-              <Truncate id={`${asset.schema.replace(/\s+/, '-')}-description`} text={asset.schema_description} />
+              <Truncate id={`${asset.schema.replace(/\s+/, '-')}-description`} text={asset.schema_description} role='data-asset'/>
             </td>
           </tr>
         );

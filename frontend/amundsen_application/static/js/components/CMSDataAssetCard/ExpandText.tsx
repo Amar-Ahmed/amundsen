@@ -29,6 +29,11 @@ export default function ExpandText({
   const ellipsis = isNeeded ? '...' : '';
   const shownText = `${text.substring(0, limit)}${ellipsis}`;
 
+  let verbiage = ''
+  if (id?.includes('data-asset')) {
+     verbiage = id.replace(/-/g, ' ').replace(/_/g, ' ').split(" ").slice(2).join(" ");
+  }
+
   return (
     <div className={className}>
       <span id={`${id}-textfield`} tabIndex={0}>
@@ -41,7 +46,7 @@ export default function ExpandText({
           onClick={() => setIsExpanded(true)}
         >
           {'more'}
-          <span className='hide-element'>{`${id}-show-more-less-toggle`}</span>
+          <span className='hide-element'>{` toggle button for ${verbiage} data asset`}</span>
         </button>
       )}
       <DataAssetModal

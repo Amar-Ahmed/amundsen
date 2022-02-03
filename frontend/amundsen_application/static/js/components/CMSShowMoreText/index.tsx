@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 import CMSLink from 'components/CMSLinkify';
 import '../../GlobalStyles/hide-element.css'
+import { SHOW_MORE_TEXT, SHOW_LESS_TEXT } from '../../constants'
 
 type CMSShowMoreTextProps = {
   text: string;
@@ -27,6 +28,12 @@ export default function CMSShowMoreText({
   const shownText =
     !isNeeded || isExpanded ? text : `${text.substring(0, limit)}${ellipsis}`;
 
+  let verbiage = ''
+  if (id?.includes('domain')) {
+    console.log(id)
+     verbiage = id?.replace(/-/g, ' ').split(" ").slice(1).join(" ");
+  }
+
   return (
     <div className={className}>
       <span id={`${id}-textfield`} tabIndex={0}>
@@ -39,8 +46,8 @@ export default function CMSShowMoreText({
           className="display--inline-block btn btn-link"
           onClick={() => setIsExpanded(!isExpanded)}
         >
-          {isExpanded ? '...less' : 'more'}
-          <span className='hide-element'>{`${id}-show-more-less-toggle`}</span>
+          {isExpanded ? SHOW_LESS_TEXT : SHOW_MORE_TEXT}
+          <span className='hide-element'>{` toggle button for ${verbiage} domain`}</span>
         </button>
       )}
     </div>
