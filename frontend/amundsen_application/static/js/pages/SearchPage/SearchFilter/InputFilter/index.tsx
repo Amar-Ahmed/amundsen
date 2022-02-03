@@ -80,6 +80,7 @@ export class InputFilter extends React.Component<
           id={`${categoryId}-input-field`}
           onChange={this.onInputChange}
           value={this.state.value}
+          aria-label={`${categoryId} text field`}
         />
         <button id={`${categoryId}-apply-button`} name={categoryId} className="btn btn-default" type="submit">
           {APPLY_BTN_TEXT}
