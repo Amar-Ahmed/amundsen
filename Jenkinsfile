@@ -14,7 +14,7 @@ spec:
     image: python:3.10
     command: ['cat']
     tty: true
-      - name: kaniko
+  - name: kaniko
     image: gcr.io/kaniko-project/executor:debug
     imagePullPolicy: Always
     command: ['/busybox/cat']
