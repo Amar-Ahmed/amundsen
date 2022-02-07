@@ -16,6 +16,7 @@ spec:
     tty: true
 """
     }
+    docker { image 'node:12.22.10-alpine' }
   }
   stages {
     // Add any other stages and/or steps to complete the job
@@ -25,7 +26,7 @@ spec:
 
       // }
             steps {
-       sh 'npm -v'
+       sh 'node --version'
         }
     }  
 }
