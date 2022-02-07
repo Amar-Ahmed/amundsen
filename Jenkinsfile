@@ -14,6 +14,37 @@ spec:
     image: python:3.10
     command: ['cat']
     tty: true
+      - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    imagePullPolicy: Always
+    command: ['/busybox/cat']
+    tty: true
+    resources:
+      limits:
+        cpu: 1000m   
+        memory: 2048Mi        
+  - name: jfrogcli
+    image: docker.bintray.io/jfrog/jfrog-cli-go:latest
+    command: ['cat']
+    tty: true
+    env:
+      - name: DOCKER_HOST
+        value: tcp://localhost:2375
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 3072Mi
+  - name: docker-daemon
+    image: docker:19.03.1-dind
+    securityContext:
+      privileged: true
+    env:
+      - name: DOCKER_TLS_CERTDIR
+        value: ""
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2048Mi   
 """
     }                             
   }
