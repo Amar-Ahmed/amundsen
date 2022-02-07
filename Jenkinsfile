@@ -28,7 +28,7 @@ spec:
       steps {
         sh 'ls' 
         sh 'cd frontend'
-        sh 'docker build --no-cache -f .\public.Dockerfile .'
+        sh 'docker build --no-cache -f public.Dockerfile .'
       }
       
 
