@@ -27,6 +27,8 @@ spec:
     stage('ls dir') {
       steps {
         sh 'ls' 
+        sh 'sudo yum install docker-engine -y'
+        sh 'sudo service docker start'
         sh 'docker --version'
         sh 'cd frontend'
         sh 'docker build --no-cache -f public.Dockerfile .'
