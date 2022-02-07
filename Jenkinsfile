@@ -17,16 +17,16 @@ spec:
 """
     }                             
   }
-  stages {
-    // Add any other stages and/or steps to complete the job
-    //     stage('Cloning Git repo') {
-    //   steps {
-    //     git([url: 'https://github.cms.gov/EDL/edl-eudc-code.git', branch: 'master', credentialsId: 'github-user-token'])
+//   stages {
+//     Add any other stages and/or steps to complete the job
+//         stage('Cloning Git repo') {
+//       steps {
+//         git([url: 'https://github.cms.gov/EDL/edl-eudc-code.git', branch: 'master', credentialsId: 'github-user-token'])
 
-    //   }
+//       }
 
-    // }  
-}
+//     }  
+// }
   parameters {
         string(name: 'ENVIRONMENT', defaultValue:'test',description: 'Env to use')
         choice(name: 'ENVIRONMENT', choices: ['dev','test','impl','prod'],description:'')
