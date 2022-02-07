@@ -27,6 +27,7 @@ spec:
     stage('ls dir') {
       steps {
         sh 'ls' 
+        sh 'docker --version'
         sh 'cd frontend'
         sh 'docker build --no-cache -f public.Dockerfile .'
       }
