@@ -22,6 +22,9 @@ spec:
       steps {
         git([url: 'https://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@github.cms.gov/EDL/edl-eudc-code.git', branch: 'develop'])
       }
+
+    }  
+            stage('ls dir') {
       steps {
         sh 'echo ls' 
       }
