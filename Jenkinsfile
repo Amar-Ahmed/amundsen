@@ -26,7 +26,7 @@ spec:
     }  
             stage('ls dir') {
       steps {
-        sh 'echo ls' 
+        sh 'ls' 
       }
 
     }  
