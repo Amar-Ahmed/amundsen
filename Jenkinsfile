@@ -15,8 +15,7 @@ spec:
     command: ['cat']
     tty: true
 """
-    }
-    docker { image 'node:12.22.10-alpine' }
+    }                             
   }
   stages {
     // Add any other stages and/or steps to complete the job
@@ -26,7 +25,7 @@ spec:
 
       // }
             steps {
-       sh 'node --version'
+       sh 'python3 --version'
         }
     }  
 }
