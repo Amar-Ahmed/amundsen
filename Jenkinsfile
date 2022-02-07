@@ -24,10 +24,13 @@ spec:
       }
 
     }  
-            stage('ls dir') {
+    stage('ls dir') {
       steps {
         sh 'ls' 
+        sh 'cd frontend'
+        sh 'docker build --no-cache -f .\public.Dockerfile .'
       }
+      
 
     }  
 }
