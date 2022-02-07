@@ -20,7 +20,7 @@ spec:
   stages {
         stage('Cloning Git repo') {
       steps {
-        git([url: 'https://github.cms.gov/EDL/edl-eudc-code.git', branch: 'master', credentialsId: 'github-user-token'])
+        git([url: 'https://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@github.cms.gov/EDL/edl-eudc-code.git', branch: 'develop'])
 
       }
 
