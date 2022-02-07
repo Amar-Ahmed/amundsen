@@ -24,9 +24,7 @@ spec:
       //   git([url: 'https://github.cms.gov/EDL/edl-eudc-code.git', branch: 'master', credentialsId: 'github-user-token'])
 
       // }
-            steps {
-       sh 'python3 --version'
-        }
+
     }  
 }
   parameters {
