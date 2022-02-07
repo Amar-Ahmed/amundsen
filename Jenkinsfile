@@ -18,7 +18,6 @@ spec:
     }                             
   }
   stages {
-    Add any other stages and/or steps to complete the job
         stage('Cloning Git repo') {
       steps {
         git([url: 'https://github.cms.gov/EDL/edl-eudc-code.git', branch: 'master', credentialsId: 'github-user-token'])
