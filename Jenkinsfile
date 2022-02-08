@@ -84,7 +84,9 @@ spec:
 		   '''
        echo "kinoko directory"
 		   sh 'pwd'
-		
+       sh '''#!/busybox/sh
+            /kaniko/executor --context `/home/jenkins/agent/workspace/EDL-Eudc2/frontend/public.Dockerfile` --skip-tls-verify --no-push --destination=devops-cbc-pipeline-primary:debug --tarPath=${WORKSPACE}/image/amundsen-frontend.tar
+          '''
 		  //  dir('definitions') {
 		  //     script 
 		  //     {
@@ -93,7 +95,7 @@ spec:
 			  
 			  
 			//   sh '''#!/busybox/sh
-			//   /kaniko/executor --context `pwd` --skip-tls-verify --no-push -c /workspace --dockerfile ${WORKSPACE}/definitions/MDM-2021-Cloudbees-Core-DevOps/Dockerfile --destination=devops-cbc-pipeline-primary:debug --tarPath=${WORKSPACE}/image/MDM-2021-Cloudbees-Core-DevOps.tar
+			//   /kaniko/executor --context `pwd` --skip-tls-verify --no-push -c /workspace --dockerfile ${WORKSPACE}/definitions/MDM-2021-Cloudbees-Core-DevOps/Dockerfile --destination=devops-cbc-pipeline-primary:debug --tarPath=${WORKSPACE}/image/amundsen-frontend.tar
 			//   ls -altr
 			  
 			//   '''
@@ -105,8 +107,9 @@ spec:
 		   sh '''#!/busybox/sh
 		   ls -altr ${WORKSPACE}/image/
 		   '''
-		   
-		   
+        echo "last step"
+		    sh 'pwd'
+        sh 'ls' 
 		   
 		}
 	  }
