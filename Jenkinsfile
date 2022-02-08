@@ -85,7 +85,7 @@ spec:
        echo "kinoko directory"
 		   sh 'pwd'
        sh '''#!/busybox/sh
-            /kaniko/executor --context `pwd` --skip-tls-verify --no-push -c /workspace --dockerfile ${WORKSPACE}/frontend/public.Dockerfile --destination=devops-cbc-pipeline-primary:debug --tarPath=${WORKSPACE}/image/amundsen-frontend.tar
+            /kaniko/executor --context `pwd` --skip-tls-verify --no-push -c /workspace --dockerfile ${WORKSPACE}/metadata/public.Dockerfile --destination=pipeline-primary:debug --tarPath=${WORKSPACE}/image/amundsen-metadata.tar
           '''
 		  //  dir('definitions') {
 		  //     script 
