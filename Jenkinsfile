@@ -49,22 +49,64 @@ spec:
     }                             
   }
   stages {
-        stage('Cloning Git repo') {
+    stage('Cloning Git repo') {
       steps {
         git([url: 'https://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@github.cms.gov/EDL/edl-eudc-code.git', branch: 'develop'])
       }
 
     }  
+    
     stage('ls dir') {
       steps {
         sh 'ls' 
-        sh 'docker --version'
-        sh 'cd frontend'
-        sh 'docker build --no-cache -f public.Dockerfile .'
       }
       
+      
 
-    }  
+    } 
+
+    stage('Get Dockerfile From Version Control') {      
+	  steps 
+	  {
+        // get the dockerfile checked out to the Kaniko container, so it can find it  does $WORKSPACE mount here?
+		container(name: 'kaniko', shell: '/busybox/sh') 
+		{
+		   echo "The Cloudbees Core execution workspace environment variable value in Kaniko container is: $WORKSPACE"
+		
+		   // creating image directory to place image into
+		   sh '''#!/busybox/sh
+		   mkdir ${WORKSPACE}/image/
+		   '''
+		   
+		
+		   dir('definitions') 
+		   {
+		      script 
+		      {
+			     handleSCMRepoCheckout('MDMGHEAutomationCreds', "https://github.com/Amar-Ahmed/docker-file.git", "master")
+		      }
+			  
+			  
+			  sh '''#!/busybox/sh
+			  /kaniko/executor --context `pwd` --skip-tls-verify --no-push -c /workspace --dockerfile ${WORKSPACE}/definitions/MDM-2021-Cloudbees-Core-DevOps/Dockerfile --destination=devops-cbc-pipeline-primary:debug --tarPath=${WORKSPACE}/image/MDM-2021-Cloudbees-Core-DevOps.tar
+			  ls -altr
+			  
+			  '''
+			  
+		   } // end dir
+		   
+		   // figure out where image was written to locally within Kaniko container
+		   
+		   sh '''#!/busybox/sh
+		   ls -altr ${WORKSPACE}/image/
+		   '''
+		   
+		   
+		   
+		}
+	  }
+	  
+	}  
 }
   parameters {
         string(name: 'ENVIRONMENT', defaultValue:'test',description: 'Env to use')
