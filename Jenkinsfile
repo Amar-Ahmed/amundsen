@@ -1,3 +1,8 @@
+def handleSCMRepoCheckout(urlToUse, branchToGet) {     
+	    
+	git  url: urlToUse, branch: branchToGet		
+	
+}
 pipeline {
   agent {
     kubernetes {
