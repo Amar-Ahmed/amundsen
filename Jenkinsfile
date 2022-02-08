@@ -75,31 +75,30 @@ spec:
 	  steps 
 	  {
         // get the dockerfile checked out to the Kaniko container, so it can find it  does $WORKSPACE mount here?
-		container(name: 'kaniko', shell: '/busybox/sh') 
-		{
+		container(name: 'kaniko', shell: '/busybox/sh') {
 		   echo "The Cloudbees Core execution workspace environment variable value in Kaniko container is: $WORKSPACE"
 		
 		   // creating image directory to place image into
 		   sh '''#!/busybox/sh
 		   mkdir ${WORKSPACE}/image/
 		   '''
-		   
+       echo "kinoko directory"
+		   sh 'pwd'
 		
-		   dir('definitions') 
-		   {
-		      script 
-		      {
-			     handleSCMRepoCheckout("https://github.com/Amar-Ahmed/docker-file.git", "master")
-		      }
+		  //  dir('definitions') {
+		  //     script 
+		  //     {
+			//      handleSCMRepoCheckout("https://github.com/Amar-Ahmed/docker-file.git", "master")
+		  //     }
 			  
 			  
-			  sh '''#!/busybox/sh
-			  /kaniko/executor --context `pwd` --skip-tls-verify --no-push -c /workspace --dockerfile ${WORKSPACE}/definitions/MDM-2021-Cloudbees-Core-DevOps/Dockerfile --destination=devops-cbc-pipeline-primary:debug --tarPath=${WORKSPACE}/image/MDM-2021-Cloudbees-Core-DevOps.tar
-			  ls -altr
+			//   sh '''#!/busybox/sh
+			//   /kaniko/executor --context `pwd` --skip-tls-verify --no-push -c /workspace --dockerfile ${WORKSPACE}/definitions/MDM-2021-Cloudbees-Core-DevOps/Dockerfile --destination=devops-cbc-pipeline-primary:debug --tarPath=${WORKSPACE}/image/MDM-2021-Cloudbees-Core-DevOps.tar
+			//   ls -altr
 			  
-			  '''
+			//   '''
 			  
-		   } // end dir
+		  //  }
 		   
 		   // figure out where image was written to locally within Kaniko container
 		   
