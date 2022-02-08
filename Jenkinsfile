@@ -63,6 +63,7 @@ spec:
     
     stage('ls dir') {
       steps {
+        sh 'pwd'
         sh 'ls' 
       }
       
