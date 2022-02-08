@@ -88,7 +88,7 @@ spec:
 		   {
 		      script 
 		      {
-			     handleSCMRepoCheckout('MDMGHEAutomationCreds', "https://github.com/Amar-Ahmed/docker-file.git", "master")
+			     handleSCMRepoCheckout("https://github.com/Amar-Ahmed/docker-file.git", "master")
 		      }
 			  
 			  
