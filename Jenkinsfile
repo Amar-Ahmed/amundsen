@@ -81,8 +81,10 @@ spec:
       sh '''
         apk add docker
 			  
-			  echo "Step 1"
+			  echo "Step 1.0"
 			  docker image ls
+        echo "Step 5.0..."
+			  /usr/local/bin/jfrog config show cms-artifactory
 			  docker pull artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim 
 		  '''  
       }
