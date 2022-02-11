@@ -77,6 +77,16 @@ spec:
       withCredentials([usernamePassword(credentialsId: 'JFROG_CLI_CREDS', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
       sh '/usr/local/bin/jfrog config add cms-artifactory --artifactory-url=https://artifactory.cloud.cms.gov/artifactory --user="${USER}" --password="${PASS}"'
           }
+      echo 'loggined into jFrog'
+      sh '''
+        apk add docker
+			  
+			  echo "Step 1"
+			  docker image ls
+			  docker pull artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim 
+		  '''
+		  		  
+		  sh '''
       }
 
 		   echo "The Cloudbees Core execution workspace environment variable value in Kaniko container is: $WORKSPACE"
