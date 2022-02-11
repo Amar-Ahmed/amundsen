@@ -84,20 +84,20 @@ spec:
 			  echo "Step 1"
 			  docker image ls
 			  docker pull artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim 
-		  '''
-		  		  
-		  sh '''
+		  '''  
       }
 
 		   echo "The Cloudbees Core execution workspace environment variable value in Kaniko container is: $WORKSPACE"
 		
 		   // creating image directory to place image into
-		   sh '''#!/busybox/sh
+		   sh '''
+       #!/busybox/sh
 		   mkdir ${WORKSPACE}/image/
 		   '''
        echo "kinoko directory"
 		   sh 'pwd'
-       sh '''#!/busybox/sh
+       sh '''
+       #!/busybox/sh
             /kaniko/executor --context `pwd` --skip-tls-verify --no-push -c /workspace --dockerfile ${WORKSPACE}/metadata/public.Dockerfile --destination=pipeline-primary:debug --tarPath=${WORKSPACE}/image/amundsen-metadata.tar
           '''
 		  //  dir('definitions') {
