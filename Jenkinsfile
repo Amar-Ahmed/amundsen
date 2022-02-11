@@ -73,9 +73,12 @@ spec:
 	  {
         // get the dockerfile checked out to the Kaniko container, so it can find it  does $WORKSPACE mount here?
 		container(name: 'kaniko', shell: '/busybox/sh') {
+      container('jfrogcli'){
       withCredentials([usernamePassword(credentialsId: 'JFROG_CLI_CREDS', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
       sh '/usr/local/bin/jfrog config add cms-artifactory --artifactory-url=https://artifactory.cloud.cms.gov/artifactory --user="${USER}" --password="${PASS}"'
           }
+      }
+
 		   echo "The Cloudbees Core execution workspace environment variable value in Kaniko container is: $WORKSPACE"
 		
 		   // creating image directory to place image into
