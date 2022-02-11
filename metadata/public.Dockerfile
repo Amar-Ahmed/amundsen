@@ -1,4 +1,4 @@
-FROM python:3.7-slim as base
+FROM artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim as base
 WORKDIR /app
 RUN pip3 install gunicorn
 
@@ -25,7 +25,7 @@ ENV SQLALCHEMY_DATABASE_URI sqlite:///sessions.db
 # You will need to set these environment variables in order to use the oidc image
 # FLASK_OIDC_CLIENT_SECRETS - a path to a client_secrets.json file
 # FLASK_OIDC_SECRET_KEY - A secret key from your oidc provider
-# You will also need to mount a volume for the clients_secrets.json file.
+# You will also need to mount a volume for the clients_secrets.json file .
 
 FROM base as release
 RUN python3 setup.py install
