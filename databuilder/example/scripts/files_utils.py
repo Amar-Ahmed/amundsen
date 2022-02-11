@@ -3,12 +3,8 @@ import logging
 import pandas as pd
 import re
 from typing import List, Union, Any
-# Download/Install NLP Dependencies
-import nltk
-import textblob
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('brown')
+import spacy
+nlp_sm = spacy.load("en_core_web_sm")
 
 
 
@@ -22,7 +18,8 @@ class File_Utils:
     
     def fetch_contributor_name(self) -> str:
         """ parses contributor name from filename"""
-        contributor_name=str(self.file_name).split("_")[0]
+        index = self.file_name.rindex('_')
+        contributor_name=self.file_name[0:index]
         return contributor_name
 
 
@@ -35,6 +32,28 @@ class File_Utils:
             in source file"""
         xlsx_path=os.path.join(source_path,self.file_name)
         return xlsx_path
+
+    def get_nlp(text: str)-> list:
+        doc_sm = nlp_sm(text)
+        nouns = []
+        # get the nouns, proper noun, compund words, object of proposition and direct object from the table comment
+        for token in doc_sm:
+            if token.dep_ in ['dobj','pobj', 'compound'] or token.pos_ in ["NOUN", 'PROPN']:
+                nouns.append({
+                    'token': token,
+                    'type': token.dep_
+                })
+        # check the compound token and build the full word
+        noun_phrases = []
+        index = 0
+        while index < len(nouns):
+            if nouns[index]['type'] == 'compound':
+                noun_phrases.append(f"{nouns[index]['token']} {nouns[index+1]['token']}".lower())
+                index += 2
+            else:
+                noun_phrases.append(str(nouns[index]['token']).lower())
+                index += 1
+        return list(set(noun_phrases))
 
     @staticmethod
     def fetch_excel (directory: str) -> list:
@@ -69,25 +88,21 @@ class File_Utils:
     def check_tags(table_dataframe: pd.DataFrame) -> pd.DataFrame:
         """ Check for presence of tags for each table. Creates tags for tables that are missing
             returns the tables dataframe with updated tags column"""
-        
         df=table_dataframe
         for x in df.index:
-            tags=df['tags'][x]
+            tags=df['tags'][x] 
             row=str(df['description'][x])   
-            table_name=str(df['name'][x]).lower()
             table_comment=str(row)
-            # logging.info(f"Position: {x}, Table= {table_name},  tags = {tags}")
             # checks to see if tags are missing for a table and creates them if they are
             if not tags or File_Utils.isNaN(tags) or tags.replace(' ','') == '':
                 table_comment = re.sub(r"('|’)(s|S)","", table_comment)  
-                blob=textblob.TextBlob(table_comment)
-                noun_phrases=blob.noun_phrases
-                noun_phrases=list(set(noun_phrases))
-                noun_phrases.append('MDM')
-                # add tags to the tag column for that row (table)
-                df['tags'][x] = ','.join(noun_phrases).title()
+                df['tags'][x] = ','.join(File_Utils.get_nlp(table_comment)).title()
             else:
-                continue
+                # special character replace with no space
+                new_tag = re.sub(r'[\(|\)|\[|\]|\{|\}|\.|\|\!|\|\'|’"]*','',tags)
+                # special character replace with space
+                new_tag = re.sub(r'\/|--|_',' ',new_tag)
+                df['tags'][x] = new_tag
         return df
 
     @staticmethod
@@ -102,10 +117,8 @@ class File_Utils:
             table_comment=str(row)
             #checks to see if badges are missing and creates them if they are
             if not badges:
-                blob=textblob.TextBlob(table_comment)
-                noun_phrases=blob.noun_phrases
-                noun_phrases=list(set(noun_phrases))
-                df['badges'][x] = ','.join(noun_phrases).title()
+                table_comment = re.sub(r"('|’)(s|S)","", table_comment)  
+                df['badges'][x] = ','.join(File_Utils.get_nlp(table_comment)).title()
             else:
                 continue
         return df

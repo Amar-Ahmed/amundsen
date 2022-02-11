@@ -32,7 +32,7 @@ const StaticBadge: React.FC<BadgeStyleConfig> = ({
   displayName,
 }: BadgeStyleConfig) => (
   <span className={`static-badge flag label label-${style}`}>
-    <div className={`badge-overlay-${style}`}>{displayName}</div>
+    <div tabIndex={0} id={displayName ? displayName.replace(/\s+/, '-') + '-badge' : 'underfined'} className={`badge-overlay-${style}`}>{displayName}</div>
   </span>
 );
 

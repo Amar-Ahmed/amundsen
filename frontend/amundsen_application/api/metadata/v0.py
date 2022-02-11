@@ -792,15 +792,22 @@ def _get_related_dashboards_metadata(*, url: str) -> Dict[str, Any]:
         results_dict['status_code'] = getattr(e, 'code', HTTPStatus.INTERNAL_SERVER_ERROR)
         return results_dict
 
-@metadata_blueprint.route('/schemas', methods=['GET'])
+@metadata_blueprint.route('/schemas', methods=['GET', 'POST'])
 def get_schemas() -> Response:
     """
-    call the metadata service endpoint to get the list of all schemas from neo4j
+    call the metadata service endpoint to get the list of all schemas when is a
+    GET request and specific schema when is POST request from neo4j
     :return: a json output containing the list of all schemas, as 'schemas'
 
     """
     try:
-        url = app.config['METADATASERVICE_BASE'] + SCHEMAS_ENDPOINT
+        url = f"{app.config['METADATASERVICE_BASE']}{SCHEMAS_ENDPOINT}/"
+        # check if it is a post request to retrieve the schema name
+        if request.method == 'POST':
+            args = request.get_json()
+            schema_name = get_query_param(args, 'schema_name')
+            url = f"{url}{schema_name}"             
+
         response = request_metadata(url=url)
         status_code = response.status_code
 

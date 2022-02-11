@@ -42,11 +42,13 @@ class TableListItem extends React.Component<TableListItemProps, {}> {
     return (
       <li className="list-group-item clickable">
         <Link
+          id={`${table.name}-anchor`}
           className="resource-list-item table-list-item"
           to={this.getLink()}
         >
           <div className="resource-info">
             <span
+              id={`${table.name}-icon`}
               className={this.generateResourceIconClass(
                 table.database,
                 table.type
@@ -54,7 +56,7 @@ class TableListItem extends React.Component<TableListItemProps, {}> {
             />
             <div className="resource-info-text my-auto">
               <div className="resource-name title-2">
-                <div className="truncated">
+                <div id={`${table.schema}-${table.name}-text`} className="truncated">
                   {table.schema_description && (
                     <SchemaInfo
                       schema={table.schema}
@@ -69,7 +71,7 @@ class TableListItem extends React.Component<TableListItemProps, {}> {
                   resourceType={table.type}
                 /> */}
               </div>
-              <div className="body-secondary-3 truncated">
+              <div id={`${table.name.replace(/\s+/, '-')}-description`} className="body-secondary-3 truncated">
                 {table.description}
               </div>
             </div>

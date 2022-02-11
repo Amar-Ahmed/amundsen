@@ -42,6 +42,7 @@ export class NavBar extends React.Component<NavBarProps> {
       if (link.use_router) {
         return (
           <NavLink
+            id={`navlink-${link.label}`}
             className="title-3 border-bottom-white"
             key={index}
             to={link.href}
@@ -54,6 +55,7 @@ export class NavBar extends React.Component<NavBarProps> {
       }
       return (
         <a
+          id={`navlink-${link.label}`}
           className="title-3 border-bottom-white"
           key={index}
           href={link.href}
@@ -100,7 +102,7 @@ export class NavBar extends React.Component<NavBarProps> {
                     alt=""
                   />
                 )}
-                <span className="title-3">{getLogoTitle()}</span>
+                <span id="navbar-logo-title" className="title-3">{getLogoTitle()}</span>
               </Link>
             </div>
             {this.renderSearchBar()}

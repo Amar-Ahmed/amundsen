@@ -2065,7 +2065,7 @@ class Neo4jProxy(BaseProxy):
                               text=query_result['text'],
                               source=query_result['source'])
 
-# cms code
+    # cms code
     @timer_with_counter
     def get_schemas(self) -> List:
         """
@@ -2084,9 +2084,11 @@ class Neo4jProxy(BaseProxy):
         # so we get one description that include the table name related to it
         # and we remove that table name from the description to get the data asset
         for record in records:
-            schema = str(record['schema'].split('_')[1]).upper()
-            schema_title = record['description'].split('.')[0] 
-            schema_description = str(record['description']).replace(f"{schema_title}.",'')
+            schema = str(record['schema']).upper()
+            # schema = str(record['schema']).upper()
+            schema_title = record['description'].split('|')[0] 
+            schema_description = record['description'].split('|')[1]
+
             results.append(SchemaDetail(
                 schema=schema,
                 schema_title=schema_title,
@@ -2094,6 +2096,34 @@ class Neo4jProxy(BaseProxy):
                 )
             )
         return results
+
+    @timer_with_counter
+    def get_schema_detail(self, schema_name: str) -> Dict:
+        """
+        Get the schema detail with all the Data Asset Profile related to it
+        :return:
+        """
+        LOGGER.info('Get schema detail')
+        query = textwrap.dedent("""
+            MATCH (sh:Schema)-[:DESCRIPTION_OF]-(de:Description)
+            WHERE sh.name = $schema_name
+            RETURN sh.name AS schema, de.description AS description
+        """)
+        records = self._execute_cypher_query(statement=query,param_dict={'schema_name': schema_name})
+        record = records.single()
+        # check if the query return any record
+        if record:
+            schema = str(record['schema']).upper()
+            schema_title = record['description'].split('|')[0] 
+            schema_description = record['description'].split('|')[1]
+            return SchemaDetail(
+                schema= schema,
+                schema_title= schema_title,
+                schema_description= schema_description
+            )
+        return None
+
+    
 
 
     @timer_with_counter
@@ -2180,10 +2210,9 @@ class Neo4jProxy(BaseProxy):
             for data_asset in record['data_asset']:
                 if data_asset['name'] is None:
                     break
-                schema_name = str(data_asset['name'].split('_')[1]).upper()
-                schema_title = data_asset['description'].split('.')[0] 
-                schema_description = str(data_asset['description']).replace(f"{schema_title}.",'')
-                schema_title = f"{schema_name} {schema_title}"
+                schema_name = str(data_asset['name']).upper()
+                schema_title = data_asset['description'].split('|')[0] 
+                schema_description = data_asset['description'].split('|')[1]
                 data_asset_list.append({
                     'schema': schema_name,
                     'schema_description': schema_description.lstrip(),

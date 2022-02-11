@@ -17,7 +17,7 @@ export default function LinkEmail({ text }: LinkEmailProps) {
     for (let i = 1; i < parts.length; i += 2) {
       const link: string = parts[i] as string;
       parts[i] = (
-        <a key={'link' + i} href={`mailto:${link}`}>
+        <a id={`email-anchor-${link}`} key={'link' + i} href={`mailto:${link}`}>
           {link}
         </a>
       );

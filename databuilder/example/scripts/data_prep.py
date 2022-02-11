@@ -97,7 +97,7 @@ def create_columns(xls_path: str, contributor_name: str) -> None:
     data_frame_column.build_data_frame()
     data_frame_column.create_csv('sample_col.csv')
 
-def create_data_asset_profile(xls_path: str, contributor_name: str, df_tables: pd.DataFrame) -> None:
+def create_data_asset_profile(xls_path: str, contributor_name: str, df_tables: pd.DataFrame, data_asset_title: str) -> None:
     """ Extract the Data Asset Profile information, transform the data to a new format and
         load the new Data Frame in a new CSV
     """
@@ -118,7 +118,8 @@ def create_data_asset_profile(xls_path: str, contributor_name: str, df_tables: p
         sample_data_dir=sample_data_dir, 
         load_file_backup_dir=load_file_backup_dir, 
         worksheet_name='', 
-        contributor_name=contributor_name
+        contributor_name=contributor_name,
+        data_asset_title= data_asset_title
     )
     data_asset_description = data_frame_data_asset.get_data_asset_description()
     data_frame_description.build_data_frame(data_asset_description= data_asset_description)
@@ -139,7 +140,10 @@ def get_data(file: bytes) -> Tuple[str, str, str]:
     check =  all(item in list_sheet_name for item in sheet_names)
     if not check:
         raise Exception("Not all the sheet names are in the file")
-    return xls_path, contributor_name, file_name
+    # Getting the Data Asset Profile title from the cell A1  
+    sheet = xls.sheet_by_name('Data Asset Profile')
+    data_asset_title= sheet.cell_value(rowx=0, colx=0)
+    return xls_path, contributor_name, file_name, data_asset_title
 
 
 
@@ -149,7 +153,7 @@ def main() -> None:
         returning to the top of the loop and processing the next file """
     
     # call Nipun's shell script to download source file from s3
-    # download_files(get_contributor_files_script)
+    download_files()
     sys.stdout.write("begin processing source files\n")
     logging.basicConfig(level=logging.INFO)
 
@@ -160,11 +164,11 @@ def main() -> None:
     # to keep track of processing progress and control when to exit
     for file in source_files:
         # Get the path, file name and contributor
-        xls_path, contributor_name, file_name  = get_data(file)
+        xls_path, contributor_name, file_name, data_asset_title  = get_data(file)
         # create tables, columns, and data asset profile dataframes
         df_tables = create_tables(xls_path, contributor_name)
         create_columns(xls_path, contributor_name)
-        create_data_asset_profile(xls_path, contributor_name, df_tables)
+        create_data_asset_profile(xls_path, contributor_name, df_tables, data_asset_title)
 
         # move .xlsx file from source_files to archive_files dir when processing is complete
         old_path= os.path.join(source_file_dir,file_name)
@@ -173,8 +177,7 @@ def main() -> None:
         # shutil.copy(old_path,new_path)
     
         # Start the load process from the CSV file to Neo4j
-        schema = f"hive_{contributor_name.lower()}"
-        data_loader.run_data_loader(schema=schema)
+        data_loader.run_data_loader(schema=contributor_name.lower())
             
            
 if __name__ == '__main__':

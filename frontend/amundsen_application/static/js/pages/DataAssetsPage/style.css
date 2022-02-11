@@ -1,0 +1,10 @@
+.data-asset-description {
+  font-weight: 600 !important;
+}
+.data-asset-list-description-container {
+    max-width: 500px !important;
+    white-space: normal !important;
+}
+.capitalize{
+  text-transform: capitalize;
+}

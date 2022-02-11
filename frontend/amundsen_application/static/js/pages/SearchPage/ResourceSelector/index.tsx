@@ -51,14 +51,15 @@ export class ResourceSelector extends React.Component<ResourceSelectorProps> {
     <div key={`resource-radio-item:${index}`} className="radio">
       <label className="radio-label">
         <input
+          id={`${option.type}-radio-button`}
           type="radio"
           name="resource"
           value={option.type}
           checked={this.props.resource === option.type}
           onChange={this.onChange}
         />
-        <span className="subtitle-2">{option.label}</span>
-        <span className="body-secondary-3 pull-right">{option.count}</span>
+        <span id={`${option.type}-label-text`} className="subtitle-2">{option.label}</span>
+        <span id={`${option.type}-count-text`} className="body-secondary-3 pull-right">{option.count}</span>
       </label>
     </div>
   );
@@ -90,7 +91,7 @@ export class ResourceSelector extends React.Component<ResourceSelectorProps> {
 
     return (
       <>
-        <h2 className="title-2">{RESOURCE_SELECTOR_TITLE}</h2>
+        <h2 id='resource-header' className="title-2">{RESOURCE_SELECTOR_TITLE}</h2>
         {resourceOptions.map((option, index) =>
           this.renderRadioOption(option, index)
         )}

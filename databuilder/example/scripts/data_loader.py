@@ -295,6 +295,8 @@ def run_delete_data_job(schema: str):
     # getting todays date
     today_date = date.today().strftime("%Y-%m-%d")
 
+    # delete elasticsearch index
+    es.indices.delete(index='_all', ignore=[400, 404])
     DEFAULT_TARGET_RELATIONS = [
         "TAG_OF",
         "TAGGED_BY",
@@ -376,3 +378,6 @@ def run_data_loader(schema: str):
         elasticsearch_mapping=DASHBOARD_ELASTICSEARCH_INDEX_MAPPING)
     job_es_dashboard.launch()
 
+
+# if __name__ == '__main__':
+#     run_delete_data_job(schema='mdm_pmi_spp')

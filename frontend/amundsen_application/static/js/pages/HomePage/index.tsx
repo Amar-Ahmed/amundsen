@@ -42,22 +42,23 @@ export class HomePage extends React.Component<HomePageProps> {
     do we want the title to change based on which
     implementation is being used? probably not */
     return (
-      <main className="container home-page">
-        <div className="row">
+      <main id="home-main" className="container home-page">
+        <div id="home-inner-container" className="row">
           <div
+          id="home-content"
             className={`col-xs-12 ${
               announcementsEnabled() ? 'col-md-8' : 'col-md-offset-1 col-md-10'
             }`}
           >
-            <h1 className="sr-only">{HOMEPAGE_TITLE}</h1>
+            <h1 id="home-title" className="sr-only">{HOMEPAGE_TITLE}</h1>
 
             {/* <div>
               <CMSIntro />
             </div> */}
 
-            <div className="home-element-container-half-height">
+            <div id="home-navbar" className="home-element-container-half-height">
               <SearchBar />
-              <div className="filter-breadcrumb pull-right">
+              <div id="home-navbar-breadcrumb" className="filter-breadcrumb pull-right">
                 <Breadcrumb
                   direction="right"
                   path="/search"
@@ -65,14 +66,14 @@ export class HomePage extends React.Component<HomePageProps> {
                 />
               </div>
             </div>
-            <div className="home-element-container">
+            <div id="home-domains" className="home-element-container">
               <DomainCard/>
             </div>
-            <div className="home-element-container">
+            <div id="home-dataassets" className="home-element-container">
               <DataAssets />
             </div>
 
-            <div className="home-element-container">
+            <div id="home-tags" className="home-element-container">
               <TagsListContainer shortTagsList />
             </div>
             {/* <div className="home-element-container">
@@ -83,7 +84,7 @@ export class HomePage extends React.Component<HomePageProps> {
             </div> */}
           </div>
           {announcementsEnabled() && (
-            <div className="col-xs-12 col-md-offset-1 col-md-3">
+            <div id="home-announcements" className="col-xs-12 col-md-offset-1 col-md-3">
               <Announcements />
             </div>
           )}

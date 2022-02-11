@@ -33,11 +33,11 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = (
   if (path !== undefined && text !== undefined) {
     return (
       <div className="amundsen-breadcrumb">
-        <Link to={path} className="btn btn-flat-icon title-3">
+        <Link to={path} id='amundsen-breadcrumb-link' className="btn btn-flat-icon title-3">
           {direction === 'left' && (
-            <img className="icon icon-left" alt={DATASET_ALT_TXT} />
+            <img id='amundsen-breadcrumb-link-image' className="icon icon-left" alt={DATASET_ALT_TXT} />
           )}
-          <span>{text}</span>
+          <span id={`breadcrumb-span-${text}`}>{text}</span>
           {direction === 'right' && <img className="icon icon-right" alt="" />}
         </Link>
       </div>
@@ -47,11 +47,12 @@ export const Breadcrumb: React.FC<BreadcrumbProps> = (
     <div className="amundsen-breadcrumb">
       {/* eslint-disable jsx-a11y/anchor-is-valid */}
       <a
+        id='amundsen-breadcrumb-anchor'
         onClick={props.loadPreviousSearch}
         className="btn btn-flat-icon title-3"
       >
         {direction === 'left' && (
-          <img className="icon icon-left" alt={DATASET_ALT_TXT} />
+          <img id='amundsen-breadcrumb-anchor-image' className="icon icon-left" alt={DATASET_ALT_TXT} />
         )}
         {direction === 'right' && <img className="icon icon-right" alt="" />}
       </a>

@@ -18,9 +18,11 @@ export interface InfoButtonProps {
   title?: string;
   placement?: string;
   size?: IconSizes;
+  id?: string;
 }
 
 const InfoButton: React.FC<InfoButtonProps> = ({
+  id,
   title,
   infoText,
   placement = DEFAULT_PLACEMENT,
@@ -39,11 +41,12 @@ const InfoButton: React.FC<InfoButtonProps> = ({
       overlay={popoverHoverFocus}
     >
       <button
+        id={`${id}-info-button`}
         className={`btn info-button ${size === IconSizes.SMALL ? 'small' : ''}`}
         type="button"
       >
         <InformationIcon size={size} />
-        <span className="sr-only">{INFO_BUTTON_TEXT}</span>
+        <span id={`${id}-info-button-text`} className="sr-only">{INFO_BUTTON_TEXT}</span>
       </button>
     </OverlayTrigger>
   );

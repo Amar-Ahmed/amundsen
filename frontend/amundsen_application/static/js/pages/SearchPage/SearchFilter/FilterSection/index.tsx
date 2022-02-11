@@ -65,6 +65,7 @@ export class FilterSection extends React.Component<FilterSectionProps> {
         <div className="search-filter-section-header">
           <div className="search-filter-section-title">
             <label
+              id={`${title}-label`}
               className="search-filter-section-label title-2"
               htmlFor={categoryId}
             >
@@ -72,6 +73,7 @@ export class FilterSection extends React.Component<FilterSectionProps> {
             </label>
             {helpText && (
               <InfoButton
+                id={title}
                 infoText={helpText}
                 placement="top"
                 size={IconSizes.SMALL}
@@ -80,12 +82,13 @@ export class FilterSection extends React.Component<FilterSectionProps> {
           </div>
           {hasValue && (
             <button
+              id={`${title}-clear-button`}
               onClick={this.onClearFilter}
               className="btn btn-link clear-button"
               type="button"
               aria-live="assertive"
               role="alert"
-              aria-label='Clear button is now active'
+              aria-label={`${title} Clear button is now active`}
             >
               {CLEAR_BTN_TEXT}
             </button>
