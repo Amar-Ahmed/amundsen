@@ -91,15 +91,19 @@ class File_Utils:
             returns the tables dataframe with updated tags column"""
         df=table_dataframe
         for x in df.index:
-            badges=df['tags'][x]
+            tags=df['tags'][x]
             row=df['description'][x]   
             table_comment=str(row)
-            #checks to see if badges are missing and creates them if they are
-            if not str(badges).replace(' ','') or File_Utils.isNaN(badges):
+            #checks to see if tags are missing and creates them if they are
+            if not str(tags).replace(' ','') or File_Utils.isNaN(tags):
                 table_comment = re.sub(r"('|’)(s|S)","", table_comment)  
                 df['tags'][x] = ','.join(File_Utils.get_nlp(table_comment)).title()
             else:
-                continue
+                # special character replace with no space
+                new_tag = re.sub(r'[\(|\)|\[|\]|\{|\}|\.|\|\!|\|\'|’"]*','',tags)
+                # special character replace with space
+                new_tag = re.sub(r'\/|--|_',' ',new_tag)
+                df['tags'][x] = new_tag
         return df
 
     @staticmethod

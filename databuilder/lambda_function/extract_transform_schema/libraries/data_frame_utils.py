@@ -85,6 +85,8 @@ class DataFrameColumn(DataFrameCSV):
         self.data_frame['is_view'].fillna('table',inplace=True)
         self.data_frame['table_name']=[x.lower() for x in self.data_frame['table_name']]
         self.data_frame['name']=[x.lower() for x in self.data_frame['name']]
+        # upper case column type
+        self.data_frame['col_type'] = [column.upper() for column in self.data_frame['col_type']]
         # create database, cluster, schema columns
         self.set_database_attributes()
         # assign position int for sort_order
