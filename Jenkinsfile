@@ -75,7 +75,7 @@ spec:
 		container(name: 'kaniko', shell: '/busybox/sh') {
       container('jfrogcli'){
       withCredentials([usernamePassword(credentialsId: 'JFROG_CLI_CREDS', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-      sh '/usr/local/bin/jfrog config add cms-artifactory --artifactory-url=https://artifactory.cloud.cms.gov --user="${USER}" --password="${PASS}"'
+      sh '/usr/local/bin/jfrog config add cms-artifactory --artifactory-url=artifactory.cloud.cms.gov --user="${USER}" --password="${PASS}"'
           }
       echo 'loggined into jFrog'
       sh '''
