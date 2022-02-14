@@ -85,7 +85,7 @@ spec:
         /usr/local/bin/jfrog config show cms-artifactory
 			  docker image ls
         echo "Server info"
-			  docker pull artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim 
+			  docker rt pull artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim 
 		  '''  
       }
 
