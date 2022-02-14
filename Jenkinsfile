@@ -82,9 +82,9 @@ spec:
         apk add docker
 			  
 			  echo "List docker images"
+        /usr/local/bin/jfrog config show cms-artifactory
 			  docker image ls
         echo "Server info"
-			  /usr/local/bin/jfrog config show cms-artifactory
 			  docker pull artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim 
 		  '''  
       }
