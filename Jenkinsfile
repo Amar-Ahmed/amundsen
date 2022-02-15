@@ -85,6 +85,13 @@ spec:
         echo "Server info"
 			  /usr/local/bin/jfrog rt docker-pull artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim edl-docker-prod-local
         ls -al
+        cd metadata
+        docker build --no-cache -f public.Dockerfile .
+        image_ID=$(docker images --format='{{.ID}}' | head -1)
+        docker save -o amundsenmetadatalibrary-test2.tar "$image_ID"
+        ls -al
+        docker tag "$image_ID" artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest2
+        docker push artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest2
         ls -al
 		  '''  
       }
@@ -98,15 +105,6 @@ spec:
 		   '''
        echo "kinoko directory"
 		   sh 'pwd'
-       sh '''
-        cd metadata
-        docker build --no-cache -f public.Dockerfile .
-        image_ID=$(docker images --format='{{.ID}}' | head -1)
-        docker save -o amundsenmetadatalibrary-test2.tar "$image_ID"
-        ls -al
-        docker tag "$image_ID" artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest2
-        docker push artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest2
-        '''
       //  sh '''
       //  #!/busybox/sh
       //       /kaniko/executor --context `pwd` --skip-tls-verify --no-push -c /${WORKSPACE} --dockerfile ${WORKSPACE}/metadata/public.Dockerfile --destination=pipeline-primary:debug --tarPath=${WORKSPACE}/image/amundsen-metadata.tar
