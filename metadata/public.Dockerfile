@@ -1,4 +1,4 @@
-FROM artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim as base
+FROM python:3.7-slim as base
 WORKDIR /app
 RUN pip3 install gunicorn
 
