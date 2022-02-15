@@ -84,14 +84,12 @@ spec:
         /usr/local/bin/jfrog config show cms-artifactory 
         echo "Server info"
 			  /usr/local/bin/jfrog rt docker-pull artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim edl-docker-prod-local
-        tar -cvf metadata.tar /home/jenkins/agent/workspace/EDL-Eudc2/metadata/
         ls -al
-        cat metadata.tar | docker import - metadata/image
         docker image ls
 		  '''  
       }
 
-		   echo "The Cloudbees Core execution workspace environment variable value in Kaniko container is: $WORKSPACE"
+		   echo "Workspace environment variable value in Kaniko container is: $WORKSPACE"
 		
 		   // creating image directory to place image into
 		   sh '''
