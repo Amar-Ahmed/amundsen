@@ -89,6 +89,8 @@ spec:
         docker tag artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim eudc-python:3.7-slim
         docker images
         docker --version
+        docker login -u="edleudc" -p="DEtkT8Aaz"
+        pwd
 		  '''  
       }
 
@@ -103,7 +105,6 @@ spec:
 		   sh 'pwd'
        sh '''
        #!/busybox/sh
-       docker login -u="edleudc" -p="DEtkT8Aaz"
             /kaniko/executor --context `pwd` --skip-tls-verify --no-push -c /${WORKSPACE} --dockerfile ${WORKSPACE}/metadata/public.Dockerfile --destination=pipeline-primary:debug --tarPath=${WORKSPACE}/image/amundsen-metadata.tar
           '''
 		  //  dir('definitions') {
