@@ -1,4 +1,4 @@
-FROM artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim as base
+FROM /usr/local/bin/jfrog rt docker-pull artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim edl-docker-prod-local as base
 WORKDIR /app
 RUN pip3 install gunicorn
 
