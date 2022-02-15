@@ -108,10 +108,10 @@ spec:
 		   '''
        echo "kinoko directory"
 		   sh 'pwd'
-       sh '''
-       #!/busybox/sh
-            /kaniko/executor --context `pwd` --skip-tls-verify --no-push -c /${WORKSPACE} --dockerfile ${WORKSPACE}/metadata/public.Dockerfile --destination=pipeline-primary:debug --tarPath=${WORKSPACE}/image/amundsen-metadata.tar
-          '''
+      //  sh '''
+      //  #!/busybox/sh
+      //       /kaniko/executor --context `pwd` --skip-tls-verify --no-push -c /${WORKSPACE} --dockerfile ${WORKSPACE}/metadata/public.Dockerfile --destination=pipeline-primary:debug --tarPath=${WORKSPACE}/image/amundsen-metadata.tar
+      //     '''
 		  //  dir('definitions') {
 		  //     script 
 		  //     {
