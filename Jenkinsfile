@@ -95,6 +95,8 @@ spec:
         docker build --no-cache -f public.Dockerfile .
         image_ID=$(docker images --format='{{.ID}}' | head -1)
         docker save -o amundsenmetadatalibrary-test.tar "$image_ID"
+        docker tag "$image_ID" artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest
+        docker push artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest
         ls
 		  '''  
       }
