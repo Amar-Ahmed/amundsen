@@ -81,10 +81,12 @@ spec:
 			  ls -al
         pwd
 			  echo "List docker images"
-        /usr/local/bin/jfrog config show cms-artifactory
-			  docker image ls
+        /usr/local/bin/jfrog config show cms-artifactory 
         echo "Server info"
 			  /usr/local/bin/jfrog rt docker-pull artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim edl-docker-prod-local
+        tar -czvf metadata.tar /home/jenkins/agent/workspace/EDL-Eudc2/metadata/
+        docker load -i metadata.tar
+        docker image ls
 		  '''  
       }
 
