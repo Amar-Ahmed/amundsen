@@ -89,6 +89,7 @@ spec:
 		  '''  
       }
 
+      sh 'pwd'
 		   echo "The Cloudbees Core execution workspace environment variable value in Kaniko container is: $WORKSPACE"
 		
 		   // creating image directory to place image into
