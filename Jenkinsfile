@@ -86,7 +86,7 @@ spec:
 			  /usr/local/bin/jfrog rt docker-pull artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim edl-docker-prod-local
         tar -cvf metadata.tar /home/jenkins/agent/workspace/EDL-Eudc2/metadata/
         ls -al
-        docker load --input /home/jenkins/agent/workspace/EDL-Eudc2/metadata.tar
+        cat metadata.tar | docker import - metadata/image
         docker image ls
 		  '''  
       }
