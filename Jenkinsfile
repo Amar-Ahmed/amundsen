@@ -93,6 +93,9 @@ spec:
         pwd
         cd metadata
         docker build --no-cache -f public.Dockerfile .
+        image_ID=$(docker images --format='{{.ID}}' | head -1)
+        docker save -o amundsenmetadatalibrary-test.tar "$image_ID"
+        ls
 		  '''  
       }
 
