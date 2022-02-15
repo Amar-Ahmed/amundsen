@@ -78,7 +78,8 @@ spec:
       echo 'loggined into jFrog'
       sh '''
         apk add docker
-			  
+			  ls -al
+        pwd
 			  echo "List docker images"
         /usr/local/bin/jfrog config show cms-artifactory
 			  docker image ls
