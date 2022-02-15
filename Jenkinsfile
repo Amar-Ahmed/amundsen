@@ -58,7 +58,6 @@ spec:
       steps {
         git([url: 'https://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@github.cms.gov/EDL/edl-eudc-code.git', branch: 'develop'])
       }
-
     }  
     
     stage('ls dir') {
@@ -67,7 +66,6 @@ spec:
         sh 'ls' 
       }
     } 
-
     stage('Get Dockerfile From Version Control') {      
 	  steps 
 	  {
