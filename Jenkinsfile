@@ -85,20 +85,7 @@ spec:
         echo "Server info"
 			  /usr/local/bin/jfrog rt docker-pull artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim edl-docker-prod-local
         ls -al
-        :'
-        docker images
-        docker images
-        docker --version
-        docker login -u="edleudc" -p="DEtkT8Aaz"
-        pwd
-        cd metadata
-        docker build --no-cache -f public.Dockerfile .
-        image_ID=$(docker images --format='{{.ID}}' | head -1)
-        docker save -o amundsenmetadatalibrary-test.tar "$image_ID"
-        docker tag "$image_ID" artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest
-        docker push artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest
         ls -al
-        '
 		  '''  
       }
 
