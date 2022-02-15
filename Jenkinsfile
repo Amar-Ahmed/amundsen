@@ -86,6 +86,8 @@ spec:
 			  /usr/local/bin/jfrog rt docker-pull artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim edl-docker-prod-local
         ls -al
         docker images
+        docker tag artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim python:3.7-slim
+        docker images
 		  '''  
       }
 
