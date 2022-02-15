@@ -91,6 +91,8 @@ spec:
         docker --version
         docker login -u="edleudc" -p="DEtkT8Aaz"
         pwd
+        cd metadata
+        docker docker build --no-cache -f public.Dockerfile .
 		  '''  
       }
 
