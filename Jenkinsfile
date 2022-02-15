@@ -89,6 +89,7 @@ spec:
         docker tag artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim eudc-python:3.7-slim
         docker images
         docker --version
+        docker login -u="edleudc" -p="DEtkT8Aaz"
 		  '''  
       }
 
