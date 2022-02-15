@@ -80,16 +80,16 @@ spec:
       echo 'loggined into jFrog'
       sh '''
         apk add docker
-			  
+			  pwd
 			  echo "List docker images"
         /usr/local/bin/jfrog config show cms-artifactory
-			  docker image ls
         echo "Server info"
 			  /usr/local/bin/jfrog rt docker-pull artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim edl-docker-prod-local
+        docker image ls
 		  '''  
       }
 
-      sh 'pwd'
+      
 		   echo "The Cloudbees Core execution workspace environment variable value in Kaniko container is: $WORKSPACE"
 		
 		   // creating image directory to place image into
