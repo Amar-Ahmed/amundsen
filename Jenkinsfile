@@ -90,8 +90,7 @@ spec:
         image_ID=$(docker images --format='{{.ID}}' | head -1)
         docker save -o amundsenmetadatalibrary-test2.tar "$image_ID"
         ls -al
-        /usr/local/bin/jfrog rt del artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata/latest/
-        /usr/local/bin/jfrog rt del artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata/latest2/
+        /usr/local/bin/jfrog rt del artifactory.cloud.cms.gov/artifactory/edl-docker-prod-local/latest/metadata/latest2/
         docker tag "$image_ID" artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest
         
         ls -al
