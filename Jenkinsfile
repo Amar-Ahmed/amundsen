@@ -90,15 +90,17 @@ spec:
         image_ID=$(docker images --format='{{.ID}}' | head -1)
         docker save -o amundsenmetadatalibrary-test2.tar "$image_ID"
         ls -al
-        docker tag "$image_ID" artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest2
-        docker push artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest2
+        /usr/local/bin/jfrog rt del artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest
+        /usr/local/bin/jfrog rt del artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest2
+        docker tag "$image_ID" artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest
+        
         ls -al
 		  '''  
       }
 
 		   echo "Workspace environment variable value in Kaniko container is: $WORKSPACE"
 		
-		   // creating image directory to place image into
+		   // creating image directory to place image into docker push artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest2
 		   sh '''
        #!/busybox/sh
 		   mkdir ${WORKSPACE}/image/
