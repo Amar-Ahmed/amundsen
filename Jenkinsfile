@@ -66,7 +66,7 @@ spec:
         sh 'ls' 
       }
     } 
-    stage('Get Dockerfile From Version Control') {      
+    stage('Build image using Dockerfile & upload to Artifactory') {      
 	  steps 
 	  {
         // get the dockerfile checked out to the Kaniko container, so it can find it  does $WORKSPACE mount here?
@@ -88,12 +88,12 @@ spec:
         cd metadata
         docker build --no-cache -f public.Dockerfile .
         image_ID=$(docker images --format='{{.ID}}' | head -1)
-        docker save -o amundsenmetadatalibrary-test2.tar "$image_ID"
+        docker save -o amundsenmetadatalibrary-test.tar "$image_ID"
         ls -al
         /usr/local/bin/jfrog rt del edl-docker-prod-local/latest/metadata/latest/
         docker tag "$image_ID" artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest
         docker push artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest
-        ls -al
+        curl -X PUT -u edl-jf-svc:NwS8a4T2?s$Y9mTF -T amundsenmetadatalibrary-test.tar "https://artifactory.cloud.cms.gov/artifactory/edl-docker-prod-local/latest/amundsenmetadatalibrary-test.tar"
 		  '''  
       }
 
