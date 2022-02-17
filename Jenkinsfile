@@ -93,7 +93,7 @@ spec:
         /usr/local/bin/jfrog rt del edl-docker-prod-local/latest/metadata/latest/
         docker tag "$image_ID" artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest
         docker push artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest
-        curl -X PUT -u edl-jf-svc:NwS8a4T2?s$Y9mTF -T amundsenmetadatalibrary-test.tar "https://artifactory.cloud.cms.gov/artifactory/edl-docker-prod-local/latest/amundsenmetadatalibrary-test.tar"
+        /usr/local/bin/jfrog rt u amundsenmetadatalibrary-test.tar edl-docker-prod-local/latest/
 		  '''  
       }
 
