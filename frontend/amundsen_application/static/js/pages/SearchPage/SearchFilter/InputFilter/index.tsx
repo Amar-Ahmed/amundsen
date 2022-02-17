@@ -1,16 +1,15 @@
 // Copyright Contributors to the Amundsen project.
 // SPDX-License-Identifier: Apache-2.0
 
-import * as React from 'react';
-import { bindActionCreators } from 'redux';
-import { connect } from 'react-redux';
-
+import { GlobalState } from 'ducks/rootReducer';
 import {
   updateFilterByCategory,
   UpdateFilterRequest,
 } from 'ducks/search/filters/reducer';
-
-import { GlobalState } from 'ducks/rootReducer';
+import * as React from 'react';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import '../../../../GlobalStyles/hide-element.css';
 import { APPLY_BTN_TEXT } from '../constants';
 
 interface OwnProps {
@@ -82,8 +81,14 @@ export class InputFilter extends React.Component<
           value={this.state.value}
           aria-label={`${categoryId} text field`}
         />
-        <button id={`${categoryId}-apply-button`} name={categoryId} className="btn btn-default" type="submit">
+        <button
+          id={`${categoryId}-apply-buttones`}
+          name={categoryId}
+          className="btn btn-default"
+          type="submit"
+        >
           {APPLY_BTN_TEXT}
+          <span className="hide-element">{`Apply ${categoryId} button`}</span>
         </button>
       </form>
     );
