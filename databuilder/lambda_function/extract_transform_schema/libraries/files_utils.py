@@ -4,8 +4,10 @@ import pandas as pd
 import re
 from typing import List, Union, Any
 import spacy
+from spacy.symbols import ORTH
 #nlp_sm = spacy.load("en_core_web_sm")
 nlp_sm = spacy.load('/opt/python/lib/python3.7/site-packages/en_core_web_sm/en_core_web_sm-3.2.0')
+nlp_sm.tokenizer.add_special_case('id', [{ORTH: 'id'}])
 
 
 class File_Utils:
@@ -49,8 +51,15 @@ class File_Utils:
         index = 0
         while index < len(nouns):
             if nouns[index]['type'] == 'compound':
-                noun_phrases.append(f"{nouns[index]['token']} {nouns[index+1]['token']}".lower())
-                index += 2
+                word = nouns[index]['token']
+                flag = False
+                index += 1
+                while not flag:
+                    if nouns[index]['type'] != 'compound':
+                        flag = True
+                    word = f"{word} {nouns[index]['token']}"
+                    index += 1
+                noun_phrases.append(word.lower())
             else:
                 noun_phrases.append(str(nouns[index]['token']).lower())
                 index += 1
@@ -94,15 +103,20 @@ class File_Utils:
             tags=df['tags'][x]
             row=df['description'][x]   
             table_comment=str(row)
-            #checks to see if tags are missing and creates them if they are
-            if not str(tags).replace(' ','') or File_Utils.isNaN(tags):
-                table_comment = re.sub(r"('|’)(s|S)","", table_comment)  
-                df['tags'][x] = ','.join(File_Utils.get_nlp(table_comment)).title()
+            # checks to see if tags are missing for a table and creates them if they are
+            regular_expresion_no_space = r'[\(|\)|\[|\]|\{|\}|\.|\|\!|\|\'|=|:|;|\*|\+"]*'
+            regular_expresion_space = r'\/|--|_'
+            if not tags or File_Utils.isNaN(tags) or tags.replace(' ','') == '':
+                # special character replace with no space
+                new_table_comment = re.sub(regular_expresion_no_space,'', table_comment)  
+                # special character replace with space
+                new_table_comment = re.sub(regular_expresion_space,' ', new_table_comment)  
+                df['tags'][x] = ','.join(File_Utils.get_nlp(new_table_comment)).title()
             else:
                 # special character replace with no space
-                new_tag = re.sub(r'[\(|\)|\[|\]|\{|\}|\.|\|\!|\|\'|’"]*','',tags)
+                new_tag = re.sub(regular_expresion_no_space,'',tags)
                 # special character replace with space
-                new_tag = re.sub(r'\/|--|_',' ',new_tag)
+                new_tag = re.sub(regular_expresion_space,' ',new_tag)
                 df['tags'][x] = new_tag
         return df
 
