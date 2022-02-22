@@ -1,0 +1,2 @@
+01 00 * * * . $HOME/amundsen_post_deploy.sh;
+02 00 * * * . $HOME/.bash_profile; cd /home/ec2-user/edl-eudc-code/databuilder && python3 example/scripts/data_prep.py && python3 example/scripts/data_domain_prep.py sleep 2m
