@@ -3,7 +3,7 @@ WORKDIR /app/amundsen_application/static
 
 COPY amundsen_application/static/package.json /app/amundsen_application/static/package.json
 COPY amundsen_application/static/package-lock.json /app/amundsen_application/static/package-lock.json
-RUN npm install
+RUN npm install --unsafe-perm
 
 COPY amundsen_application/static /app/amundsen_application/static
 RUN npm run build
