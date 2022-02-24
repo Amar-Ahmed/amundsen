@@ -54,13 +54,13 @@ spec:
     }                             
   }
   stages {
-    stage('Cloning Git repo') {
+    stage('Cloning EUDC Git repo') {
       steps {
-        git([url: 'https://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@github.cms.gov/EDL/edl-eudc-code.git', branch: 'Modify-docker-file'])
+        git([url: 'https://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@github.cms.gov/EDL/edl-eudc-code.git', branch: 'develop'])
       }
     }  
     
-    stage('ls dir') {
+    stage('EUDC workspace') {
       steps {
         sh 'pwd'
         sh 'ls' 
