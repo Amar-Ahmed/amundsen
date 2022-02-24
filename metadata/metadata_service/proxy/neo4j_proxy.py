@@ -2077,6 +2077,7 @@ class Neo4jProxy(BaseProxy):
         query = textwrap.dedent("""
             MATCH (sh:Schema)-[:DESCRIPTION_OF]-(de:Description)
             RETURN sh.name AS schema, de.description AS description
+            ORDER BY sh.publisher_last_updated_epoch_ms DESC
         """)
         records = self._execute_cypher_query(statement=query,param_dict={})
         results = []
