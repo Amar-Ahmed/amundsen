@@ -77,6 +77,7 @@ spec:
           }
       echo 'loggined into jFrog'
       sh '''
+        echo "Building metadata image from docker file"
         apk add docker
 			  ls -al
         pwd
@@ -89,58 +90,17 @@ spec:
         docker build --no-cache -f public.Dockerfile .
         image_ID=$(docker images --format='{{.ID}}' | head -1)
         docker save -o amundsenmetadatalibrary-test.tar "$image_ID"
-        ls -al
+        echo "uploading metadata build to jFrog Artifactory"
         /usr/local/bin/jfrog rt del edl-docker-prod-local/latest/metadata/latest/
         docker tag "$image_ID" artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest
         docker push artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest
         /usr/local/bin/jfrog rt u amundsenmetadatalibrary-test.tar edl-docker-prod-local/latest/
 		  '''  
       }
-
-		   echo "Workspace environment variable value in Kaniko container is: $WORKSPACE"
-		
-		   // creating image directory to place image into docker push artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest2
-		   sh '''
-       #!/busybox/sh
-		   mkdir ${WORKSPACE}/image/
-		   '''
-       echo "kinoko directory"
-		   sh 'pwd'
-      //  sh '''
-      //  #!/busybox/sh
-      //       /kaniko/executor --context `pwd` --skip-tls-verify --no-push -c /${WORKSPACE} --dockerfile ${WORKSPACE}/metadata/public.Dockerfile --destination=pipeline-primary:debug --tarPath=${WORKSPACE}/image/amundsen-metadata.tar
-      //     '''
-		  //  dir('definitions') {
-		  //     script 
-		  //     {
-			//      handleSCMRepoCheckout("https://github.com/Amar-Ahmed/docker-file.git", "master")
-		  //     }
-			  
-			  
-			//   sh '''#!/busybox/sh
-			//   /kaniko/executor --context `pwd` --skip-tls-verify --no-push -c /workspace --dockerfile ${WORKSPACE}/definitions/MDM-2021-Cloudbees-Core-DevOps/Dockerfile --destination=devops-cbc-pipeline-primary:debug --tarPath=${WORKSPACE}/image/amundsen-frontend.tar
-			//   ls -altr
-			  
-			//   '''
-			  
-		  //  }
-		   
-		   // figure out where image was written to locally within Kaniko container
-		   
-		   sh '''#!/busybox/sh
-		   ls -altr ${WORKSPACE}/image/
-		   '''
-        echo "last step"
-		    sh 'pwd'
-        sh 'ls' 
-		   
+        echo "Metadata build was sucessfully pushed to Artifactory"
 		}
 	  }
 	  
 	}  
-}
-  parameters {
-        string(name: 'ENVIRONMENT', defaultValue:'test',description: 'Env to use')
-        choice(name: 'ENVIRONMENT', choices: ['dev','test','impl','prod'],description:'')
-  } 
+} 
 }
