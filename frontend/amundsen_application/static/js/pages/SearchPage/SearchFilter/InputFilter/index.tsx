@@ -88,7 +88,7 @@ export class InputFilter extends React.Component<
           type="submit"
         >
           {APPLY_BTN_TEXT}
-          <span className="hide-element">{`Apply ${categoryId} button`}</span>
+          <span className="hide-element">{` ${categoryId} button`}</span>
         </button>
       </form>
     );

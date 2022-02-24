@@ -92,7 +92,7 @@ export class DataAssets extends React.Component<DataAssetProps, DataAssetsState>
               </p>
             </div>
           </div>
-          {/* <div className="row">
+          <div className="row">
             <div className="col-sm-12">
               <Pagination
                 activePage={this.state.activePage}
@@ -102,7 +102,7 @@ export class DataAssets extends React.Component<DataAssetProps, DataAssetsState>
                 onChange={this.handlePageChange.bind(this)}
               />
             </div>
-          </div> */}
+          </div>
           <div className="row view-all">
             <div style={{ display: "flex", justifyContent: "flex-end" }}>
               <a
