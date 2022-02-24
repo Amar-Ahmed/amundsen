@@ -76,26 +76,24 @@ spec:
       sh '/usr/local/bin/jfrog config add cms-artifactory --artifactory-url=https://artifactory.cloud.cms.gov/artifactory --user="${USER}" --password="${PASS}"'
           }
       echo 'loggined into jFrog'
+      echo "Building metadata image from docker file..."
       sh '''
-        echo "Building metadata image from docker file"
         apk add docker
-			  ls -al
-        pwd
-			  echo "List docker images"
         /usr/local/bin/jfrog config show cms-artifactory 
         echo "Server info"
 			  /usr/local/bin/jfrog rt docker-pull artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim edl-docker-prod-local
-        ls -al
         cd metadata
         docker build --no-cache -f public.Dockerfile .
         image_ID=$(docker images --format='{{.ID}}' | head -1)
         docker save -o amundsenmetadatalibrary-test.tar "$image_ID"
-        echo "uploading metadata build to jFrog Artifactory"
+		  '''
+      echo "Uploading metadata build to jFrog Artifactory..."
+      sh '''
         /usr/local/bin/jfrog rt del edl-docker-prod-local/latest/metadata/latest/
         docker tag "$image_ID" artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest
         docker push artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest
         /usr/local/bin/jfrog rt u amundsenmetadatalibrary-test.tar edl-docker-prod-local/latest/
-		  '''  
+      '''  
       }
         echo "Metadata build was sucessfully pushed to Artifactory"
 		}
