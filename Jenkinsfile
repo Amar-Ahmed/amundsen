@@ -93,7 +93,7 @@ spec:
 		  '''
       echo "Uploading metadata build to jFrog Artifactory..."
       }
-        echo "Metadata build was sucessfully pushed to Artifactory"
+      echo "Metadata build was sucessfully pushed to Artifactory"
 		}
 	  }
 	  
