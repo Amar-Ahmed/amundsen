@@ -86,14 +86,12 @@ spec:
         docker build --no-cache -f public.Dockerfile .
         image_ID=$(docker images --format='{{.ID}}' | head -1)
         docker save -o amundsenmetadatalibrary-test.tar "$image_ID"
-		  '''
-      echo "Uploading metadata build to jFrog Artifactory..."
-      sh '''
         /usr/local/bin/jfrog rt del edl-docker-prod-local/latest/metadata/latest/
         docker tag "$image_ID" artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest
         docker push artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest
         /usr/local/bin/jfrog rt u amundsenmetadatalibrary-test.tar edl-docker-prod-local/latest/
-      '''  
+		  '''
+      echo "Uploading metadata build to jFrog Artifactory..."
       }
         echo "Metadata build was sucessfully pushed to Artifactory"
 		}
