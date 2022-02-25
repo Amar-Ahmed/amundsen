@@ -1,14 +1,14 @@
-FROM node:12-slim as node-stage
+FROM artifactory.cloud.cms.gov/docker/node:12-slim as node-stage
 WORKDIR /app/amundsen_application/static
 
 COPY amundsen_application/static/package.json /app/amundsen_application/static/package.json
 COPY amundsen_application/static/package-lock.json /app/amundsen_application/static/package-lock.json
-RUN npm install
+RUN npm install --unsafe-perm
 
 COPY amundsen_application/static /app/amundsen_application/static
 RUN npm run build
 
-FROM python:3.7-slim as base
+FROM artifactory.cloud.cms.gov/docker/python:3.7-slim as base
 WORKDIR /app
 RUN pip3 install gunicorn
 
