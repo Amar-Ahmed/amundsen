@@ -41,7 +41,7 @@ export class SearchItem extends React.Component<SearchItemProps, {}> {
     }
     if (!this.props.hasResults) {
       return (
-        <div className="search-item-indicator body-placeholder">
+        <div role="alert" aria-live="assertive" className="search-item-indicator body-placeholder">
           {SEARCH_ITEM_NO_RESULTS}
         </div>
       );

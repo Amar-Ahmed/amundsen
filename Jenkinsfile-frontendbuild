@@ -1,8 +1,3 @@
-def handleSCMRepoCheckout(urlToUse, branchToGet) {     
-	    
-	git  url: urlToUse, branch: branchToGet		
-	
-}
 pipeline {
   agent {
     kubernetes {
@@ -56,17 +51,17 @@ spec:
   stages {
     stage('Cloning Git repo') {
       steps {
-        git([url: 'https://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@github.cms.gov/EDL/edl-eudc-code.git', branch: 'Modify-docker-file'])
+        git([url: 'https://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@github.cms.gov/EDL/edl-eudc-code.git', branch: 'EPDL-3434-Jenkins-pipeline'])
       }
     }  
     
-    stage('ls dir') {
+    stage('EUDC workspace') {
       steps {
         sh 'pwd'
         sh 'ls' 
       }
     } 
-    stage('Get Dockerfile From Version Control') {      
+    stage('Build image using Dockerfile & upload to Artifactory') {      
 	  steps 
 	  {
         // get the dockerfile checked out to the Kaniko container, so it can find it  does $WORKSPACE mount here?
@@ -76,49 +71,34 @@ spec:
       sh '/usr/local/bin/jfrog config add cms-artifactory --artifactory-url=https://artifactory.cloud.cms.gov/artifactory --user="${USER}" --password="${PASS}"'
           }
       echo 'loggined into jFrog'
+      echo "Building front-end image from docker file..."
       sh '''
         apk add docker
-			  ls -al
-        pwd
-			  echo "List docker images"
         /usr/local/bin/jfrog config show cms-artifactory 
         echo "Server info"
 			  /usr/local/bin/jfrog rt docker-pull artifactory.cloud.cms.gov/edl-docker-prod-local/images/python:3.7-slim edl-docker-prod-local
+        cd frontend/amundsen_application/static
+        file_package=package.json.temp
+        trimmedfilename1=$(basename $file_package .temp)
+        mv $file_package $trimmedfilename1
+        file_package_lock=package-lock.json.temp
+        trimmedfilename2=$(basename $file_package_lock .temp)
+        mv $file_package_lock $trimmedfilename2
         ls -al
-        cd frontend
+        cd ../..
         docker build --no-cache -f public.Dockerfile .
         image_ID=$(docker images --format='{{.ID}}' | head -1)
-        docker save -o amundsenfrontendlibrary.tar "$image_ID"
-        ls -al
+        docker save -o amundsenfrontendlibrary-jenkinstest.tar "$image_ID"
         docker tag "$image_ID" artifactory.cloud.cms.gov/edl-docker-prod-local/latest/frontend:latest
         docker push artifactory.cloud.cms.gov/edl-docker-prod-local/latest/frontend:latest
-        ls -al
-		  '''  
+        /usr/local/bin/jfrog rt u amundsenfrontendlibrary-jenkinstest.tar edl-docker-prod-local/latest/
+		  '''
+      echo "Uploading front-end build to jFrog Artifactory..."  
       }
-
-		   echo "Workspace environment variable value in Kaniko container is: $WORKSPACE"
-		
-		   // creating image directory to place image into docker push artifactory.cloud.cms.gov/edl-docker-prod-local/latest/metadata:latest2
-		   sh '''
-       #!/busybox/sh
-		   mkdir ${WORKSPACE}/image/
-		   '''
-       echo "kinoko directory"
-		   sh 'pwd'		   
-		   sh '''#!/busybox/sh
-		   ls -altr ${WORKSPACE}/image/
-		   '''
-        echo "last step"
-		    sh 'pwd'
-        sh 'ls' 
-		   
+      echo "Front-end build was sucessfully pushed to Artifactory"
 		}
 	  }
 	  
 	}  
 }
-  parameters {
-        string(name: 'ENVIRONMENT', defaultValue:'test',description: 'Env to use')
-        choice(name: 'ENVIRONMENT', choices: ['dev','test','impl','prod'],description:'')
-  } 
 }
