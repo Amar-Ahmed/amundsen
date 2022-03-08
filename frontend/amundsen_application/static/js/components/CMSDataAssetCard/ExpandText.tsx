@@ -74,6 +74,7 @@ function DataAssetModal(props) {
       <Modal.Body>
         <CMSLink text={props.description} />
       </Modal.Body>
+      <span tabIndex={0} onBlur={()=> props.onHide()}></span>
     </Modal>
   );
 }
