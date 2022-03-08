@@ -22,13 +22,19 @@ def lambda_handler(event, context):
     # Get the object from the event and show its content type
     logging.info("Get the object from the event")
     print(event)
-    object_get_context = event["Records"][0]
-    s3_data = object_get_context["s3"]
-    object = s3_data["object"]
+    # object_get_context = event["Records"][0]
+    # s3_data = object_get_context["s3"]
+    # object = s3_data["object"]
+    # # get the bucket name
+    # bucket_name = s3_data['bucket']['name']
+
+    event_detail = event["detail"]
     # get the bucket name
-    bucket_name = s3_data['bucket']['name']
+    bucket_name = event_detail["bucket"]["name"]
+    logging.info(f"bucket name: {bucket_name}")
+
     # get the file name and the directory path
-    file_name = urllib.parse.unquote_plus(s3_data['object']['key'], encoding='utf-8')
+    file_name = urllib.parse.unquote_plus(event_detail['object']['key'], encoding='utf-8')
     file_full_path = str(os.path.dirname(file_name)).strip('/')
     # validate the file, it has to be a Excel and come from the subfolder mdm and data-dictionaries
     if str(file_name.split('.')[-1]).lower() == 'xlsx' and file_full_path in ['amundsen/mdm','amundsen/data-dictionaries']: 
@@ -44,27 +50,21 @@ def lambda_handler(event, context):
         obj_data_builder = Data_Builder(tmp_data_dir= tmp_file_dir)
         schema_name = obj_data_builder.data_builder(bucket_name, excel_file_path, file_full_path)
         # Call the step function
-        # The transaction id is the step function's name
-        transaction_id = str(uuid.uuid1())
+        # # The transaction id is the step function's name
+        # transaction_id = str(uuid.uuid1())
         input = {
             "schema_name": schema_name,
             "bucket_name": bucket_name,
             "data_full_path": file_full_path,
             "file_name": file_name.split('/')[-1]
         }
-        # call the step function
-        response = step_function.start_execution(
-            stateMachineArn= 'arn:aws:states:us-east-1:310946103770:stateMachine:Amundsen-DataBuilder-StepFunction',
-            name= transaction_id,
-            input= json.dumps(input)
-        )
-        return {
-            'bucket_name': bucket_name,
-            'data_full_path': file_full_path,
-            'schema_name': schema_name,
-            'file_name': file_name.split('/')[-1],
-            'response': 200
-        } 
+        # # call the step function
+        # response = step_function.start_execution(
+        #     stateMachineArn= 'arn:aws:states:us-east-1:310946103770:stateMachine:Amundsen-DataBuilder-StepFunction',
+        #     name= transaction_id,
+        #     input= json.dumps(input)
+        # )
+        return input 
         logging.info('*****Process Done*****')
 
 # # Uncoment this code when run the lambda function locally
