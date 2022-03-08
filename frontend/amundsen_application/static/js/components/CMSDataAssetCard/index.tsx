@@ -85,7 +85,7 @@ export class DataAssets extends React.Component<DataAssetProps, DataAssetsState>
                 <ExpandText key={index} title={asset.schema_title} text={asset.schema_description} id={`data-asset-${asset.schema}`} />
               </div>
             ))}
-            <div className="col-sm-4" style={{background:'#D6D7D9'}}>
+            <div className="col-sm-4" style={{background:'#F0F1F1'}}>
               <h3 id='call-out-header' tabIndex={0}style={{color:'black'}}>{DATA_ASSETS_HELP_TEXT.title}</h3>
               <p id='call-out-textfield' tabIndex={0}>
                 <CMSLink text={DATA_ASSETS_HELP_TEXT.description} />
