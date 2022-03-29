@@ -13,8 +13,8 @@ class Config:
 
     def __init__(self):
         load_dotenv()
-        secret_name = "arn:aws:secretsmanager:us-east-1:310946103770:secret:Amundsen-Neo4j-DB-41TxOl";
-        region_name = "us-east-1";
+        secret_name = "arn:aws:secretsmanager:us-east-1:310946103770:secret:edl-eudc-neo4j-db-jZwBQ9"
+        region_name = "us-east-1"
         self.config = get_secret(secret_name, region_name)
         if self.config is None:
             self.config = {}

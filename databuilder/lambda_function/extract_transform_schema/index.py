@@ -18,11 +18,11 @@ tmp_file_dir = "/tmp"
 
 # Get the value from the System Manager Parameter Store
 def get_parameter_store():
-    parameter = ssm.get_parameter(Name='amundsen-mdm-bucket-path', WithDecryption=True)    
+    parameter = ssm.get_parameter(Name='edl-eudc-mdm-bucket-path', WithDecryption=True)    
     mdm_bucket_path = parameter['Parameter']['Value']
-    parameter = ssm.get_parameter(Name='amundsen-bic-bucket-path', WithDecryption=True)    
+    parameter = ssm.get_parameter(Name='edl-eudc-bic-bucket-path', WithDecryption=True)    
     bic_bucket_path = parameter['Parameter']['Value']
-    parameter = ssm.get_parameter(Name='amundsen-transform-data-path', WithDecryption=True)    
+    parameter = ssm.get_parameter(Name='edl-eudc-transform-data-path', WithDecryption=True)    
     transform_data_path = parameter['Parameter']['Value']
     return mdm_bucket_path, bic_bucket_path, transform_data_path
 
