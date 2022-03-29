@@ -15,7 +15,7 @@ class Config:
 
     def __init__(self):
         load_dotenv()
-        secret_name = "arn:aws:secretsmanager:us-east-1:310946103770:secret:Amundsen-Neo4j-DB-41TxOl";
+        secret_name = "arn:aws:secretsmanager:us-east-1:310946103770:secret:edl-eudc-neo4j-db-jZwBQ9"
         region_name = "us-east-1";
         self.config = get_secret(secret_name, region_name)
         if self.config is None:
@@ -29,13 +29,13 @@ class Config:
     # return the hostname for the Elastic Search service
     def get_elastic_search_host(self) -> str:
         #return  os.getenv('CREDENTIALS_ELASTICSEARCH_PROXY_HOST','localhost')
-        parameter = ssm.get_parameter(Name='amundsen-elasticsearch-host', WithDecryption=True)
+        parameter = ssm.get_parameter(Name='edl-eudc-elasticsearch-host', WithDecryption=True)
         return parameter['Parameter']['Value']
 
     # return the port where is running  the Elastic Search service
     def get_elastic_search_port(self) -> int:
         #return  int(os.getenv('CREDENTIALS_ELASTICSEARCH_PROXY_PORT',9200))
-        parameter = ssm.get_parameter(Name='amundsen-elasticsearch-port', WithDecryption=True)
+        parameter = ssm.get_parameter(Name='edl-eudc-elasticsearch-port', WithDecryption=True)
         return int(parameter['Parameter']['Value'])
 
     # return the hostname for the Neo4j Data Base server
@@ -59,11 +59,11 @@ class Config:
         return  self.config.get('password','test')
 
     def get_recipient_alert(self):
-        parameter = ssm.get_parameter(Name='amundsen-recipient-alert', WithDecryption=True)
+        parameter = ssm.get_parameter(Name='edl-eudc-recipient-alert', WithDecryption=True)
         return parameter['Parameter']['Value']
     
     def get_sender_alert(self):
-        parameter = ssm.get_parameter(Name='amundsen-sender-alert', WithDecryption=True)
+        parameter = ssm.get_parameter(Name='edl-eudc-sender-alert', WithDecryption=True)
         return parameter['Parameter']['Value']
 
     def get_aws_region(self):
